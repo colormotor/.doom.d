@@ -11,7 +11,6 @@ Or ~M-x doom/reload~
 
 **NB.** For a literate config to work you need to set the ~literate~ flag in ~init.el~
 
-
 ** General
 Place your private configuration here! Remember, you do not need to run 'doom
 sync' after modifying this file!
@@ -137,7 +136,7 @@ If you use `org' and don't want your org files in the default location below,
 change `org-directory'. It must be set before org ~loads!~
 
 #+begin_src emacs-lisp
-(setq org-directory "~/org/")
+(setq org-directory "~/Dropbox/org/")
 #+end_src
 
 Enable shift select in org mode
