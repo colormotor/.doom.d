@@ -1,2 +1,2 @@
 # .doom.d
-My doom-emacs config
+My literate doom-emacs config
