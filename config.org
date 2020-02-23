@@ -1,0 +1,218 @@
+#+TITLE: Emacs Doom Config
+#+AUTHOR: Daniel Berio
+#+EMAIL: drand48@gmail.com
+#+LANGUAGE: en
+#+STARTUP: inlineimages
+#+PROPERTY: header-args :tangle yes :cache yes :results silent :padline no
+
+To execute all and update use ~C-c C-v b~ or ~C-c C-v C-b~ or ~M-x
+org-babel-execute-buffer~
+Or ~M-x doom/reload~
+
+**NB.** For a literate config to work you need to set the ~literate~ flag in ~init.el~
+
+
+** General
+Place your private configuration here! Remember, you do not need to run 'doom
+sync' after modifying this file!
+
+Some functionality uses this to identify you, e.g. GPG configuration, email
+clients, file templates and snippets.
+
+#+begin_src emacs-lisp
+(setq user-full-name "Daniel Berio"
+      user-mail-address "drand48@gmail.com")
+#+end_src
+
+Start emacs with a maximized window
+#+begin_src emacs-lisp
+(add-hook 'window-setup-hook 'toggle-frame-maximized t)
+#+end_src
+** Figlet
+Because I like ascii text. From [https://github.com/emacsmirror/figlet/blob/master/figlet.el]
+Type ~M-x figlet~ and you will be asked for a string. If you use a prefix ~C-u
+M-x figlet~ it will ask for a font.
+#+begin_src emacs-lisp
+(load! "~/.doom.d/figlet/figlet.el")
+(setq figlet-font-dir "~/.doom.d/figlet/fonts")
+(setq figlet-default-font "computer")
+#+end_src
+
+** Editor
+Doom exposes five (optional) variables for controlling fonts in Doom. Here
+are the three important ones:
+
+#+begin_src emacs-lisp
+;;
+;; + `doom-font'
+;; + `doom-variable-pitch-font'
+;; + `doom-big-font' -- used for `doom-big-font-mode'; use this for
+;;   presentations or streaming.
+#+end_src
+
+They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
+font string. You generally only need these two:
+
+#+begin_src emacs-lisp
+;(setq doom-font (font-spec :family "monospace" :size 14))
+(setq doom-font (font-spec :family "Fira Code" :size 13))
+#+end_src
+
+
+There are two ways to load a theme. Both assume the theme is installed and
+available. You can either set `doom-theme' or manually load a theme with the
+~load-theme~~ function. This is the default:
+
+#+begin_src emacs-lisp
+(setq doom-theme 'doom-one)
+#+end_src
+
+
+This determines the style of line numbers in effect. If set to ~nil~, line
+numbers are disabled. For relative line numbers, set this to ~relative~.
+#+begin_src emacs-lisp
+(setq display-line-numbers-type t)
+#+end_src
+
+
+*** Key-bindings etc
+#+begin_src emacs-lisp
+; (evil-multiedit-default-keybinds)
+#+end_src
+
+#+RESULTS:
+
+Counsel: Use ~SPC-~~ followed by char
+
+#+begin_src emacs-lisp
+(map! :leader
+      (:prefix "m"
+        :desc "Ivy citation" "i"  #'ivy-bibtex-with-local-bibliography
+        :desc "Reftex citation" "r"  #'reftex-citation
+        ;:desc "figlet" "f" #("figlet")
+        ;:desc "text" "f f" #'figlet
+        ;:desc "comment" "f c" #'figlet-comment
+        ))
+#+end_src
+
+Some key bindings I am used to, but this is not working in Doom...
+#+begin_src emacs-lisp
+;; Use C-u, C-d also in insert mode
+(global-set-key (kbd "C-u") nil)
+(global-set-key (kbd "C-u") nil)
+(global-set-key (kbd "C-u") 'evil-scroll-up)
+(global-set-key (kbd "C-d") 'evil-scroll-down)
+(global-set-key (kbd "C-e") 'move-end-of-line)
+#+end_src
+
+Always support shift selec and delete
+#+begin_src emacs-lisp
+;; Delete selection
+(delete-selection-mode 1)
+(setq shift-select-mode t)
+#+end_src
+
+** Notes from doom config
+Here are some additional functions/macros that could help you configure Doom:
+
+ - ~load!~ for loading external *.el files relative to this one
+ - ~use-package~ for configuring packages
+ - ~after!~ for running code after a package has loaded
+ - ~add-load-path!~ for adding directories to the `load-path', relative to
+   this file. Emacs searches the ~load-path~ when you load packages with
+   ~require~ or ~use-package~.
+ - ~map!~ for binding new keys
+
+ To get information about any of these functions/macros, move the cursor over
+ the highlighted symbol at press 'K' (non-evil users must press 'C-c g k').
+ This will open documentation for it, including demos of how they are used.
+
+
+You can also try ~gd~ (or ~C-c g d~) to jump to their definition and see how
+they are implemented.
+
+** Org mode customizations
+
+If you use `org' and don't want your org files in the default location below,
+change `org-directory'. It must be set before org ~loads!~
+
+#+begin_src emacs-lisp
+(setq org-directory "~/org/")
+#+end_src
+
+Enable shift select in org mode
+#+BEGIN_SRC emacs-lisp
+(setq org-support-shift-select 'always)
+#+END_SRC
+
+
+** Latex (AucTex + RefTex)
+
+
+And set pdf-tools internal latex viewer
+
+#+begin_src emacs-lisp
+(setq +latex-viewers '(pdf-tools))
+#+end_src
+
+From doom issues, sync latex and pdf, still bit dodgy:
+#+begin_src emacs-lisp
+;; to use pdfview with auctex
+ (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+    TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view))
+    TeX-source-correlate-start-server t) ;; not sure if last line is neccessary
+#+end_src
+
+
+Trying to get rid of the ~epdfinfo: Destination not found~ error.
+See [https://github.com/politza/pdf-tools/issues/302]
+#+begin_src emacs-lisp
+(add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
+#+end_src
+
+Ask for master file (~Tex-master~ multifile support)? Ideally we would want
+AucTex to always ask (~nil~), but this is set in the local variables of a buffer
+(~C-c n~ to reset). Also seems that manually setting the variable (at the end of
+the doc) does not work, so it needs to be done with ~C-c _~ at least on Mac.
+#+begin_src emacs-lisp
+(add-hook 'LaTeX-mode-hook
+          (setq-default TeX-master t))
+#+end_src
+
+Setting up IVY bibtex
+#+begin_src emacs-lisp
+(setq ivy-bibtex-default-action 'ivy-bibtex-insert-key)
+#+end_src
+
+When Option-clicking on text, jump to pdf position.
+#+begin_src emacs-lisp
+(with-eval-after-load "latex"
+  (define-key LaTeX-mode-map [s-down-mouse-1] 'pdf-sync-forward-search))
+#+end_src
+
+#+begin_src emacs-lisp
+;; Using pdflatex as the default compiler for .tex files
+(setq latex-run-command "pdflatex")
+;; always autosave
+(setq TeX-save-query nil)
+;; In AUCTex, make PDF by default (can toggle with C-c C-t C-p)
+(add-hook 'TeX-mode-hook '(lambda () (TeX-PDF-mode 1)))
+#+end_src
+
+And... AucTex does not automatically support nomencalture so (from [https://tex.stackexchange.com/questions/36582/using-nomenclature-and-emacs])
+#+begin_src emacs-lisp
+;; nomenclature for latex
+(eval-after-load "tex"
+  '(add-to-list 'TeX-command-list
+                '("Nomenclature" "makeindex %s.nlo -s nomencl.ist -o %s.nls"
+                  (lambda (name command file)
+                    (TeX-run-compile name command file)
+                    (TeX-process-set-variable file 'TeX-command-next TeX-command-default))
+                  nil t :help "Create nomenclature file")))
+#+end_src
+
+Weird behavior with AucTex (elsewhere?) where creating a double ~''~ replaces
+the previous closing bracket with quotes?? (**NB** this does not really work)
+#+begin_src emacs-lisp
+(setq TeX-quote-after-quote nil)
+#+end_src

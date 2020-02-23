@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# contributor: Seong Yong-ju
+# name: #+BEGIN_SRC jupyter-python...
+# uuid: py-jupyter
+# key: <jp
+# --
+#+BEGIN_SRC jupyter-python :session py
+`%`$0
+#+END_SRC

@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: sympy_dark
+# key: sympy
+# uuid: sympy
+# --
+
+from sympy import *
+init_printing(forecolor='White', use_latex='png')
