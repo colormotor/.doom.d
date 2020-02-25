@@ -25,6 +25,8 @@
 (package! elpy)
 (package! yasnippet)
 (package! windresize) ;; Resize windows with arrows
+(package! dimmer)
+
 (def-package! pdf-tools
   :if (display-graphic-p)
   :mode ("\\.pdf$" . pdf-view-mode)

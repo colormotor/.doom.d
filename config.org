@@ -107,10 +107,22 @@ Some key bindings I am used to, but this is not working in Doom...
 Always support shift selec and delete
 #+begin_src emacs-lisp
 ;; Delete selection
-(delete-selection-mode 1)
+(setq delete-selection-mode t)
 (setq shift-select-mode t)
 #+end_src
 
+Windmove:
+#+begin_src emacs-lisp
+(global-set-key (kbd "<s-left>")  'windmove-left)
+(global-set-key (kbd "<s-right>") 'windmove-right)
+(global-set-key (kbd "<s-up>")    'windmove-up)
+(global-set-key (kbd "<s-down>")  'windmove-down)
+#+end_src
+*** Look and feel
+#+begin_src emacs-lisp
+(use-package! dimmer
+  :config (dimmer-mode))
+#+end_src
 ** Notes from doom config
 Here are some additional functions/macros that could help you configure Doom:
 
@@ -197,7 +209,10 @@ When Option-clicking on text, jump to pdf position.
 ;; In AUCTex, make PDF by default (can toggle with C-c C-t C-p)
 (add-hook 'TeX-mode-hook '(lambda () (TeX-PDF-mode 1)))
 #+end_src
-
+Also seems that AucTex resets the ~delete-selection-mode~
+#+begin_src emacs-lisp
+(add-hook 'TeX-mode-hook '(lambda () (setq delete-selection-mode t)))
+#+end_src
 And... AucTex does not automatically support nomencalture so (from [https://tex.stackexchange.com/questions/36582/using-nomenclature-and-emacs])
 #+begin_src emacs-lisp
 ;; nomenclature for latex
