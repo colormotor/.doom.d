@@ -25,7 +25,8 @@ clients, file templates and snippets.
 
 Start emacs with a maximized window
 #+begin_src emacs-lisp
-(add-hook 'window-setup-hook 'toggle-frame-maximized t)
+;(add-hook 'window-setup-hook 'toggle-frame-maximized t)
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
 #+end_src
 ** Figlet
 Because I like ascii text. From [https://github.com/emacsmirror/figlet/blob/master/figlet.el]
@@ -79,7 +80,17 @@ numbers are disabled. For relative line numbers, set this to ~relative~.
 ; (evil-multiedit-default-keybinds)
 #+end_src
 
-#+RESULTS:
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-y") 'yank)
+(global-set-key (kbd "s-z") 'undo-tree-undo)
+(global-set-key (kbd "s-Z") 'undo-tree-redo)
+(global-set-key (kbd "s-v") 'yank)
+(global-set-key (kbd "s-c") 'evil-yank)
+(global-set-key (kbd "s-a") 'mark-whole-buffer)
+(global-set-key (kbd "s-x") 'kill-region)
+(global-set-key (kbd "s-s") 'save-buffer)
+
+#+end_src
 
 Counsel: Use ~SPC-~~ followed by char
 
@@ -98,7 +109,7 @@ Some key bindings I am used to, but this is not working in Doom...
 #+begin_src emacs-lisp
 ;; Use C-u, C-d also in insert mode
 (global-set-key (kbd "C-u") nil)
-(global-set-key (kbd "C-u") nil)
+(global-set-key (kbd "C-d") nil)
 (global-set-key (kbd "C-u") 'evil-scroll-up)
 (global-set-key (kbd "C-d") 'evil-scroll-down)
 (global-set-key (kbd "C-e") 'move-end-of-line)
