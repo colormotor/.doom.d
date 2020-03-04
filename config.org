@@ -95,14 +95,14 @@ numbers are disabled. For relative line numbers, set this to ~relative~.
 Counsel: Use ~SPC-~~ followed by char
 
 #+begin_src emacs-lisp
-(map! :leader
-      (:prefix "m"
-        :desc "Ivy citation" "i"  #'ivy-bibtex-with-local-bibliography
-        :desc "Reftex citation" "r"  #'reftex-citation
-        ;:desc "figlet" "f" #("figlet")
-        ;:desc "text" "f f" #'figlet
-        ;:desc "comment" "f c" #'figlet-comment
-        ))
+;; (map! :leader
+;;       (:prefix "m"
+;;         :desc "Ivy citation" "i"  #'ivy-bibtex-with-local-bibliography
+;;         :desc "Reftex citation" "r"  #'reftex-citation
+;;         ;:desc "figlet" "f" #("figlet")
+;;         ;:desc "text" "f f" #'figlet
+;;         ;:desc "comment" "f c" #'figlet-comment
+;;         ))
 #+end_src
 
 Some key bindings I am used to, but this is not working in Doom...
@@ -189,6 +189,7 @@ Embed CSS by default
 (add-hook 'org-export-before-processing-hook 'my-org-inline-css-hook)
 #+end_src
 
+Setup org-ref
 #+begin_src emacs-lisp
 (def-package! org-ref
     :after org
@@ -199,6 +200,18 @@ Embed CSS by default
     ; code to run after loading org-ref
     )
 #+end_src
+
+Counsel key-bindings
+#+begin_src emacs-lisp
+(map!
+ :after org
+ :map org-mode-map
+ :leader
+      (:prefix "m"
+        :desc "Insert citation" "i"  #'org-ref-helm-insert-cite-link
+        ))
+#+end_src
+
 ** Latex (AucTex + RefTex)
 
 
@@ -276,4 +289,18 @@ Weird behavior with AucTex (elsewhere?) where creating a double ~''~ replaces
 the previous closing bracket with quotes?? (**NB** this does not really work)
 #+begin_src emacs-lisp
 (setq TeX-quote-after-quote nil)
+#+end_src
+
+#+begin_src emacs-lisp
+(map!
+ :after tex
+ :map TeX-mode-map
+ :leader
+      (:prefix "m"
+        :desc "Ivy citation" "i"  #'ivy-bibtex-with-local-bibliography
+        :desc "Reftex citation" "r"  #'reftex-citation
+        ;:desc "figlet" "f" #("figlet")
+        ;:desc "text" "f f" #'figlet
+        ;:desc "comment" "f c" #'figlet-comment
+        ))
 #+end_src
