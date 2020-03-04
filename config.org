@@ -189,6 +189,16 @@ Embed CSS by default
 (add-hook 'org-export-before-processing-hook 'my-org-inline-css-hook)
 #+end_src
 
+#+begin_src emacs-lisp
+(def-package! org-ref
+    :after org
+    :init
+    ; code to run before loading org-ref
+    (setq org-ref-default-bibliography '("./autograff-biblio.bib"  "./autograff-biblio-thesis.bib"))
+    :config
+    ; code to run after loading org-ref
+    )
+#+end_src
 ** Latex (AucTex + RefTex)
 
 
@@ -220,6 +230,11 @@ the doc) does not work, so it needs to be done with ~C-c _~ at least on Mac.
 #+begin_src emacs-lisp
 (add-hook 'LaTeX-mode-hook
           (setq-default TeX-master t))
+#+end_src
+
+Get RefTex to search for valid biblios
+#+begin_src emacs-lisp
+(setq reftex-use-external-file-finders t)
 #+end_src
 
 Setting up IVY bibtex

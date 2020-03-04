@@ -26,6 +26,7 @@
 (package! yasnippet)
 (package! windresize) ;; Resize windows with arrows
 (package! dimmer)
+(package! org-ref)
 
 (def-package! pdf-tools
   :if (display-graphic-p)
