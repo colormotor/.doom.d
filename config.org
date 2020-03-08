@@ -190,14 +190,37 @@ Embed CSS by default
 #+end_src
 
 Setup org-ref
+
 #+begin_src emacs-lisp
+
+;; Big hack to insert biblio entry titles
+;; unelegant simply because I do not really know LISP
+;; adapted from: http://www.mail-archive.com/emacs-orgmode@gnu.org/msg110385.html
+
+(defun set-format (key)
+  (setf (cdr (assoc key (cdr (assoc "org"
+                                    org-ref-formatted-citation-formats))))
+        "${author} ${year}. /${title}/. [[cite:${=key=}]]")
+  )
+
 (def-package! org-ref
     :after org
     :init
     ; code to run before loading org-ref
-    (setq org-ref-default-bibliography '("./autograff-biblio.bib"  "./autograff-biblio-thesis.bib"))
     :config
     ; code to run after loading org-ref
+    (setq org-ref-default-bibliography '("./autograff-biblio.bib")) ; this is a list but multiple files don't seem to work
+
+    (setq org-ref-formatted-citation-backend "org")
+    (set-format "article")
+    (set-format "inproceedings")
+    (set-format "book")
+    (set-format "phdthesis")
+    (set-format "inbook")
+    (set-format "incollection")
+    (set-format "proceedings")
+    (set-format "unpublished")
+
     )
 #+end_src
 
@@ -252,7 +275,7 @@ Get RefTex to search for valid biblios
 
 Setting up IVY bibtex
 #+begin_src emacs-lisp
-(setq ivy-bibtex-default-action 'ivy-bibtex-insert-key)
+;(setq ivy-bibtex-default-action 'ivy-bibtex-insert-key)
 #+end_src
 
 When Option-clicking on text, jump to pdf position.
@@ -297,7 +320,7 @@ the previous closing bracket with quotes?? (**NB** this does not really work)
  :map TeX-mode-map
  :leader
       (:prefix "m"
-        :desc "Ivy citation" "i"  #'ivy-bibtex-with-local-bibliography
+        :desc "Insert citation" "i"  #'helm-bibtex-with-local-bibliography
         :desc "Reftex citation" "r"  #'reftex-citation
         ;:desc "figlet" "f" #("figlet")
         ;:desc "text" "f f" #'figlet
