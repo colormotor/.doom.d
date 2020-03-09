@@ -224,6 +224,25 @@ Setup org-ref
     )
 #+end_src
 
+Setup org to open Zotero links
+#+BEGIN_SRC emacs-lisp
+;; Create hyperlink on export
+(defun zotero-org-export (link description format)
+  (let ((path (concat "zotero:" link))
+        (desc (or description "Open in Zotero")))
+    (pcase format
+      (`html (format "<a target=\"_blank\" href=\"%s\">%s</a>" path desc))
+      (`latex (format "\\href{%s}{%s}" path desc))
+      (`texinfo (format "@uref{%s,%s}" path desc))
+      (`ascii (format "%s (%s)" desc path))
+      (t path))))
+;; Setup links
+(org-add-link-type "zotero"
+                   (lambda (path)
+                              (browse-url (concat "zotero:" path)))
+                   'zotero-org-export)
+#+END_SRC
+
 Counsel key-bindings
 #+begin_src emacs-lisp
 (map!
