@@ -237,12 +237,26 @@ Setup org to open Zotero links
       (`ascii (format "%s (%s)" desc path))
       (t path))))
 ;; Setup links
+(add-hook 'org-mode-hook
+          (lambda ()
 (org-add-link-type "zotero"
                    (lambda (path)
                               (browse-url (concat "zotero:" path)))
-                   'zotero-org-export)
+                   'zotero-org-export)))
 #+END_SRC
 
+Preview latex on save ([[https://emacs.stackexchange.com/questions/38198/automatically-preview-latex-in-org-mode-as-soon-as-i-finish-typing][from]])
+#+begin_src emacs-lisp
+(defun my/org-render-latex-fragments ()
+  (if (org--list-latex-overlays)
+      (progn (org-toggle-latex-fragment)
+             (org-toggle-latex-fragment))
+    (org-toggle-latex-fragment)))
+
+(add-hook 'org-mode-hook
+          (lambda ()
+            (add-hook 'after-save-hook 'my/org-render-latex-fragments nil 'make-the-hook-local)))
+#+end_src
 Counsel key-bindings
 #+begin_src emacs-lisp
 (map!
