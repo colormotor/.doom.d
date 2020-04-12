@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: figlabel
+# key: lbl
+# condition: t
+# --
+\textbf{($1)}

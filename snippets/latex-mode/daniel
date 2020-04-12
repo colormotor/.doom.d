@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: daniel
+# key: dani
+# condition: t
+# --
+\daniel{$1}

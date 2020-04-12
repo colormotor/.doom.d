@@ -268,6 +268,11 @@ Counsel key-bindings
         ))
 #+end_src
 
+Also org mode resets the ~delete-selection-mode~. TODO find a better solution to this
+#+begin_src emacs-lisp
+(add-hook 'org-mode-hook '(lambda () (setq delete-selection-mode t)))
+#+end_src
+
 ** Latex (AucTex + RefTex)
 
 
@@ -323,11 +328,14 @@ When Option-clicking on text, jump to pdf position.
 ;; always autosave
 (setq TeX-save-query nil)
 ;; In AUCTex, make PDF by default (can toggle with C-c C-t C-p)
-(add-hook 'TeX-mode-hook '(lambda () (TeX-PDF-mode 1)))
+(add-hook 'LaTeX-mode-hook '(lambda () (TeX-PDF-mode 1)))
 #+end_src
 Also seems that AucTex resets the ~delete-selection-mode~
 #+begin_src emacs-lisp
-(add-hook 'TeX-mode-hook '(lambda () (setq delete-selection-mode t)))
+(add-hook 'LaTeX-mode-hook '(lambda () (setq delete-selection-mode t)))
+#+end_src
+#+begin_src emacs-lisp
+(add-hook 'LaTeX-mode-hook '(lambda () (global-set-key (kbd "C-e") 'move-end-of-line)))
 #+end_src
 And... AucTex does not automatically support nomencalture so (from [https://tex.stackexchange.com/questions/36582/using-nomenclature-and-emacs])
 #+begin_src emacs-lisp
@@ -359,4 +367,62 @@ the previous closing bracket with quotes?? (**NB** this does not really work)
         ;:desc "text" "f f" #'figlet
         ;:desc "comment" "f c" #'figlet-comment
         ))
+#+end_src
+
+Convert bibtex entries to Title Case, from
+http://kitchingroup.cheme.cmu.edu/blog/2014/10/12/Title-casing-bibtex-entry-journal-titles/
+
+To use, put this at beginning of bibtex file
+#+begin_example
+% (bibtex-map-entries 'jmax-title-case-article)
+#+end_example
+Place cursor at line and ~C-x C-e~
+
+#+begin_src emacs-lisp
+(defvar jmax-lower-case-words
+  '("a" "an" "on" "and" "for"
+    "the" "of" "in")
+  "List of words to keep lowercase")
+
+(defvar entry-types
+  '("article" "journal" "book" "misc" "techreport" "inproceedings" "phdthesis")
+  "List of bib entry types")
+
+(defun jmax-title-case-article (&optional key start end)
+  "Convert a bibtex entry article title to title-case. The
+arguments are optional, and are only there so you can use this
+function with `bibtex-map-entries' to change all the title
+entries in articles."
+  (interactive)
+  (bibtex-beginning-of-entry)
+
+  (let* ((title (bibtex-autokey-get-field "title"))
+         (words (split-string title))
+         (lower-case-words '("a" "an" "on" "and" "for"
+                             "the" "of" "in")))
+    (when
+        ;(string= "article" (downcase (cdr (assoc "=type=" (bibtex-parse-entry)))))
+        (-contains? entry-types (downcase (cdr (assoc "=type=" (bibtex-parse-entry)))))
+      (setq words (mapcar
+                   (lambda (word)
+                     (if (or
+                          ;; match words containing {} or \ which are probably
+                          ;; LaTeX or protected words
+                          (string-match "\\$\\|{\\|}\\|\\\\" word)
+                          ;; these words should not be capitalized, unless they
+                          ;; are the first word
+                          (-contains? lower-case-words (s-downcase word)))
+                         word
+                       (s-capitalize word)))
+                   words))
+
+      ;; Check if first word should be capitalized
+      (when (-contains? jmax-lower-case-words (car words))
+        (setf (car words) (s-capitalize (car words))))
+
+      ;; this is defined in doi-utils
+      (bibtex-set-field
+       "title"
+       (mapconcat 'identity words " "))
+      (bibtex-fill-entry))))
 #+end_src
