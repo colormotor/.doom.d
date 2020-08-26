@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: refig_parens
+# key: rfp
+# uuid: rfp
+# --
+(\refig{fig:${1:`%`}}$0)

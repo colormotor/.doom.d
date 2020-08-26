@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: refchap
+# key: rc
+# uuid: rc
+# --
+\refchap{chap:${1:`%`}}$0

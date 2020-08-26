@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: refig
+# key: rf
+# uuid: rf
+# --
+\refig{fig:${1:`%`}}$0

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: refsect
+# key: rs
+# uuid: rs
+# --
+\refsect{sect:${1:`%`}}$0

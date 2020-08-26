@@ -27,12 +27,27 @@
 (package! windresize) ;; Resize windows with arrows
 (package! dimmer)
 (package! org-ref)
+(package! org-fragtog)
+(package! lsp-ui)
+;(package! dap-mode)
+(package! clang-format)
+(package! google-c-style)
+(package! realgud-lldb)
+(unpin! dap-mode)
+(package! dap-mode)
+(unpin! jupyter)
+(package! jupyter)
 
-(def-package! pdf-tools
+(use-package! pdf-tools
   :if (display-graphic-p)
   :mode ("\\.pdf$" . pdf-view-mode)
   :init (load "pdf-tools-autoloads" nil t)
-  :config (pdf-tools-install))
+  :config)
+  ;(pdf-tools-install)) ;; This baby gives big issues with poppler
+
+(package! gud-lldb
+  :recipe (:host github :repo "extbit/gud"))
+
 
 ;; To install a package directly from a particular repo, you'll need to specify
 ;; a `:recipe'. You'll find documentation on what `:recipe' accepts here:
