@@ -16,6 +16,15 @@ Doom keybindings ref:
 - [[https://tecosaur.github.io/emacs-config/config.html][Techosaur: Very long nice config]]
 - https://github.com/hjertnes/emacs.d/blob/master/hjertnes.org
 
+*** Install on Ubuntu
+Note that Ubuntu needs "modules" support, best way to install seems to follow these instructions:
+- [[http://ubuntuhandbook.org/index.php/2019/02/install-gnu-emacs-26-1-ubuntu-18-04-16-04-18-10][Link]]
+
+#+begin_example
+sudo add-apt-repository ppa:kelleyk/emacs
+sudo apt update
+sudo apt install emacs26
+#+end_example
 
 ** General
 Place your private configuration here! Remember, you do not need to run 'doom
@@ -58,6 +67,11 @@ See [[https://gitlab.com/justinekizhak/dotfiles/blob/master/emacs/doom.d/config.
 (setq delete-selection-mode t)
 #+end_src
 
+Use CUA mode since I'm also using other editors
+#+begin_src emacs-lisp
+(cua-mode +1)
+#+end_src
+
 #+begin_src emacs-lisp
 (use-package flyspell
   :ensure t
@@ -91,6 +105,7 @@ are the three important ones:
 ;;   presentations or streaming.
 #+end_src
 
+
 They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
 font string. You generally only need these two:
 
@@ -106,15 +121,14 @@ available. You can either set `doom-theme' or manually load a theme with the
 
 #+begin_src emacs-lisp
 ;(setq doom-theme 'doom-one)
-(setq doom-theme 'doom-laserwave) ; kinda nice
+;(setq doom-theme 'doom-laserwave) ; kinda nice
 ;(setq doom-theme 'doom-zenburn) ; kinda nice
 ;(setq doom-theme 'doom-wilmersorf) ; kinda nice
-;(setq doom-theme 'doom-snazzy) ; kinda nice
+(setq doom-theme 'doom-snazzy) ; kinda nice
 ;(setq doom-theme 'doom-rouge) ; kinda nice maybe
-
-;(load-theme 'doom-laserwave)
+;(setq doom-theme 'doom-nord)
+;(load-theme 'doom-snazzy)
 #+end_src
-
 
 This determines the style of line numbers in effect. If set to ~nil~, line
 numbers are disabled. For relative line numbers, set this to ~relative~.
@@ -122,6 +136,10 @@ numbers are disabled. For relative line numbers, set this to ~relative~.
 (setq display-line-numbers-type t)
 #+end_src
 
+No menu bar
+#+begin_src emacs-lisp
+(menu-bar-mode -1)
+#+end_src
 
 *** Key-bindings etc
 #+begin_src emacs-lisp
@@ -129,7 +147,7 @@ numbers are disabled. For relative line numbers, set this to ~relative~.
 #+end_src
 
 #+begin_src emacs-lisp
-(global-set-key (kbd "C-y") 'yank)
+;(global-set-key (kbd "C-y") 'yank)
 (global-set-key (kbd "s-z") 'undo-tree-undo)
 (global-set-key (kbd "s-Z") 'undo-tree-redo)
 (global-set-key (kbd "s-v") 'yank)
@@ -139,13 +157,25 @@ numbers are disabled. For relative line numbers, set this to ~relative~.
 (global-set-key (kbd "s-s") 'save-buffer)
 (global-set-key (kbd "s-s") 'save-buffer)
 
-(global-set-key (kbd "C-a") nil)
-(global-set-key (kbd "C-e") nil)
+(define-key evil-insert-state-map (kbd "C-e") 'move-end-of-line)
+(define-key evil-insert-state-map (kbd "C-k") 'kill-line)
+(define-key evil-insert-state-map (kbd "C-w") 'kill-region)
+(define-key evil-visual-state-map (kbd "C-e") 'move-end-of-line)
+(define-key evil-normal-state-map (kbd "C-e") 'move-end-of-line)
+(define-key evil-normal-state-map (kbd "C-k") 'kill-line)
+(define-key evil-normal-state-map (kbd "C-y") 'yank)
+(define-key evil-insert-state-map (kbd "C-y") 'yank)
+(define-key evil-normal-state-map (kbd "C-w") 'kill-region)
+(define-key evil-visual-state-map (kbd "C-w") 'kill-region)
 
-(map!
- "C-a"     #'move-beginning-of-line
- "C-e"      #'move-end-of-line
- )
+; I fins some of these evil key-bindings are really odd...
+(define-key evil-insert-state-map (kbd "C-x C-s") 'save-buffer)
+
+
+;; (map!
+;;  "C-a"     #'move-beginning-of-line
+;;  "C-e"      #'move-end-of-line
+;;  )
 #+end_src
 Counsel: Use ~SPC-~~ followed by char
 
@@ -177,12 +207,14 @@ Always support shift selec and delete
 (setq shift-select-mode t)
 #+end_src
 
-Windmove:
+Windmove (move among windows), not ideal but trying to mangle too many
+key-bindings on Windows/WSL setup, where super and alt are taken mostly.
 #+begin_src emacs-lisp
-(global-set-key (kbd "<s-left>")  'windmove-left)
-(global-set-key (kbd "<s-right>") 'windmove-right)
-(global-set-key (kbd "<s-up>")    'windmove-up)
-(global-set-key (kbd "<s-down>")  'windmove-down)
+(global-set-key (kbd "C-q") nil)
+(global-set-key (kbd "C-q <left>")  'windmove-left)
+(global-set-key (kbd "C-q <right>") 'windmove-right)
+(global-set-key (kbd "C-q <up>")    'windmove-up)
+(global-set-key (kbd "C-q <down>")  'windmove-down)
 #+end_src
 *** Look and feel
 #+begin_src emacs-lisp
@@ -414,6 +446,7 @@ Preview latex fragments when cursor is elsewhere
 #+end_src
 
 ** Magit
+Performance improvements
 #+begin_src emacs-lisp
 (use-package! magit
     :config
@@ -421,6 +454,11 @@ Preview latex fragments when cursor is elsewhere
     (setq magit-commit-show-diff nil)
     (setq magit-revert-buffers 1)
     )
+#+end_src
+Do not show whitespace diffs
+
+#+begin_src emacs-lisp
+(setq ediff-diff-options "-w")
 #+end_src
 ** Latex (AucTex + RefTex)
 
@@ -472,7 +510,7 @@ Setting up IVY bibtex
 When Option-clicking on text, jump to pdf position.
 #+begin_src emacs-lisp
 (with-eval-after-load "latex"
-  (define-key LaTeX-mode-map [s-down-mouse-1] 'pdf-sync-forward-search))
+  (define-key LaTeX-mode-map [M-down-mouse-1] 'pdf-sync-forward-search))
 #+end_src
 
 #+begin_src emacs-lisp
