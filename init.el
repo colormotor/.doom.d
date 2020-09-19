@@ -86,7 +86,7 @@
        :tools
        ;;ansible
        (debugger +lsp)            ; FIXME stepping through code, to help you add bugs (debugger +lsp)
-       ;;direnv
+       direnv
        ;;docker
        ;;editorconfig      ; let someone else argue about tabs vs spaces
        ein               ; tame Jupyter notebooks with emacs
@@ -95,7 +95,6 @@
        (lookup           ; helps you navigate your code and documentation
         +docsets)        ; ...or in Dash docsets locally
        (lsp +peek)
-       macos             ; MacOS-specific commands
        magit             ; a git porcelain for Emacs
        ;;make              ; run make tasks from Emacs
        ;;pass              ; password manager for nerds
@@ -108,6 +107,7 @@
 
        :os
        ;;tty               ; improve the terminal Emacs experience
+       macos             ; MacOS-specific commands
 
        :lang
        ;;agda              ; types of types of types of types...
