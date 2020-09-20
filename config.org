@@ -666,8 +666,21 @@ Also seems that AucTex resets the ~delete-selection-mode~
 ** EIN
 
 ** Jupyter-emacs
-*** Spyder-like experience
+*** Workarounds
+Unicode bug?
+#+begin_src emacs-lisp
+(defun delete-non-displayable ()
+  "Delete characters not contained in the used fonts and therefore non-displayable."
+  (interactive)
+  (require 'descr-text) ;; for `describe-char-display'
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "[^[:ascii:]]" nil 1)
+      (unless (describe-char-display (1- (point)) (char-before))
+        (replace-match "")))))
+#+end_src
 
+*** Spyder-like experience
 #+begin_src emacs-lisp
 (set-popup-rule! "^\\*Python" :side 'right :width 0.5)
 #+end_src
@@ -691,26 +704,36 @@ Send code between ~#%%~ pairs or end of file
 (defun jupyter-send-cell()
   (interactive)
   (save-excursion
-  (if (not (search-backward "#%%" nil t))
+  (if (not (search-backward-regexp "#\s*%%" nil t))
         (message "Not in a cell")
       (forward-line)
       (beginning-of-line)
       (set-mark (point))
 
-      (if (not (search-forward "#%%" nil t))
+      (if (not (search-forward-regexp "#\s*%%" nil t))
           (end-of-buffer))
+      ;(beginning-of-line)
       (goto-char (point))
       (activate-mark)
+      ;(message (buffer-substring (mark) (point)))
       (jupyter-eval-string (buffer-substring (mark) (point)))
       (deactivate-mark)
       )))
 #+end_src
 
-Key bindings
+Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b538970ad851d368ee5a65/emacs/shared/keybindings.emacs][this]].
 #+begin_src emacs-lisp
-(with-eval-after-load 'python-mode
-  (define-key python-mode-map (kbd "<C-return>") 'jupyter-send-cell)
+(defun unset-jupyter-keys ()
+(define-key jupyter-repl-interaction-mode-map (kbd "C-c C-c") nil))
+(add-hook 'jupyter-repl-interaction-mode-hook
+          #'unset-jupyter-keys)
+
+(defun jupyter-nb-keybindings()
+  (local-set-key (kbd "C-c C-c") 'jupyter-send-cell)
 )
+(add-hook 'jupyter-repl-interaction-mode-hook
+          #'jupyter-nb-keybindings)
+
 #+end_src
 
 #+begin_src emacs-lisp
@@ -771,12 +794,6 @@ Key bindings
     (call-interactively 'jupyter-repl-associate-buffer)
     (call-interactively 'toggle-window-split)
 )
-
-;(defun cazz (client)
-;  (message "cazzo"))
-;(advice-add 'jupyter-repl-associate-buffer :after 'cazz) ;toggle-window-split)
-;(setq split-height-threshold nil)
-;(setq split-width-threshold 0)
 #+end_src
 
 ** C++

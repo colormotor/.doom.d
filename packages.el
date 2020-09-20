@@ -35,8 +35,6 @@
 (package! realgud-lldb)
 (unpin! dap-mode)
 (package! dap-mode)
-(unpin! jupyter)
-(package! jupyter)
 
 (use-package! pdf-tools
   :if (display-graphic-p)
