@@ -32,9 +32,11 @@
 ;(package! dap-mode)
 (package! clang-format)
 (package! google-c-style)
-(package! realgud-lldb)
+;(package! realgud-lldb)
 (unpin! dap-mode)
 (package! dap-mode)
+(package! image+)
+
 
 (use-package! pdf-tools
   :if (display-graphic-p)
@@ -43,8 +45,8 @@
   :config)
   ;(pdf-tools-install)) ;; This baby gives big issues with poppler
 
-(package! gud-lldb
-  :recipe (:host github :repo "extbit/gud"))
+;; (package! gud-lldb
+;;   :recipe (:host github :repo "extbit/gud"))
 
 
 ;; To install a package directly from a particular repo, you'll need to specify

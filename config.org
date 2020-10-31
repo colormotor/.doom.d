@@ -111,6 +111,7 @@ font string. You generally only need these two:
 
 #+begin_src emacs-lisp
 ;(setq doom-font (font-spec :family "monospace" :size 14))
+;
 (setq doom-font (font-spec :family "Fira Code" :size 13))
 #+end_src
 
@@ -242,8 +243,15 @@ they are implemented.
 
 ** Org mode customizations
 
+Prettification seems to be broken (at least on mac) for org mode
+#+begin_src emacs-lisp
+(add-hook 'org-mode-hook (lambda ()
+    (setq +pretty-code-symbols-alist '(org-mode nil ))))
+#+end_src
+
 If you use `org' and don't want your org files in the default location below,
 change `org-directory'. It must be set before org ~loads!~
+
 
 #+begin_src emacs-lisp
 (setq org-directory "~/Dropbox/org/")
@@ -663,9 +671,42 @@ Also seems that AucTex resets the ~delete-selection-mode~
 #+begin_src emacs-lisp
 
 #+end_src
-** EIN
+
+** Python
+#+begin_src emacs-lisp
+
+;; (add-hook
+;;  'python-mode-hook
+;;  (lambda ()
+;;    (mapc (lambda (pair) (push pair prettify-symbols-alist))
+;;          '(;; Syntax
+;;            ("def" .      #x2131)
+;;            ("not" .      #x2757)
+;;            ("in" .       #x2208)
+;;            ("not in" .   #x2209)
+;;            ("return" .   #x27fc)
+;;            ("yield" .    #x27fb)
+;;            ("for" .      #x2200)
+;;            ;; Base Types
+;;            ("int" .      #x2124)
+;;            ("float" .    #x211d)
+;;            ("str" .      #x1d54a)
+;;            ("True" .     #x1d54b)
+;;            ("False" .    #x1d53d)
+;;            ;; Mypy
+;;            ("Dict" .     #x1d507)
+;;            ("List" .     #x2112)
+;;            ("Tuple" .    #x2a02)
+;;            ("Set" .      #x2126)
+;;            ("Iterable" . #x1d50a)
+;;            ("Any" .      #x2754)
+;;            ("Union" .    #x22c3)))))
+#+end_src
 
 ** Jupyter-emacs
+#+begin_src emacs-lisp
+(set-popup-rule! "\*jupyter-repl...*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
+#+end_src
 *** Workarounds
 Unicode bug?
 #+begin_src emacs-lisp
@@ -817,10 +858,11 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
   (setq lsp-vetur-format-options-tab-size 4)
   ;(setq lsp-vetur-format-enable nil)
   (setq lsp-prompt-projet-root t)
-  (setq lsp-auto-guess-root t)
+  (setq lsp-auto-guess-root nil)
+  (setq lsp-enable-snippet nil)
+  ;(add-to-list 'lsp-file-watch-ignored "[/\\\\]\\data")
+  ;(add-to-list 'lsp-file-watch-ignored "[/\\\\]\\bin")
 )
-
-(require 'realgud-lldb)
 
 ;; clang-format
 (use-package clang-format
@@ -852,7 +894,7 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
  (dap-mode 1)
  (require 'dap-hydra)
 (require 'dap-launch)
- (require 'dap-lldb)	; download and expand lldb-vscode to the =~/.extensions/webfreak.debug= ;gdb-lldb
+ (require 'dap-gdb-lldb)	; download and expand lldb-vscode to the =~/.extensions/webfreak.debug= ;gdb-lldb
 ; (use-package dap-lldb
  ; :disabled t)
  (use-package dap-ui
@@ -874,4 +916,23 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
 ;;   (dap-ui-mode 1)
 ;;   (require 'dap-lldb)
 ;;   (setq dap-lldb-debug-program "/Users/colormotor/.vscode/extensions/lanza.lldb-vscode-0.2.2/bin/darwin/bin/lldb-vscode"))
+#+end_src
+
+*** DAP MODE
+Following instructions [[https://github.com/roangel/my_emacs_config/][here]] to compile lldb-vscode in llvm-project (after clone),
+pretty long procedure. Hope I can ditch VScode for good with this...
+#+begin_example
+mkdir build; cd build
+cmake ../llvm -DLLVM_ENABLE_PROJECTS="clang;libcxx;lldb"
+make -j4 lldb lldb-server lldb-vscode
+#+end_example
+On mac+miniconda there is an issue related to ncurses, this is an ugly workaround:
+#+begin_example
+cp ~/opt/miniconda3/lib/libtinfo.6.dylib /usr/local/lib
+#+end_example
+
+#+begin_src emacs-lisp
+;; (setq dap-lldb-debug-program '("~/develop/llvm-project/build/bin/lldb-vscode"))
+;; (require 'dap-lldb)
+;; (setq dap-print-io 1)
 #+end_src
