@@ -211,12 +211,18 @@ Always support shift selec and delete
 Windmove (move among windows), not ideal but trying to mangle too many
 key-bindings on Windows/WSL setup, where super and alt are taken mostly.
 #+begin_src emacs-lisp
-(global-set-key (kbd "C-q") nil)
-(global-set-key (kbd "C-q <left>")  'windmove-left)
-(global-set-key (kbd "C-q <right>") 'windmove-right)
-(global-set-key (kbd "C-q <up>")    'windmove-up)
-(global-set-key (kbd "C-q <down>")  'windmove-down)
+;; (global-set-key (kbd "C-q") nil)
+;; (global-set-key (kbd "C-q <left>")  'windmove-left)
+;; (global-set-key (kbd "C-q <right>") 'windmove-right)
+;; (global-set-key (kbd "C-q <up>")    'windmove-up)
+;; (global-set-key (kbd "C-q <down>")  'windmove-down)
 #+end_src
+
+Ace window. For multiple windows shows letters for selection
+#+begin_src emacs-lisp
+(global-set-key (kbd "M-o") 'ace-window)
+#+end_src
+
 *** Look and feel
 #+begin_src emacs-lisp
 (use-package! dimmer
@@ -794,7 +800,9 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
  (dap-mode 1)
  (require 'dap-hydra)
 (require 'dap-launch)
- (require 'dap-gdb-lldb)	; download and expand lldb-vscode to the =~/.extensions/webfreak.debug= ;gdb-lldb
+(require 'dap-cpptools)
+(setq dap-print-io 1)
+; (require 'dap-gdb-lldb)	; download and expand lldb-vscode to the =~/.extensions/webfreak.debug= ;gdb-lldb
 ; (use-package dap-lldb
  ; :disabled t)
  (use-package dap-ui
