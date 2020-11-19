@@ -269,6 +269,25 @@ Enable shift select in org mode
 (setq org-support-shift-select 'always)
 #+END_SRC
 
+*** Src captions
+Want to add captions to src-block generated images.
+Solution by [[http://kitchingroup.cheme.cmu.edu/blog/2016/02/26/Adding-captions-and-attributes-to-figures-and-tables-from-code-blocks-in-org-mode/][Kitchin]]:
+#+begin_src emacs-lisp
+(defun src-caption (&optional caption)
+  ; Usage: :wrap (src-caption "This is a caption. label:fig-cap")
+  "A wrap function for src blocks."
+  (concat
+   "ORG\n"
+   (when caption
+     (format "#+caption: %s" caption))))
+#+END_SRC
+
+*** Export
+
+Don't exectute all src blocks:
+#+begin_src emacs-lisp
+(setq org-export-babel-evaluate t)
+#+end_src
 Embed CSS by default
 
 #+begin_src emacs-lisp
@@ -292,6 +311,7 @@ Embed CSS by default
 (add-hook 'org-export-before-processing-hook 'my-org-inline-css-hook)
 #+end_src
 
+*** Org-ref
 Setup org-ref
 
 #+begin_src emacs-lisp
@@ -458,6 +478,94 @@ Preview latex fragments when cursor is elsewhere
     (set-company-backend! 'TeX-mode 'company-latex-commands)
     (setq company-tooltip-align-annotations t)
     (setq company-math-allow-latex-symbols-in-faces t))
+#+end_src
+
+*** Drag and drop
+#+begin_src emacs-lisp
+
+(defun to-buffer-relative (path)
+  (file-relative-name path (file-name-directory buffer-file-name)))
+
+(defun make-buffer-subdir (name)
+  (let ((path  (concat (file-name-directory buffer-file-name) name)))
+    (make-directory path t)
+    (file-name-as-directory path))
+  )
+(defun copy-and-get-relative-path (path dir-name)
+  (let ((file (concat (make-buffer-subdir dir-name) (file-name-nondirectory path)))
+	)
+
+    (copy-file path file t)
+    (concat "./" dir-name "/"  (file-name-nondirectory path))
+    )
+  )
+
+(defun my-dnd-func (event)
+  (interactive "e")
+  (goto-char (nth 1 (event-start event)))
+  (x-focus-frame nil)
+  (let* ((payload (car (last event)))
+         (type (car payload))
+         (fname (cadr payload))
+         (img-regexp "\\(png\\|jp[e]?g\\)\\>"))
+    (cond
+     ;; insert image link
+     ((and  (eq 'drag-n-drop (car event))
+            (eq 'file type)
+            (string-match img-regexp fname))
+      (insert (format "[[file:%s]]" (copy-and-get-relative-path fname "images"))) ; (file-name-base buffer-file-name)
+      (org-display-inline-images t t))
+     ;; insert image link with caption
+     ((and  (eq 'C-drag-n-drop (car event))
+            (eq 'file type)
+            (string-match img-regexp fname))
+      (insert "#+ATTR_ORG: :width 300\n")
+      (insert (concat  "#+CAPTION: " (read-input "Caption: ") "\n"))
+      (insert (format "[[file:%s]]"  (copy-and-get-relative-path fname "images")))
+      (org-display-inline-images t t))
+     ;; C-drag-n-drop to open a file
+     ((and  (eq 'C-drag-n-drop (car event))
+            (eq 'file type))
+      (find-file fname))
+     ((and (eq 'M-drag-n-drop (car event))
+           (eq 'file type))
+      (insert (format "[[attachfile:%s]]"  (copy-and-get-relative-path fname "files"))))
+     ;; regular drag and drop on file
+     ((eq 'file type)
+      (insert (format "[[%s]]\n" (copy-and-get-relative-path fname "files")))
+      )
+     (t
+      (error "I am not equipped for dnd on %s" payload)))))
+
+
+
+;(define-key org-mode-map (kbd "<drag-n-drop>") 'my-dnd-func)
+;(define-key org-mode-map (kbd "<C-drag-n-drop>") 'my-dnd-func)
+;(define-key org-mode-map (kbd "<M-drag-n-drop>") 'my-dnd-func)
+
+;; Insert files in org mode
+;; From http://kitchingroup.cheme.cmu.edu/blog/2015/07/10/Drag-images-and-files-onto-org-mode-and-insert-a-link-to-them/
+
+;; Paste from clipboard
+;; http://www.enist.org/blog/post/pasting-images-into-org-mode-on-mac/
+(defun org-paste-clipboard ()
+  (interactive)
+  (setq myvar/folder-name "images")	;
+
+  (setq myvar/folder-path  (make-buffer-subdir myvar/folder-name)) ;  (file-name-directory buffer-file-name)
+  (let* ((image-file (concat
+		      myvar/folder-path
+		      (read-string "Enter image name:")
+		      ".png")))
+
+    (message image-file)
+    ;; requires pngpaste on OSX (brew install pngpaste)
+    (call-process-shell-command (concat "pngpaste " image-file))
+
+    (insert (concat  "#+CAPTION: " (read-string "Caption: ") "\n"))
+    (insert (format "[[file:%s]]"  (concat "./" myvar/folder-name "/" (file-name-nondirectory image-file))  ))
+    (org-display-inline-images)))
+
 #+end_src
 
 ** Magit
@@ -676,6 +784,10 @@ Also seems that AucTex resets the ~delete-selection-mode~
 (add-hook 'LaTeX-mode-hook '(lambda () (global-set-key (kbd "C-e") 'move-end-of-line)))
 #+end_src
 
+** Coding general
+#+begin_src emacs-lisp
+(setq flycheck-checker-error-threshold 2500)
+#+end_src
 ** Python
 
 ** Jupyter-emacs
@@ -694,6 +806,12 @@ Unicode bug?
     (while (re-search-forward "[^[:ascii:]]" nil 1)
       (unless (describe-char-display (1- (point)) (char-before))
         (replace-match "")))))
+#+end_src
+
+*** Ox-Ipynb
+Because I like notebooks but I hate writing them. Loaded in ~init.el~ from [[https://github.com/jkitchin/ox-ipynb]]
+#+begin_src emacs-lisp
+(require 'ox-ipynb)
 #+end_src
 
 *** Spyder-like experience

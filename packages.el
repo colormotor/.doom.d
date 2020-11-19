@@ -36,7 +36,10 @@
 (unpin! dap-mode)
 (package! dap-mode)
 (package! image+)
+(package! ox-ipynb)
 
+(package! ox-ipynb
+  :recipe (:host github :repo "jkitchin/ox-ipynb"))
 
 (use-package! pdf-tools
   :if (display-graphic-p)
