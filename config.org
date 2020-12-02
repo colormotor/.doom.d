@@ -64,7 +64,7 @@ See [[https://gitlab.com/justinekizhak/dotfiles/blob/master/emacs/doom.d/config.
   :ensure nil
   :config (delete-selection-mode +1))
 
-(setq delete-selection-mode t)
+(setq! delete-selection-mode t)
 #+end_src
 
 (Don't) Use CUA mode since I'm also using other editors
@@ -158,6 +158,10 @@ No menu bar
 (global-set-key (kbd "s-s") 'save-buffer)
 (global-set-key (kbd "s-s") 'save-buffer)
 (global-set-key (kbd "s-f") 'swiper)
+(global-set-key (kbd "s-p") nil)
+; Just to avoid issues when switching editors
+(global-set-key (kbd "s-p") nil)
+(global-set-key (kbd "s-p") 'counsel-recentf)
 
 (define-key evil-insert-state-map (kbd "C-e") 'move-end-of-line)
 (define-key evil-insert-state-map (kbd "C-k") 'kill-line)
@@ -500,42 +504,42 @@ Preview latex fragments when cursor is elsewhere
     )
   )
 
-(defun my-dnd-func (event)
-  (interactive "e")
-  (goto-char (nth 1 (event-start event)))
-  (x-focus-frame nil)
-  (let* ((payload (car (last event)))
-         (type (car payload))
-         (fname (cadr payload))
-         (img-regexp "\\(png\\|jp[e]?g\\)\\>"))
-    (cond
-     ;; insert image link
-     ((and  (eq 'drag-n-drop (car event))
-            (eq 'file type)
-            (string-match img-regexp fname))
-      (insert (format "[[file:%s]]" (copy-and-get-relative-path fname "images"))) ; (file-name-base buffer-file-name)
-      (org-display-inline-images t t))
-     ;; insert image link with caption
-     ((and  (eq 'C-drag-n-drop (car event))
-            (eq 'file type)
-            (string-match img-regexp fname))
-      (insert "#+ATTR_ORG: :width 300\n")
-      (insert (concat  "#+CAPTION: " (read-input "Caption: ") "\n"))
-      (insert (format "[[file:%s]]"  (copy-and-get-relative-path fname "images")))
-      (org-display-inline-images t t))
-     ;; C-drag-n-drop to open a file
-     ((and  (eq 'C-drag-n-drop (car event))
-            (eq 'file type))
-      (find-file fname))
-     ((and (eq 'M-drag-n-drop (car event))
-           (eq 'file type))
-      (insert (format "[[attachfile:%s]]"  (copy-and-get-relative-path fname "files"))))
-     ;; regular drag and drop on file
-     ((eq 'file type)
-      (insert (format "[[%s]]\n" (copy-and-get-relative-path fname "files")))
-      )
-     (t
-      (error "I am not equipped for dnd on %s" payload)))))
+;; (defun my-dnd-func (event)
+;;   (interactive "e")
+;;   (goto-char (nth 1 (event-start event)))
+;;   (x-focus-frame nil)
+;;   (let* ((payload (car (last event)))
+;;          (type (car payload))
+;;          (fname (cadr payload))
+;;          (img-regexp "\\(png\\|jp[e]?g\\)\\>"))
+;;     (cond
+;;      ;; insert image link
+;;      ((and  (eq 'drag-n-drop (car event))
+;;             (eq 'file type)
+;;             (string-match img-regexp fname))
+;;       (insert (format "[[file:%s]]" (copy-and-get-relative-path fname "images"))) ; (file-name-base buffer-file-name)
+;;       (org-display-inline-images t t))
+;;      ;; insert image link with caption
+;;      ((and  (eq 'C-drag-n-drop (car event))
+;;             (eq 'file type)
+;;             (string-match img-regexp fname))
+;;       (insert "#+ATTR_ORG: :width 300\n")
+;;       (insert (concat  "#+CAPTION: " (read-input "Caption: ") "\n"))
+;;       (insert (format "[[file:%s]]"  (copy-and-get-relative-path fname "images")))
+;;       (org-display-inline-images t t))
+;;      ;; C-drag-n-drop to open a file
+;;      ((and  (eq 'C-drag-n-drop (car event))
+;;             (eq 'file type))
+;;       (find-file fname))
+;;      ((and (eq 'M-drag-n-drop (car event))
+;;            (eq 'file type))
+;;       (insert (format "[[attachfile:%s]]"  (copy-and-get-relative-path fname "files"))))
+;;      ;; regular drag and drop on file
+;;      ((eq 'file type)
+;;       (insert (format "[[%s]]\n" (copy-and-get-relative-path fname "files")))
+;;       )
+;;      (t
+;;       (error "I am not equipped for dnd on %s" payload)))))
 
 
 
@@ -791,6 +795,7 @@ Also seems that AucTex resets the ~delete-selection-mode~
 ** Python
 
 ** Jupyter-emacs
+
 #+begin_src emacs-lisp
 (set-popup-rule! "\*jupyter-repl...*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
@@ -808,6 +813,14 @@ Unicode bug?
         (replace-match "")))))
 #+end_src
 
+Maybe one day, there will be a way to use Jupyter without crying... Emacs 27 bug
+in Jupyter emacs, REPL freezes with (relatively) large code blocks. Workaround
+from [[https://github.com/nnicandro/emacs-jupyter/issues/219]], but it removes
+fontification from REPL. No activity since August on repo....
+#+begin_src emacs-lisp
+(add-hook 'jupyter-repl-mode-hook
+          (lambda () (font-lock-mode 0)))
+#+end_src
 *** Ox-Ipynb
 Because I like notebooks but I hate writing them. Loaded in ~init.el~ from [[https://github.com/jkitchin/ox-ipynb]]
 #+begin_src emacs-lisp
