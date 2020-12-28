@@ -600,6 +600,18 @@ And set pdf-tools internal latex viewer
 (setq +latex-viewers '(pdf-tools))
 #+end_src
 
+#+begin_src emacs-lisp
+;(define-key pdf-view-mode-map (kbd "M-s") nil)
+;(define-key pdf-view-mode-map (kbd "M-s") 'isearch-forward)
+#+end_src
+
+When Option-clicking on text, jump to pdf position.
+#+begin_src emacs-lisp
+(with-eval-after-load "latex"
+  (define-key LaTeX-mode-map [M-down-mouse-1] 'pdf-sync-forward-search))
+#+end_src
+
+
 From doom issues, sync latex and pdf, still bit dodgy:
 #+begin_src emacs-lisp
 ;; to use pdfview with auctex
@@ -635,11 +647,6 @@ Setting up IVY bibtex
 ;(setq ivy-bibtex-default-action 'ivy-bibtex-insert-key)
 #+end_src
 
-When Option-clicking on text, jump to pdf position.
-#+begin_src emacs-lisp
-(with-eval-after-load "latex"
-  (define-key LaTeX-mode-map [M-down-mouse-1] 'pdf-sync-forward-search))
-#+end_src
 
 #+begin_src emacs-lisp
 ;; Using pdflatex as the default compiler for .tex files
@@ -841,6 +848,7 @@ Tell jupyter emacs to send code to repl
 
 Send code between ~#%%~ pairs or end of file
 #+begin_src emacs-lisp
+(defvar last-executed-cell "")
 (defun jupyter-send-cell()
   (interactive)
   (save-excursion
@@ -856,9 +864,15 @@ Send code between ~#%%~ pairs or end of file
       (goto-char (point))
       (activate-mark)
       ;(message (buffer-substring (mark) (point)))
-      (jupyter-eval-string (buffer-substring (mark) (point)))
+      (setq last-executed-cell (buffer-substring (mark) (point)))
+      (jupyter-eval-string last-executed-cell)
       (deactivate-mark)
       )))
+
+(defun jupyter-execute-last()
+  (interactive)
+  (jupyter-eval-string last-executed-cell)
+)
 #+end_src
 
 Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b538970ad851d368ee5a65/emacs/shared/keybindings.emacs][this]].
