@@ -15,6 +15,7 @@ Doom keybindings ref:
 ** Configuration rabbithole links
 - [[https://tecosaur.github.io/emacs-config/config.html][Techosaur: Very long nice config]]
 - https://github.com/hjertnes/emacs.d/blob/master/hjertnes.org
+- https://blog.sumtypeofway.com/posts/emacs-config.html
 
 *** Install on Ubuntu
 Note that Ubuntu needs "modules" support, best way to install seems to follow these instructions:
@@ -45,6 +46,7 @@ Start emacs with a maximized window
 #+end_src
 
 Do not keep undo history after quit (see [[https://github.com/hlissner/doom-emacs/issues/1407][this]]).
+Currently undo-tree is disabled.
 #+begin_src emacs-lisp
 ;; Don't save undo-tree history
 (after! undo-tree
@@ -142,6 +144,24 @@ No menu bar
 (menu-bar-mode -1)
 #+end_src
 
+Some defaults
+#+begin_src emacs-lisp
+  (setq
+   ;; Fix undo in commands affecting the mark.
+   ; mark-even-if-inactive nil
+   ;; Let C-k delete the whole line.
+   ; kill-whole-line t
+   ;; search should be case-sensitive by default
+   case-fold-search nil
+   scroll-conservatively 1
+   )
+#+end_src
+
+#+begin_src emacs-lisp
+(setq fast-but-imprecise-scrolling t)
+(setq jit-lock-defer-time 0)
+#+end_src
+
 *** Key-bindings etc
 #+begin_src emacs-lisp
 ; (evil-multiedit-default-keybinds)
@@ -149,8 +169,8 @@ No menu bar
 
 #+begin_src emacs-lisp
 ;(global-set-key (kbd "C-y") 'yank)
-(global-set-key (kbd "s-z") 'undo-tree-undo)
-(global-set-key (kbd "s-Z") 'undo-tree-redo)
+(global-set-key (kbd "s-z") 'undo-fu-only-undo);undo-tree-undo)
+(global-set-key (kbd "s-Z") 'undo-fu-only-redo);undo-tree-redo)
 (global-set-key (kbd "s-v") 'yank)
 (global-set-key (kbd "s-c") 'evil-yank)
 (global-set-key (kbd "s-a") 'mark-whole-buffer)
@@ -233,6 +253,31 @@ Ace window. For multiple windows shows letters for selection
 (use-package! dimmer
   :config (dimmer-mode))
 #+end_src
+
+**** Minibuffer input
+The minibuffer at bottom can be annoying if you use the mouse.
+Trying https://github.com/muffinmad/emacs-mini-frame to fix it.
+The following setup is borrowed from https://github.com/gcv/dotfiles/blob/master/emacs/selectrum.el
+#+begin_src emacs-lisp
+(use-package! mini-frame
+  :custom
+  (mini-frame-detach-on-hide nil)       ; workaround for hidden frames showing up
+  (mini-frame-resize nil)               ; cannot be t until frame bugs are fixed
+  (mini-frame-show-parameters
+   '((top . 0.0)
+     (left . 0.0)
+     (height . 15)                      ; needed until frame bugs are fixed
+     (width . 0.5)
+     (left-fringe . 5)
+     (right-fringe . 5)))
+  (mini-frame-resize-max-height 15)
+  (mini-frame-color-shift-step 7)
+  :commands (mini-frame-read-from-minibuffer)
+
+  :config
+    (mini-frame-mode +1)
+)
+#+end_src
 ** Notes from doom config
 Here are some additional functions/macros that could help you configure Doom:
 
@@ -253,6 +298,7 @@ You can also try ~gd~ (or ~C-c g d~) to jump to their definition and see how
 they are implemented.
 
 ** Org mode customizations
+
 
 Prettification seems to be broken (at least on mac) for org mode
 #+begin_src emacs-lisp
@@ -884,11 +930,14 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
 
 (defun jupyter-nb-keybindings()
   (local-set-key (kbd "C-c C-c") 'jupyter-send-cell)
+  (local-set-key (kbd "C-c C-x") 'org-babel-remove-result)
 )
 (add-hook 'jupyter-repl-interaction-mode-hook
           #'jupyter-nb-keybindings)
 
 #+end_src
+
+
 ** C++
 #+begin_src emacs-lisp
 (after! projectile

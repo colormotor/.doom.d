@@ -46,6 +46,11 @@
   :mode ("\\.pdf$" . pdf-view-mode)
   :init (load "pdf-tools-autoloads" nil t)
   :config)
+
+; Try to put minibuffer input at top, so it does not interfere with info-bar
+; https://github.com/muffinmad/emacs-mini-frame
+(package! mini-frame)
+
   ;(pdf-tools-install)) ;; This baby gives big issues with poppler
 
 ;; (package! gud-lldb
