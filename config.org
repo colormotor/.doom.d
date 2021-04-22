@@ -28,12 +28,6 @@ sudo apt install emacs26
 #+end_example
 
 ** General
-Place your private configuration here! Remember, you do not need to run 'doom
-sync' after modifying this file!
-
-Some functionality uses this to identify you, e.g. GPG configuration, email
-clients, file templates and snippets.
-
 #+begin_src emacs-lisp
 (setq user-full-name "Daniel Berio"
       user-mail-address "drand48@gmail.com")
@@ -41,16 +35,15 @@ clients, file templates and snippets.
 
 Start emacs with a maximized window
 #+begin_src emacs-lisp
-;(add-hook 'window-setup-hook 'toggle-frame-maximized t)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 #+end_src
 
 Do not keep undo history after quit (see [[https://github.com/hlissner/doom-emacs/issues/1407][this]]).
-Currently undo-tree is disabled.
+Undo-tree is cool, but unfortunately once in while it will mess up the undo history. This is rare, but when it does happen it is a total disaster...
 #+begin_src emacs-lisp
 ;; Don't save undo-tree history
-(after! undo-tree
-  (setq undo-tree-auto-save-history nil))
+; (after! undo-tree
+;  (setq undo-tree-auto-save-history nil))
 #+end_src
 
 Counsel-grep for big files
@@ -58,22 +51,31 @@ Counsel-grep for big files
 (setq counsel-grep-base-command "rg -S -M 120 --no-heading --line-number --color never %s %s")
 #+end_src
 
-Force damn delete selection?
-See [[https://gitlab.com/justinekizhak/dotfiles/blob/master/emacs/doom.d/config.org][this]]
+*** Delete selection mode
+Delete selection mode disables itself when some kinds of errors happen.
+Not much information on this online, found this thread that mentions the problem
+https://stackoverflow.com/questions/14954490/emacs-delete-selection-mode-disables-itself
+
+My main curiosity is: is this a problem I experience due to my limited knowledge of ELISP,
+or is it a problem commonly experienced by Emacs users? The problem seems to be happen in either
+AucTex or Jupyter-Emacs, and it does not seem to be caused by my (messy) config.
+
+The following is from [[https://gitlab.com/justinekizhak/dotfiles/blob/master/emacs/doom.d/config.org][this]]
 #+begin_src emacs-lisp
 (use-package delsel
   :disabled
   :ensure nil
   :config (delete-selection-mode +1))
 
-(setq! delete-selection-mode t)
+(setq delete-selection-mode t)
 #+end_src
 
-(Don't) Use CUA mode since I'm also using other editors
+Also shift select (this luckily does not get disabled)
 #+begin_src emacs-lisp
-;(cua-mode +1)
+(setq shift-select-mode t)
 #+end_src
 
+*** Spelling
 #+begin_src emacs-lisp
 (use-package flyspell
   :ensure t
@@ -82,10 +84,8 @@ See [[https://gitlab.com/justinekizhak/dotfiles/blob/master/emacs/doom.d/config.
         ispell-dictionary "english"))
 #+end_src
 
-#+begin_src emacs-lisp
-#+end_src
 
-** Figlet
+*** Figlet
 Because I like ascii text. From [https://github.com/emacsmirror/figlet/blob/master/figlet.el]
 Type ~M-x figlet~ and you will be asked for a string. If you use a prefix ~C-u
 M-x figlet~ it will ask for a font.
@@ -95,7 +95,7 @@ M-x figlet~ it will ask for a font.
 (setq figlet-default-font "computer")
 #+end_src
 
-** Editor
+** Editor (from Doom original config)
 Doom exposes five (optional) variables for controlling fonts in Doom. Here
 are the three important ones:
 
@@ -107,14 +107,13 @@ are the three important ones:
 ;;   presentations or streaming.
 #+end_src
 
-
 They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
 font string. You generally only need these two:
 
 #+begin_src emacs-lisp
 ;(setq doom-font (font-spec :family "monospace" :size 14))
 ;
-(setq doom-font (font-spec :family "Fira Code" :size 13))
+(setq doom-font (font-spec :family "Fira Code" :size 12))
 #+end_src
 
 
@@ -124,13 +123,17 @@ available. You can either set `doom-theme' or manually load a theme with the
 
 #+begin_src emacs-lisp
 ;(setq doom-theme 'doom-one)
-;(setq doom-theme 'doom-laserwave) ; kinda nice
-;(setq doom-theme 'doom-zenburn) ; kinda nice
-;(setq doom-theme 'doom-wilmersorf) ; kinda nice
-(setq doom-theme 'doom-snazzy) ; kinda nice
-;(setq doom-theme 'doom-rouge) ; kinda nice maybe
-;(setq doom-theme 'doom-nord)
-;(load-theme 'doom-snazzy)
+;; (setq doom-theme 'doom-laserwave) ; kinda nice
+;(setq doom-theme 'doom-zenburn) ; kinda nice greyish
+;; (setq doom-theme 'doom-wilmersorf) ; kinda nice (doesnt work)
+;; (setq doom-theme 'doom-snazzy) ; kinda nice ++
+;; (setq doom-theme 'doom-rouge) ; kinda nice maybe
+;(setq doom-theme 'doom-nord) ; very gray
+;(setq doom-theme 'doom-city-lights)
+;; (setq doom-theme 'doom-manegarm)
+(setq doom-theme 'doom-Iosvkem)
+;; (setq doom-theme 'doom-nord-light)
+(load-theme doom-theme t) ;'doom-snazzy)
 #+end_src
 
 This determines the style of line numbers in effect. If set to ~nil~, line
@@ -139,6 +142,7 @@ numbers are disabled. For relative line numbers, set this to ~relative~.
 (setq display-line-numbers-type t)
 #+end_src
 
+*** Customizations
 No menu bar
 #+begin_src emacs-lisp
 (menu-bar-mode -1)
@@ -157,16 +161,30 @@ Some defaults
    )
 #+end_src
 
+Annoying pdf-tools undo warnings
+#+begin_src emacs-lisp
+(add-to-list 'warning-suppress-types '(undo discard-info))
+#+end_src
+
 #+begin_src emacs-lisp
 (setq fast-but-imprecise-scrolling t)
 (setq jit-lock-defer-time 0)
 #+end_src
 
-*** Key-bindings etc
+Modeline, add the nyan cat leaving a CO2 rainbow trail. For some bling since it is so [[https://www.theverge.com/2021/2/18/22287956/nyan-cat-crypto-art-foundation-nft-sale-chris-torres][valuable]] now
 #+begin_src emacs-lisp
-; (evil-multiedit-default-keybinds)
+(nyan-mode t)
+(setq doom-modeline-modal-icon nil)
 #+end_src
 
+Trying to improve slowness:
+
+
+#+begin_src emacs-lisp
+(after! gcmh
+  (setq gcmh-high-cons-threshold 33554432))
+#+end_src
+*** Key-bindings etc
 #+begin_src emacs-lisp
 ;(global-set-key (kbd "C-y") 'yank)
 (global-set-key (kbd "s-z") 'undo-fu-only-undo);undo-tree-undo)
@@ -196,13 +214,8 @@ Some defaults
 
 ; I fins some of these evil key-bindings are really odd...
 (define-key evil-insert-state-map (kbd "C-x C-s") 'save-buffer)
-
-
-;; (map!
-;;  "C-a"     #'move-beginning-of-line
-;;  "C-e"      #'move-end-of-line
-;;  )
 #+end_src
+
 Counsel: Use ~SPC-~~ followed by char
 
 #+begin_src emacs-lisp
@@ -226,26 +239,15 @@ Some key bindings I am used to, but this is not working in Doom...
 (global-set-key (kbd "C-e") 'move-end-of-line)
 #+end_src
 
-Always support shift selec and delete
-#+begin_src emacs-lisp
-;; Delete selection
-(setq delete-selection-mode t)
-(setq shift-select-mode t)
-#+end_src
-
-Windmove (move among windows), not ideal but trying to mangle too many
-key-bindings on Windows/WSL setup, where super and alt are taken mostly.
-#+begin_src emacs-lisp
-;; (global-set-key (kbd "C-q") nil)
-;; (global-set-key (kbd "C-q <left>")  'windmove-left)
-;; (global-set-key (kbd "C-q <right>") 'windmove-right)
-;; (global-set-key (kbd "C-q <up>")    'windmove-up)
-;; (global-set-key (kbd "C-q <down>")  'windmove-down)
-#+end_src
-
 Ace window. For multiple windows shows letters for selection
 #+begin_src emacs-lisp
 (global-set-key (kbd "M-o") 'ace-window)
+#+end_src
+
+String inflection (from-to-snake-case)
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-c C") 'string-inflection-camelcase)
+(global-set-key (kbd "C-c c") 'string-inflection-underscore)
 #+end_src
 
 *** Look and feel
@@ -278,6 +280,7 @@ The following setup is borrowed from https://github.com/gcv/dotfiles/blob/master
     (mini-frame-mode +1)
 )
 #+end_src
+
 ** Notes from doom config
 Here are some additional functions/macros that could help you configure Doom:
 
@@ -297,8 +300,7 @@ Here are some additional functions/macros that could help you configure Doom:
 You can also try ~gd~ (or ~C-c g d~) to jump to their definition and see how
 they are implemented.
 
-** Org mode customizations
-
+** Org mode
 
 Prettification seems to be broken (at least on mac) for org mode
 #+begin_src emacs-lisp
@@ -309,14 +311,14 @@ Prettification seems to be broken (at least on mac) for org mode
 If you use `org' and don't want your org files in the default location below,
 change `org-directory'. It must be set before org ~loads!~
 
-
 #+begin_src emacs-lisp
 (setq org-directory "~/Dropbox/org/")
 #+end_src
 
-Enable shift select in org mode
+Enable shift select and tabs in org mode a
 #+BEGIN_SRC emacs-lisp
 (setq org-support-shift-select 'always)
+(setq org-src-tab-acts-natively t)
 #+END_SRC
 
 *** Src captions
@@ -365,7 +367,6 @@ Embed CSS by default
 Setup org-ref
 
 #+begin_src emacs-lisp
-
 ;; Big hack to insert biblio entry titles
 ;; unelegant simply because I do not really know LISP
 ;; adapted from: http://www.mail-archive.com/emacs-orgmode@gnu.org/msg110385.html
@@ -392,7 +393,6 @@ Setup org-ref
     (set-format "incollection")
     (set-format "proceedings")
     (set-format "unpublished")
-
     )
 #+end_src
 
@@ -451,7 +451,7 @@ Setup org to open Zotero links
                    'zotero-org-export)))
 #+END_SRC
 
-Preview latex on save ([[https://emacs.stackexchange.com/questions/38198/automatically-preview-latex-in-org-mode-as-soon-as-i-finish-typing][from]])
+Preview latex on save ([[https://emacs.stackexchange.com/questions/38198/automatically-preview-latex-in-org-mode-as-soon-as-i-finish-typing][from here]], disabled)
 #+begin_src emacs-lisp
 ;; (defun my/org-render-latex-fragments ()
 ;;   (if (org-list-latex-overlays)
@@ -463,6 +463,7 @@ Preview latex on save ([[https://emacs.stackexchange.com/questions/38198/automat
 ;;           (lambda ()
 ;;             (add-hook 'after-save-hook 'my/org-render-latex-fragments nil 'make-the-hook-local)))
 #+end_src
+
 Counsel key-bindings
 #+begin_src emacs-lisp
 (map!
@@ -531,8 +532,8 @@ Preview latex fragments when cursor is elsewhere
 #+end_src
 
 *** Drag and drop
+Drag and drop and paste images into org
 #+begin_src emacs-lisp
-
 (defun to-buffer-relative (path)
   (file-relative-name path (file-name-directory buffer-file-name)))
 
@@ -629,26 +630,16 @@ Performance improvements
     )
 #+end_src
 Do not show whitespace diffs
-
 #+begin_src emacs-lisp
 (setq ediff-diff-options "-w")
 #+end_src
 
 ** Latex (AucTex + RefTex)
-
-
 And set pdf-tools internal latex viewer
-#+begin_src emacs-lisp
-;(setenv "PKG_CONFIG_PATH" (concat (shell-command-to-string "printf %s \"$(brew --prefix libffi)\"") "/lib/pkgconfig/"))
-#+end_src
 
 #+begin_src emacs-lisp
 (setq +latex-viewers '(pdf-tools))
-#+end_src
-
-#+begin_src emacs-lisp
-;(define-key pdf-view-mode-map (kbd "M-s") nil)
-;(define-key pdf-view-mode-map (kbd "M-s") 'isearch-forward)
+;; (set-popup-rule! "\*.pdf" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
 
 When Option-clicking on text, jump to pdf position.
@@ -657,7 +648,6 @@ When Option-clicking on text, jump to pdf position.
   (define-key LaTeX-mode-map [M-down-mouse-1] 'pdf-sync-forward-search))
 #+end_src
 
-
 From doom issues, sync latex and pdf, still bit dodgy:
 #+begin_src emacs-lisp
 ;; to use pdfview with auctex
@@ -665,7 +655,6 @@ From doom issues, sync latex and pdf, still bit dodgy:
     TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view))
     TeX-source-correlate-start-server t) ;; not sure if last line is neccessary
 #+end_src
-
 
 Trying to get rid of the ~epdfinfo: Destination not found~ error.
 See [https://github.com/politza/pdf-tools/issues/302]
@@ -682,7 +671,6 @@ the doc) does not work, so it needs to be done with ~C-c _~ at least on Mac.
           (setq-default TeX-master t))
 #+end_src
 
-
 Get RefTex to search for valid biblios
 #+begin_src emacs-lisp
 (setq reftex-use-external-file-finders t)
@@ -693,7 +681,6 @@ Setting up IVY bibtex
 ;(setq ivy-bibtex-default-action 'ivy-bibtex-insert-key)
 #+end_src
 
-
 #+begin_src emacs-lisp
 ;; Using pdflatex as the default compiler for .tex files
 (setq latex-run-command "pdflatex")
@@ -703,6 +690,16 @@ Setting up IVY bibtex
 (add-hook 'LaTeX-mode-hook '(lambda () (TeX-PDF-mode 1)))
 #+end_src
 
+*** AucTex is sloooow
+Slowness with backspace
+#+begin_src emacs-lisp
+(after! tex-mode
+  (map-delete sp-pairs 'LaTeX-mode)
+  (map-delete sp-pairs 'latex-mode)
+  (map-delete sp-pairs 'tex-mode)
+  (map-delete sp-pairs 'plain-tex-mode))
+#+end_src
+*** Nomenclature support
 And... AucTex does not automatically support nomencalture so (from [https://tex.stackexchange.com/questions/36582/using-nomenclature-and-emacs])
 #+begin_src emacs-lisp
 ;; nomenclature for latex
@@ -735,6 +732,7 @@ the previous closing bracket with quotes?? (**NB** this does not really work)
         ))
 #+end_src
 
+*** Title case for bibtex entries
 Convert bibtex entries to Title Case, from
 http://kitchingroup.cheme.cmu.edu/blog/2014/10/12/Title-casing-bibtex-entry-journal-titles/
 
@@ -793,6 +791,7 @@ entries in articles."
       (bibtex-fill-entry))))
 #+end_src
 
+*** Wordcount
 Tex word count with master file (from
 [https://superuser.com/questions/125027/word-count-for-latex-within-emacs])
 #+begin_src emacs-lisp
@@ -841,18 +840,23 @@ Also seems that AucTex resets the ~delete-selection-mode~
 (add-hook 'LaTeX-mode-hook '(lambda () (global-set-key (kbd "C-e") 'move-end-of-line)))
 #+end_src
 
-** Coding general
+** Coding
 #+begin_src emacs-lisp
 (setq flycheck-checker-error-threshold 2500)
 #+end_src
-** Python
 
-** Jupyter-emacs
+*** Ox-Ipynb
+Because I like notebooks but I hate writing them. Loaded in ~init.el~ from [[https://github.com/jkitchin/ox-ipynb]]
+#+begin_src emacs-lisp
+(require 'ox-ipynb)
+#+end_src
+
+*** Jupyter-emacs
 
 #+begin_src emacs-lisp
 (set-popup-rule! "\*jupyter-repl...*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
-*** Workarounds
+**** Workarounds
 Unicode bug?
 #+begin_src emacs-lisp
 (defun delete-non-displayable ()
@@ -874,13 +878,8 @@ fontification from REPL. No activity since August on repo....
 (add-hook 'jupyter-repl-mode-hook
           (lambda () (font-lock-mode 0)))
 #+end_src
-*** Ox-Ipynb
-Because I like notebooks but I hate writing them. Loaded in ~init.el~ from [[https://github.com/jkitchin/ox-ipynb]]
-#+begin_src emacs-lisp
-(require 'ox-ipynb)
-#+end_src
 
-*** Spyder-like experience
+**** Spyder-like experience
 Have the REPL appear on the right
 #+begin_src emacs-lisp
 (set-popup-rule! "^\\*Python" :side 'right :width 0.5)
@@ -892,7 +891,9 @@ Tell jupyter emacs to send code to repl
 ;(setq conda-anaconda-home "~/opt/miniconda3")
 #+end_src
 
-Send code between ~#%%~ pairs or end of file
+Send code between ~#%%~ pairs or end of file. Stores last executed cell so we can re-execute it
+with ~jupyter-execute-last~.
+
 #+begin_src emacs-lisp
 (defvar last-executed-cell "")
 (defun jupyter-send-cell()
@@ -938,7 +939,7 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
 #+end_src
 
 
-** C++
+*** C++
 #+begin_src emacs-lisp
 (after! projectile
   (projectile-register-project-type 'cmake '("CMakeLists.txt")

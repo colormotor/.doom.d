@@ -21,7 +21,14 @@
 
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;(package! some-package)
-(package! jupyter)
+(unpin! zmq)
+(package! zmq
+   :recipe (:host github :repo "nnicandro/emacs-zmq"))
+
+(unpin! jupyter)
+(package! jupyter
+   :recipe (:host github :repo "nnicandro/emacs-jupyter"))
+
 (package! elpy)
 (package! yasnippet)
 (package! windresize) ;; Resize windows with arrows
@@ -50,6 +57,12 @@
 ; Try to put minibuffer input at top, so it does not interfere with info-bar
 ; https://github.com/muffinmad/emacs-mini-frame
 (package! mini-frame)
+(package! string-inflection)
+;; (package! evil-briefcase
+;;   :recipe (:host github :repo "strickinato/evil-briefcase"))
+(package! nyan-mode)
+
+(package! lsp-python-ms)
 
   ;(pdf-tools-install)) ;; This baby gives big issues with poppler
 
