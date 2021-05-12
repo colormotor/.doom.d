@@ -60,9 +60,11 @@
 (package! string-inflection)
 ;; (package! evil-briefcase
 ;;   :recipe (:host github :repo "strickinato/evil-briefcase"))
-(package! nyan-mode)
+(package! nyan-mode) ;; Keeping track of buffer pos
 
 (package! lsp-python-ms)
+
+(package! parrot) ;; Toggling between symbols (e.g. true/false)
 
   ;(pdf-tools-install)) ;; This baby gives big issues with poppler
 

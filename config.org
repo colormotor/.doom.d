@@ -122,16 +122,16 @@ available. You can either set `doom-theme' or manually load a theme with the
 ~load-theme~~ function. This is the default:
 
 #+begin_src emacs-lisp
-;(setq doom-theme 'doom-one)
+;; (setq doom-theme 'doom-one)
 ;; (setq doom-theme 'doom-laserwave) ; kinda nice
 ;(setq doom-theme 'doom-zenburn) ; kinda nice greyish
 ;; (setq doom-theme 'doom-wilmersorf) ; kinda nice (doesnt work)
 ;; (setq doom-theme 'doom-snazzy) ; kinda nice ++
 ;; (setq doom-theme 'doom-rouge) ; kinda nice maybe
 ;(setq doom-theme 'doom-nord) ; very gray
-;(setq doom-theme 'doom-city-lights)
+(setq doom-theme 'doom-city-lights)
 ;; (setq doom-theme 'doom-manegarm)
-(setq doom-theme 'doom-Iosvkem)
+;; (setq doom-theme 'doom-Iosvkem)
 ;; (setq doom-theme 'doom-nord-light)
 (load-theme doom-theme t) ;'doom-snazzy)
 #+end_src
@@ -179,10 +179,28 @@ Modeline, add the nyan cat leaving a CO2 rainbow trail. For some bling since it 
 
 Trying to improve slowness:
 
-
 #+begin_src emacs-lisp
 (after! gcmh
   (setq gcmh-high-cons-threshold 33554432))
+#+end_src
+
+Parrot mode to toggle between common boolean symbols
+#+begin_src emacs-lisp
+(use-package parrot
+  :config
+  (parrot-mode))
+
+(define-key evil-normal-state-map (kbd "[r") 'parrot-rotate-prev-word-at-point)
+(define-key evil-normal-state-map (kbd "]r") 'parrot-rotate-next-word-at-point)
+
+(setq parrot-rotate-dict
+      '(
+        (:rot ("yes" "no") :caps t :upcase t)
+        (:rot ("t" "f") :caps t :upcase t)
+        (:rot ("on" "off") :caps t :upcase t)
+        (:rot ("prev" "next"))
+        (:rot ("true" "false") :caps t :upcase t)
+        ))
 #+end_src
 *** Key-bindings etc
 #+begin_src emacs-lisp
@@ -656,6 +674,15 @@ From doom issues, sync latex and pdf, still bit dodgy:
     TeX-source-correlate-start-server t) ;; not sure if last line is neccessary
 #+end_src
 
+#+begin_src emacs-lisp
+(setq pdf-sync-backward-display-action t)
+(setq pdf-sync-forward-display-action t)
+#+end_src
+
+Try to get pdf to always popup on side
+#+begin_src emacs-lisp
+(set-popup-rule! "\....pdf" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
+#+end_src
 Trying to get rid of the ~epdfinfo: Destination not found~ error.
 See [https://github.com/politza/pdf-tools/issues/302]
 #+begin_src emacs-lisp
@@ -995,9 +1022,9 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
  :config
  (dap-mode 1)
  (require 'dap-hydra)
-(require 'dap-launch)
-(require 'dap-cpptools)
-(setq dap-print-io 1)
+ (require 'dap-launch)
+ (require 'dap-cpptools)
+ (setq dap-print-io 1)
 ; (require 'dap-gdb-lldb)	; download and expand lldb-vscode to the =~/.extensions/webfreak.debug= ;gdb-lldb
 ; (use-package dap-lldb
  ; :disabled t)
@@ -1023,22 +1050,34 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
 #+end_src
 
 *** DAP MODE
-Not working yet.
-
-Following instructions [[https://github.com/roangel/my_emacs_config/][here]] to compile lldb-vscode in llvm-project (after clone),
-pretty long procedure. Hope I can ditch VScode for good with this...
-#+begin_example
-mkdir build; cd build
-cmake ../llvm -DLLVM_ENABLE_PROJECTS="clang;libcxx;lldb"
-make -j4 lldb lldb-server lldb-vscode
-#+end_example
-On mac+miniconda there is an issue related to ncurses, this is an ugly workaround:
-#+begin_example
-cp ~/opt/miniconda3/lib/libtinfo.6.dylib /usr/local/lib
-#+end_example
-
+Some good hints and code below: https://emacs-lsp.github.io/dap-mode/page/how-to/
 #+begin_src emacs-lisp
-;; (setq dap-lldb-debug-program '("~/develop/llvm-project/build/bin/lldb-vscode"))
-;; (require 'dap-lldb)
-;; (setq dap-print-io 1)
+;; -*- lexical-binding: t -*-
+(define-minor-mode +dap-running-session-mode
+  "A mode for adding keybindings to running sessions"
+  nil
+  nil
+  (make-sparse-keymap)
+  (evil-normalize-keymaps) ;; if you use evil, this is necessary to update the keymaps
+  ;; The following code adds to the dap-terminated-hook
+  ;; so that this minor mode will be deactivated when the debugger finishes
+  (when +dap-running-session-mode
+    (let ((session-at-creation (dap--cur-active-session-or-die)))
+      (add-hook 'dap-terminated-hook
+                (lambda (session)
+                  (when (eq session session-at-creation)
+                    (+dap-running-session-mode -1)))))))
+
+;; Activate this minor mode when dap is initialized
+(add-hook 'dap-session-created-hook '+dap-running-session-mode)
+
+;; Activate this minor mode when hitting a breakpoint in another file
+(add-hook 'dap-stopped-hook '+dap-running-session-mode)
+
+;; Activate this minor mode when stepping into code in another file
+(add-hook 'dap-stack-frame-changed-hook (lambda (session)
+                                          (when (dap--session-running session)
+                                            (+dap-running-session-mode 1))))
 #+end_src
+
+- Other recent hints: https://www.reddit.com/r/emacs/comments/mxiqt6/how_to_setup_and_use_dapmode_for_c/
