@@ -163,7 +163,7 @@ Some defaults
 
 Annoying pdf-tools undo warnings
 #+begin_src emacs-lisp
-(add-to-list 'warning-suppress-types '(undo discard-info))
+;; (add-to-list 'warning-suppress-types '(undo discard-info))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -219,6 +219,10 @@ Parrot mode to toggle between common boolean symbols
 (global-set-key (kbd "s-p") nil)
 (global-set-key (kbd "s-p") 'counsel-recentf)
 
+; For avoiding conflicts with window management
+(global-set-key (kbd "s-p") nil)
+
+
 (define-key evil-insert-state-map (kbd "C-e") 'move-end-of-line)
 (define-key evil-insert-state-map (kbd "C-k") 'kill-line)
 (define-key evil-insert-state-map (kbd "C-w") 'kill-region)
@@ -232,6 +236,7 @@ Parrot mode to toggle between common boolean symbols
 
 ; I fins some of these evil key-bindings are really odd...
 (define-key evil-insert-state-map (kbd "C-x C-s") 'save-buffer)
+
 #+end_src
 
 Counsel: Use ~SPC-~~ followed by char
@@ -268,6 +273,27 @@ String inflection (from-to-snake-case)
 (global-set-key (kbd "C-c c") 'string-inflection-underscore)
 #+end_src
 
+Trying to sort out conflicts with window management
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-<S-up>") nil)
+(global-set-key (kbd "C-<S-down>") nil)
+(global-set-key (kbd "C-<S-left>") nil)
+
+(defun org-unset-alt-keys ()
+  (define-key org-mode-map (kbd "C-<S-up>") nil)
+  (define-key org-mode-map (kbd "C-<S-down>") nil)
+  (define-key org-mode-map (kbd "C-<S-left>") nil)
+)
+
+(defun evil-org-unset-alt-keys ()
+   (define-key evil-org-mode-map (kbd "C-<S-up>") nil)
+   (define-key evil-org-mode-map (kbd "C-<S-down>") nil)
+   (define-key evil-org-mode-map (kbd "C-<S-left>") nil)
+)
+(with-eval-after-load 'org (org-unset-alt-keys))
+(with-eval-after-load 'evil-org (evil-org-unset-alt-keys))
+
+#+end_src
 *** Look and feel
 #+begin_src emacs-lisp
 (use-package! dimmer
