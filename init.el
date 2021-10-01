@@ -109,8 +109,8 @@
        ;;upload            ; map local to remote projects via ssh/ftp
 
        :os
-       ;;tty               ; improve the terminal Emacs experience
-       macos             ; MacOS-specific commands
+       tty               ; improve the terminal Emacs experience
+       (:if IS-MAC macos)  ; MacOS-specific commands
 
        :lang
        ;;agda              ; types of types of types of types...
