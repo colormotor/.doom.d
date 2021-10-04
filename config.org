@@ -950,6 +950,11 @@ Also seems that AucTex resets the ~delete-selection-mode~
 # (require 'ox-ipynb)
 # #+end_src
 
+*** Additional file extensions
+#+begin_src emacs-lisp
+; Processing
+(add-to-list 'auto-mode-alist '("\\.pde\\'" . java-mode))
+#+end_src
 *** Jupyter-emacs
 
 #+begin_src emacs-lisp
