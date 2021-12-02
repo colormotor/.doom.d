@@ -126,20 +126,20 @@ available. You can either set `doom-theme' or manually load a theme with the
 
 I like to switch around between these:
 #+begin_src emacs-lisp
-(setq doom-theme 'doom-one)
+;; (setq doom-theme 'doom-one)
 ;; (setq doom-theme 'doom-laserwave) ; kinda nice
 ;; (setq doom-theme 'doom-zenburn) ; kinda nice greyish
 ;; (setq doom-theme 'doom-snazzy) ; kinda nice ++
 ;; (setq doom-theme 'doom-rouge) ; kinda nice maybe
-(setq doom-theme 'doom-nord) ; very gray
+;; (setq doom-theme 'doom-nord) ; very gray
 ;;
-;; (setq doom-theme 'doom-manegarm) ; freddy kruger
-(setq doom-theme 'doom-city-lights) ; nice greenish blue
-(setq doom-theme 'doom-challenger-deep) ; nice
+(setq doom-theme 'doom-manegarm) ; freddy kruger
+;; (setq doom-theme 'doom-city-lights) ; nice greenish blue
+;; (setq doom-theme 'doom-challenger-deep) ; nice
 ;; (setq doom-theme 'doom-gruvbox) ; brown/orange
-(setq doom-theme 'doom-material)
-;; (setq doom-theme 'doom-oceanic-next) ; contrasty
-;; (setq doom-theme 'doom-Iosvkem)
+;; (setq doom-theme 'doom-material)
+(setq doom-theme 'doom-oceanic-next) ; contrasty
+(setq doom-theme 'doom-Iosvkem)
 ;; (setq doom-theme 'doom-nord-light) ; LIGHT
 ;; (setq doom-theme 'doom-wilmersorf) ; kinda nice (LIGHT)
 ;; (setq doom-theme 'doom-opera) ; OK
@@ -443,6 +443,31 @@ Embed CSS by default
 (add-hook 'org-export-before-processing-hook 'my-org-inline-css-hook)
 #+end_src
 
+*** Latex export org
+Export html with latex macros ([[https://emacs.stackexchange.com/questions/54703/exporting-latex-commands-to-html-mathjax]])
+#+begin_src emacs-lisp
+;;;###autoload
+(with-eval-after-load "org"
+  (add-to-list 'org-src-lang-modes '("latex-macros" . latex)))
+
+(defvar org-babel-default-header-args:latex-macros
+  '((:results . "raw")
+    (:exports . "results")))
+
+(defun prefix-all-lines (pre body)
+  (with-temp-buffer
+    (insert body)
+    (string-insert-rectangle (point-min) (point-max) pre)
+    (buffer-string)))
+
+(defun org-babel-execute:latex-macros (body _params)
+  (concat
+   (prefix-all-lines "#+LATEX_HEADER: " body)
+   "\n#+HTML_HEAD_EXTRA: <div style=\"display: none\"> \\(\n"
+   (prefix-all-lines "#+HTML_HEAD_EXTRA: " body)
+   "\n#+HTML_HEAD_EXTRA: \\)</div>\n"))
+#+end_src
+
 *** Org-ref
 Setup org-ref
 
@@ -451,29 +476,29 @@ Setup org-ref
 ;; unelegant simply because I do not really know LISP
 ;; adapted from: http://www.mail-archive.com/emacs-orgmode@gnu.org/msg110385.html
 
-(defun set-format (key)
-  (setf (cdr (assoc key (cdr (assoc "org"
-                                    org-ref-formatted-citation-formats))))
-        "${author} ${year}. /${title}/. [[cite:${=key=}]]")
-  )
+;; (defun set-format (key)
+;;   (setf (cdr (assoc key (cdr (assoc "org"
+;;                                     org-ref-formatted-citation-formats))))
+;;         "${author} ${year}. /${title}/. [[cite:${=key=}]]")
+;;   )
 
-(use-package! org-ref
-    :after org
-    :init
-    ; code to run before loading org-ref
-    :config
-    ; code to run after loading org-ref
-    (setq org-ref-default-bibliography '("./autograff-biblio.bib")) ; this is a list but multiple files don't seem to work
-    (setq org-ref-formatted-citation-backend "org")
-    (set-format "article")
-    (set-format "inproceedings")
-    (set-format "book")
-    (set-format "phdthesis")
-    (set-format "inbook")
-    (set-format "incollection")
-    (set-format "proceedings")
-    (set-format "unpublished")
-    )
+;; (use-package! org-ref
+;;     :after org
+;;     :init
+;;     ; code to run before loading org-ref
+;;     :config
+;;     ; code to run after loading org-ref
+;;     (setq org-ref-default-bibliography '("./autograff-biblio.bib")) ; this is a list but multiple files don't seem to work
+;;     (setq org-ref-formatted-citation-backend "org")
+;;     (set-format "article")
+;;     (set-format "inproceedings")
+;;     (set-format "book")
+;;     (set-format "phdthesis")
+;;     (set-format "inbook")
+;;     (set-format "incollection")
+;;     (set-format "proceedings")
+;;     (set-format "unpublished")
+;;    )
 #+end_src
 
 Also for some reason "phdthesis" is not included in the version of bibtex used
