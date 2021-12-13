@@ -283,6 +283,7 @@ Some key bindings I am used to, but this is not working in Doom...
 (global-set-key (kbd "C-u") 'evil-scroll-up)
 (global-set-key (kbd "C-d") 'evil-scroll-down)
 (global-set-key (kbd "C-e") 'move-end-of-line)
+(global-set-key (kbd "s-/") 'evilnc-comment-or-uncomment-lines)
 #+end_src
 
 Ace window. For multiple windows shows letters for selection
