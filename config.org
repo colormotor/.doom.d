@@ -416,10 +416,6 @@ Solution by [[http://kitchingroup.cheme.cmu.edu/blog/2016/02/26/Adding-captions-
 
 *** Export
 
-Don't exectute all src blocks:
-#+begin_src emacs-lisp
-(setq org-export-babel-evaluate t)
-#+end_src
 Embed CSS by default
 
 #+begin_src emacs-lisp
@@ -429,7 +425,7 @@ Embed CSS by default
     (let* ((dir (ignore-errors (file-name-directory (buffer-file-name))))
            (path (concat dir "style.css"))
            (homestyle (or (null dir) (null (file-exists-p path))))
-           (final (if homestyle "~/.doom.d/org-style.css" path))) ;; <- set your own style file path
+           (final (if homestyle "~/.doom.d/latex.css" path))) ;; <- set your own style file path
       (setq org-html-head-include-default-style nil)
       (setq org-html-head (concat
                            "<style type=\"text/css\">\n"
@@ -468,6 +464,31 @@ Export html with latex macros ([[https://emacs.stackexchange.com/questions/54703
    "\n#+HTML_HEAD_EXTRA: \\)</div>\n"))
 #+end_src
 
+*** Org-cite
+#+begin_src emacs-lisp
+(use-package! citeproc
+  :defer t)
+(map! :after org
+      :map org-mode-map
+      :localleader
+      :desc "Insert citation" "@" #'org-cite-insert)
+
+(use-package! citar
+  :when (featurep! :completion vertico))
+
+(use-package! oc
+  :after org citar)
+
+;;; Org-cite processors
+(use-package! oc-biblatex
+  :after oc)
+
+(use-package! oc-csl
+  :after oc)
+
+(use-package! oc-natbib
+  :after oc)
+#+end_src
 *** Org-ref
 Setup org-ref
 

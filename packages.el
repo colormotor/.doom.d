@@ -44,9 +44,9 @@
 (package! dap-mode)
 (package! image+)
 (package! ox-ipynb)
-
 (package! ox-ipynb
   :recipe (:host github :repo "jkitchin/ox-ipynb"))
+(package! citeproc)
 
 (use-package! pdf-tools
   :if (display-graphic-p)
