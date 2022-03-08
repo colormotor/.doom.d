@@ -27,6 +27,25 @@ sudo apt update
 sudo apt install emacs26
 #+end_example
 
+** Notes from doom config
+Here are some additional functions/macros that could help you configure Doom:
+
+ - ~load!~ for loading external *.el files relative to this one
+ - ~use-package~ for configuring packages
+ - ~after!~ for running code after a package has loaded
+ - ~add-load-path!~ for adding directories to the `load-path', relative to
+   this file. Emacs searches the ~load-path~ when you load packages with
+   ~require~ or ~use-package~.
+ - ~map!~ for binding new keys
+
+ To get information about any of these functions/macros, move the cursor over
+ the highlighted symbol at press 'K' (non-evil users must press 'C-c g k').
+ This will open documentation for it, including demos of how they are used.
+
+
+You can also try ~gd~ (or ~C-c g d~) to jump to their definition and see how
+they are implemented.
+
 ** General
 #+begin_src emacs-lisp
 (setq user-full-name "Daniel Berio"
@@ -38,8 +57,9 @@ Start emacs with a maximized window
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 #+end_src
 
-Do not keep undo history after quit (see [[https://github.com/hlissner/doom-emacs/issues/1407][this]]).
-Undo-tree is cool, but unfortunately once in while it will mess up the undo history. This is rare, but when it does happen it is a total disaster...
+Do not keep undo history after quit (see [[https://github.com/hlissner/doom-emacs/issues/1407][this]]). Ditched... Undo-tree is cool,
+but unfortunately once in while it will mess up the undo history. This is rare,
+but when it does happen it is a total disaster...
 #+begin_src emacs-lisp
 ;; Don't save undo-tree history
 ; (after! undo-tree
@@ -59,6 +79,9 @@ https://stackoverflow.com/questions/14954490/emacs-delete-selection-mode-disable
 My main curiosity is: is this a problem I experience due to my limited knowledge of ELISP,
 or is it a problem commonly experienced by Emacs users? The problem seems to be happen in either
 AucTex or Jupyter-Emacs, and it does not seem to be caused by my (messy) config.
+
+This discussion is ridiculous:
+https://lists.defectivebydesign.org/archive/html/emacs-devel/2018-09/msg00816.html
 
 The following is from [[https://gitlab.com/justinekizhak/dotfiles/blob/master/emacs/doom.d/config.org][this]]
 #+begin_src emacs-lisp
@@ -84,6 +107,10 @@ Also shift select (this luckily does not get disabled)
         ispell-dictionary "english"))
 #+end_src
 
+*** Disable smart parens
+#+begin_src emacs-lisp
+(remove-hook 'doom-first-buffer-hook #'smartparens-global-mode)
+#+end_src
 
 *** Figlet
 Because I like ascii text. From [https://github.com/emacsmirror/figlet/blob/master/figlet.el]
@@ -95,7 +122,7 @@ M-x figlet~ it will ask for a font.
 (setq figlet-default-font "computer")
 #+end_src
 
-** Editor (from Doom original config)
+*** Editor (from Doom original config)
 Doom exposes five (optional) variables for controlling fonts in Doom. Here
 are the three important ones:
 
@@ -133,13 +160,15 @@ I like to switch around between these:
 ;; (setq doom-theme 'doom-rouge) ; kinda nice maybe
 ;; (setq doom-theme 'doom-nord) ; very gray
 ;;
-(setq doom-theme 'doom-manegarm) ; freddy kruger
+;; (setq doom-theme 'doom-manegarm) ; freddy kruger
 ;; (setq doom-theme 'doom-city-lights) ; nice greenish blue
 ;; (setq doom-theme 'doom-challenger-deep) ; nice
-;; (setq doom-theme 'doom-gruvbox) ; brown/orange
+;; (setq doom-theme 'doom-sourcerer) ; nice gray/purple
+;; (setq doom-theme 'doom-tomorrow-night)
+(setq doom-theme 'doom-gruvbox) ; brown/orange
 ;; (setq doom-theme 'doom-material)
-(setq doom-theme 'doom-oceanic-next) ; contrasty
-(setq doom-theme 'doom-Iosvkem)
+;; (setq doom-theme 'doom-oceanic-next) ; contrasty
+;; (setq doom-theme 'doom-Iosvkem)
 ;; (setq doom-theme 'doom-nord-light) ; LIGHT
 ;; (setq doom-theme 'doom-wilmersorf) ; kinda nice (LIGHT)
 ;; (setq doom-theme 'doom-opera) ; OK
@@ -153,19 +182,35 @@ numbers are disabled. For relative line numbers, set this to ~relative~.
 (setq display-line-numbers-type t)
 #+end_src
 
+
 *** Customizations
-No menu bar
+**** No menu bar
 #+begin_src emacs-lisp
 (menu-bar-mode -1)
 #+end_src
-
+**** Dividers
 #+begin_src emacs-lisp
 (setq window-divider-default-bottom-width 4 ; in pixels
       window-divider-default-right-width 8)
 #+end_src
+**** Completion
 Ivy has this absurd thing that it does not let you unselect a completion, making it impossible to save a filename that is partially equal to an existing one...
 #+begin_src emacs-lisp
 (setq ivy-use-selectable-prompt t)
+#+end_src
+
+Vertico directory from https://www.rousette.org.uk/archives/hi-ho-hi-ho-it-s-back-to-doom-i-go/
+#+begin_src emacs-lisp
+(use-package! vertico-directory
+  :after vertico
+  :ensure nil
+  ;; More convenient directory navigation commands
+  :bind (:map vertico-map
+              ("RET" . vertico-directory-enter)
+              ("DEL" . vertico-directory-delete-char)
+              ("M-DEL" . vertico-directory-delete-word))
+  ;; Tidy shadowed file names
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
 #+end_src
 
 Some defaults
@@ -181,29 +226,8 @@ Some defaults
    )
 #+end_src
 
-Annoying pdf-tools undo warnings
-#+begin_src emacs-lisp
-;; (add-to-list 'warning-suppress-types '(undo discard-info))
-#+end_src
 
-#+begin_src emacs-lisp
-(setq fast-but-imprecise-scrolling t)
-(setq jit-lock-defer-time 0)
-#+end_src
-
-Modeline, add the nyan cat leaving a CO2 rainbow trail. For some bling since it is so [[https://www.theverge.com/2021/2/18/22287956/nyan-cat-crypto-art-foundation-nft-sale-chris-torres][valuable]] now
-#+begin_src emacs-lisp
-(nyan-mode t)
-(setq doom-modeline-modal-icon nil)
-#+end_src
-
-Trying to improve slowness:
-
-#+begin_src emacs-lisp
-(after! gcmh
-  (setq gcmh-high-cons-threshold 33554432))
-#+end_src
-
+**** Parrot mode
 Parrot mode to toggle between common boolean symbols
 #+begin_src emacs-lisp
 (use-package parrot
@@ -222,47 +246,62 @@ Parrot mode to toggle between common boolean symbols
         (:rot ("true" "false") :caps t :upcase t)
         ))
 #+end_src
-*** Key-bindings etc
+**** Tweaks
+Annoying pdf-tools undo warnings
+#+begin_src emacs-lisp
+;; (add-to-list 'warning-suppress-types '(undo discard-info))
+#+end_src
+
+#+begin_src emacs-lisp
+;; (setq fast-but-imprecise-scrolling t)
+;; (setq jit-lock-defer-time 0)
+#+end_src
+
+Modeline, add the nyan cat leaving a CO2 rainbow trail. For some bling since it is so [[https://www.theverge.com/2021/2/18/22287956/nyan-cat-crypto-art-foundation-nft-sale-chris-torres][valuable]] now
+#+begin_src emacs-lisp
+(nyan-mode t)
+(setq doom-modeline-modal-icon nil)
+#+end_src
+
+Trying to improve slowness:
+
+#+begin_src emacs-lisp
+;; (after! gcmh
+  ;; (setq gcmh-high-cons-threshold 33554432))
+#+end_src
+
+
+**** Key-binding tweaks
 #+begin_src emacs-lisp
 ;(global-set-key (kbd "C-y") 'yank)
 (global-set-key (kbd "s-z") 'undo-fu-only-undo);undo-tree-undo)
 (global-set-key (kbd "s-Z") 'undo-fu-only-redo);undo-tree-redo)
 (global-set-key (kbd "s-v") 'yank)
 (global-set-key (kbd "s-c") 'evil-yank)
-(global-set-key (kbd "s-a") 'mark-whole-buffer)
+;(global-set-key (kbd "s-a") 'mark-whole-buffer)
 (global-set-key (kbd "s-x") 'kill-region)
 (global-set-key (kbd "s-s") 'save-buffer)
-(global-set-key (kbd "s-s") 'save-buffer)
-(global-set-key (kbd "s-f") 'swiper)
+(global-set-key (kbd "s-f") '+default/search-buffer)
 (global-set-key (kbd "s-p") nil)
 ; Just to avoid issues when switching editors
-(global-set-key (kbd "s-p") nil)
-(global-set-key (kbd "s-p") 'counsel-recentf)
-
-; For avoiding conflicts with window management
-(global-set-key (kbd "s-p") nil)
-
 
 (define-key evil-insert-state-map (kbd "C-e") 'move-end-of-line)
 (define-key evil-insert-state-map (kbd "C-k") 'kill-line)
 (define-key evil-insert-state-map (kbd "C-w") 'kill-region)
 (define-key evil-visual-state-map (kbd "C-e") 'move-end-of-line)
 (define-key evil-normal-state-map (kbd "C-e") 'move-end-of-line)
-(define-key evil-normal-state-map (kbd "C-k") 'kill-line)
+;(define-key evil-normal-state-map (kbd "C-k") 'kill-line)
 (define-key evil-normal-state-map (kbd "C-y") 'yank)
 (define-key evil-insert-state-map (kbd "C-y") 'yank)
 (define-key evil-normal-state-map (kbd "C-w") 'kill-region)
 (define-key evil-visual-state-map (kbd "C-w") 'kill-region)
 
-; I fins some of these evil key-bindings are really odd...
+; I find some of these evil key-bindings are really odd...
 (define-key evil-insert-state-map (kbd "C-x C-s") 'save-buffer)
 
 ; switch header
 (global-set-key (kbd "s-<up>") 'ff-find-other-file)
-
 #+end_src
-
-Counsel: Use ~SPC-~~ followed by char
 
 #+begin_src emacs-lisp
 ;; (map! :leader
@@ -275,7 +314,7 @@ Counsel: Use ~SPC-~~ followed by char
 ;;         ))
 #+end_src
 
-Some key bindings I am used to, but this is not working in Doom...
+Some key bindings I am used to
 #+begin_src emacs-lisp
 ;; Use C-u, C-d also in insert mode
 (global-set-key (kbd "C-u") nil)
@@ -318,14 +357,36 @@ Trying to sort out conflicts with window management
 (with-eval-after-load 'evil-org (evil-org-unset-alt-keys))
 
 (global-set-key (kbd "<f12>") 'toggle-frame-fullscreen)
-
 #+end_src
-*** Look and feel
+
+**** Look and feel
+Show which buffer is active with dimmer
 #+begin_src emacs-lisp
 (use-package! dimmer
   :config (dimmer-mode))
 #+end_src
 
+**** Evil tweaks
+https://blog.meain.io/2017/how-emacs-took-over-my-vim-life/
+#+begin_src emacs-lisp
+(defun minibuffer-keyboard-quit ()
+  "Abort recursive edit.
+        In Delete Selection mode, if the mark is active, just deactivate it;
+        then it takes a second \\[keyboard-quit] to abort the minibuffer."
+  (interactive)
+  (if (and delete-selection-mode transient-mark-mode mark-active)
+      (setq deactivate-mark  t)
+    (when (get-buffer "*Completions*") (delete-windows-on "*Completions*"))
+    (abort-recursive-edit)))
+(define-key evil-normal-state-map [escape] 'keyboard-quit)
+(define-key evil-visual-state-map [escape] 'keyboard-quit)
+(define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
+(define-key minibuffer-local-ns-map [escape] 'minibuffer-keyboard-quit)
+(define-key minibuffer-local-completion-map [escape] 'minibuffer-keyboard-quit)
+(define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
+(define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
+(global-set-key [escape] 'evil-exit-emacs-state)
+#+end_src
 **** Minibuffer input
 The minibuffer at bottom can be annoying if you use the mouse.
 Trying https://github.com/muffinmad/emacs-mini-frame to fix it.
@@ -351,25 +412,6 @@ The following setup is borrowed from https://github.com/gcv/dotfiles/blob/master
 )
 #+end_src
 
-** Notes from doom config
-Here are some additional functions/macros that could help you configure Doom:
-
- - ~load!~ for loading external *.el files relative to this one
- - ~use-package~ for configuring packages
- - ~after!~ for running code after a package has loaded
- - ~add-load-path!~ for adding directories to the `load-path', relative to
-   this file. Emacs searches the ~load-path~ when you load packages with
-   ~require~ or ~use-package~.
- - ~map!~ for binding new keys
-
- To get information about any of these functions/macros, move the cursor over
- the highlighted symbol at press 'K' (non-evil users must press 'C-c g k').
- This will open documentation for it, including demos of how they are used.
-
-
-You can also try ~gd~ (or ~C-c g d~) to jump to their definition and see how
-they are implemented.
-
 ** Calendar
 #+begin_src emacs-lisp
 ;; (defun my-open-calendar ()
@@ -383,7 +425,7 @@ they are implemented.
 #+end_src
 ** Org mode
 
-Prettification (is slow), and seems to be broken (at least on mac) for org mode
+Prettification is cool but slow, and seems to be broken (at least on mac) for org mode
 #+begin_src emacs-lisp
 ;; (add-hook 'org-mode-hook (lambda ()
 ;;     (setq +pretty-code-symbols-alist '(org-mode nil ))))
@@ -402,6 +444,11 @@ Enable shift select and tabs in org mode a
 (setq org-src-tab-acts-natively t)
 #+END_SRC
 
+Make sure delete selection is active
+#+begin_src emacs-lisp
+(after! org
+  (setq delete-selection-mode t))
+#+end_src
 *** Src captions
 Want to add captions to src-block generated images.
 Solution by [[http://kitchingroup.cheme.cmu.edu/blog/2016/02/26/Adding-captions-and-attributes-to-figures-and-tables-from-code-blocks-in-org-mode/][Kitchin]]:
@@ -490,7 +537,8 @@ Export html with latex macros ([[https://emacs.stackexchange.com/questions/54703
 (use-package! oc-natbib
   :after oc)
 #+end_src
-*** Org-ref
+
+*** Org-ref (disabled, dropping it for org-cite)
 Setup org-ref
 
 #+begin_src emacs-lisp
@@ -526,29 +574,29 @@ Setup org-ref
 Also for some reason "phdthesis" is not included in the version of bibtex used
 here. Adapted from [[https://github.com/eush77/dotfiles/blob/fede630f5ad677af9e4294b6549e1ff4ed9bfc15/emacs/.emacs.d/config/config-bibtex.el][here]]
 #+begin_src emacs-lisp
-(defvar my-bibtex-biblatex-entry-type-special-aliases
-  '(("Thesis"
-     ("MastersThesis" "Master's Thesis")
-     ("PhdThesis" "PhD Thesis"))
-    ("Report"
-     ("TechReport" "Technical Report")))
-  "Special entry type aliases specified in BibLaTeX.")
+;; (defvar my-bibtex-biblatex-entry-type-special-aliases
+;;   '(("Thesis"
+;;      ("MastersThesis" "Master's Thesis")
+;;      ("PhdThesis" "PhD Thesis"))
+;;     ("Report"
+;;      ("TechReport" "Technical Report")))
+;;   "Special entry type aliases specified in BibLaTeX.")
 
-(after! bibtex
-;; Add special entry type aliases.
-(pcase-dolist (`(,aliasee . ,aliases)
-               my-bibtex-biblatex-entry-type-special-aliases)
-  (pcase-let ((`(_ _ ,required nil ,optional)
-               (assoc aliasee bibtex-biblatex-entry-alist)))
-    (dolist (alias aliases)
-      (add-to-list 'bibtex-biblatex-entry-alist
-                   (append alias
-                           (list (remove '("type") required)
-                                 nil
-                                 (cons '("type") optional)))))))
+;; (after! bibtex
+;; ;; Add special entry type aliases.
+;; (pcase-dolist (`(,aliasee . ,aliases)
+;;                my-bibtex-biblatex-entry-type-special-aliases)
+;;   (pcase-let ((`(_ _ ,required nil ,optional)
+;;                (assoc aliasee bibtex-biblatex-entry-alist)))
+;;     (dolist (alias aliases)
+;;       (add-to-list 'bibtex-biblatex-entry-alist
+;;                    (append alias
+;;                            (list (remove '("type") required)
+;;                                  nil
+;;                                  (cons '("type") optional)))))))
 
-(bibtex-set-dialect 'biblatex)
-)
+;; (bibtex-set-dialect 'biblatex)
+;; )
 #+end_src
 #+begin_src emacs-lisp
 ;; (use-package! helm-bibtex
@@ -557,28 +605,28 @@ here. Adapted from [[https://github.com/eush77/dotfiles/blob/fede630f5ad677af9e4
 ;; )
 #+end_src
 
-Setup org to open Zotero links
+*** Setup org to open Zotero links (disabled)
 #+BEGIN_SRC emacs-lisp
 ;; Create hyperlink on export
-(defun zotero-org-export (link description format)
-  (let ((path (concat "zotero:" link))
-        (desc (or description "Open in Zotero")))
-    (pcase format
-      (`html (format "<a target=\"_blank\" href=\"%s\">%s</a>" path desc))
-      (`latex (format "\\href{%s}{%s}" path desc))
-      (`texinfo (format "@uref{%s,%s}" path desc))
-      (`ascii (format "%s (%s)" desc path))
-      (t path))))
-;; Setup links
-(add-hook 'org-mode-hook
-          (lambda ()
-(org-add-link-type "zotero"
-                   (lambda (path)
-                              (browse-url (concat "zotero:" path)))
-                   'zotero-org-export)))
+;; (defun zotero-org-export (link description format)
+;;   (let ((path (concat "zotero:" link))
+;;         (desc (or description "Open in Zotero")))
+;;     (pcase format
+;;       (`html (format "<a target=\"_blank\" href=\"%s\">%s</a>" path desc))
+;;       (`latex (format "\\href{%s}{%s}" path desc))
+;;       (`texinfo (format "@uref{%s,%s}" path desc))
+;;       (`ascii (format "%s (%s)" desc path))
+;;       (t path))))
+;; ;; Setup links
+;; (add-hook 'org-mode-hook
+;;           (lambda ()
+;; (org-add-link-type "zotero"
+;;                    (lambda (path)
+;;                               (browse-url (concat "zotero:" path)))
+;;                    'zotero-org-export)))
 #+END_SRC
 
-Preview latex on save ([[https://emacs.stackexchange.com/questions/38198/automatically-preview-latex-in-org-mode-as-soon-as-i-finish-typing][from here]], disabled)
+*** Preview latex on save ([[https://emacs.stackexchange.com/questions/38198/automatically-preview-latex-in-org-mode-as-soon-as-i-finish-typing][from here]], disabled)
 #+begin_src emacs-lisp
 ;; (defun my/org-render-latex-fragments ()
 ;;   (if (org-list-latex-overlays)
@@ -591,23 +639,18 @@ Preview latex on save ([[https://emacs.stackexchange.com/questions/38198/automat
 ;;             (add-hook 'after-save-hook 'my/org-render-latex-fragments nil 'make-the-hook-local)))
 #+end_src
 
-Counsel key-bindings
+*** Counsel key-bindings (disabled)
 #+begin_src emacs-lisp
-(map!
- :after org
- :map org-mode-map
- :leader
-      (:prefix "m"
-        :desc "Insert citation" "i"  #'org-ref-helm-insert-cite-link
-        ))
+;; (map!
+;;  :after org
+;;  :map org-mode-map
+;;  :leader
+;;       (:prefix "m"
+;;         :desc "Insert citation" "i"  #'org-ref-helm-insert-cite-link
+;;         ))
 #+end_src
 
-Also org mode resets the ~delete-selection-mode~. TODO find a better solution to this
-#+begin_src emacs-lisp
-(add-hook 'org-mode-hook '(lambda () (setq delete-selection-mode t)))
-#+end_src
-
-Preview latex fragments when cursor is elsewhere
+*** Preview latex fragments when cursor is elsewhere (org-fragtog)
 #+begin_src emacs-lisp
 (add-hook 'org-mode-hook 'org-fragtog-mode)
 #+end_src
@@ -776,7 +819,6 @@ Really annoying since this needs to be done for each ~doom upgrade~.
 
 #+begin_src emacs-lisp
 (setq +latex-viewers '(pdf-tools))
-;; (set-popup-rule! "\*.pdf" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
 
 When Option-clicking on text, jump to pdf position.
@@ -787,7 +829,6 @@ When Option-clicking on text, jump to pdf position.
 
 From doom issues, sync latex and pdf, still bit dodgy:
 #+begin_src emacs-lisp
-;; to use pdfview with auctex
  (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
     TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view))
     TeX-source-correlate-start-server t) ;; not sure if last line is neccessary
@@ -839,23 +880,23 @@ Setting up IVY bibtex
 *** AucTex is sloooow
 Slowness with backspace
 #+begin_src emacs-lisp
-(after! tex-mode
-  (map-delete sp-pairs 'LaTeX-mode)
-  (map-delete sp-pairs 'latex-mode)
-  (map-delete sp-pairs 'tex-mode)
-  (map-delete sp-pairs 'plain-tex-mode))
+;; (after! tex-mode
+;;   (map-delete sp-pairs 'LaTeX-mode)
+;;   (map-delete sp-pairs 'latex-mode)
+;;   (map-delete sp-pairs 'tex-mode)
+;;   (map-delete sp-pairs 'plain-tex-mode))
 #+end_src
 *** Nomenclature support
 And... AucTex does not automatically support nomencalture so (from [https://tex.stackexchange.com/questions/36582/using-nomenclature-and-emacs])
 #+begin_src emacs-lisp
 ;; nomenclature for latex
-(eval-after-load "tex"
-  '(add-to-list 'TeX-command-list
-                '("Nomenclature" "makeindex %s.nlo -s nomencl.ist -o %s.nls"
-                  (lambda (name command file)
-                    (TeX-run-compile name command file)
-                    (TeX-process-set-variable file 'TeX-command-next TeX-command-default))
-                  nil t :help "Create nomenclature file")))
+;; (eval-after-load "tex"
+;;   '(add-to-list 'TeX-command-list
+;;                 '("Nomenclature" "makeindex %s.nlo -s nomencl.ist -o %s.nls"
+;;                   (lambda (name command file)
+;;                     (TeX-run-compile name command file)
+;;                     (TeX-process-set-variable file 'TeX-command-next TeX-command-default))
+;;                   nil t :help "Create nomenclature file")))
 #+end_src
 
 Weird behavior with AucTex (elsewhere?) where creating a double ~''~ replaces
@@ -1003,7 +1044,13 @@ Also seems that AucTex resets the ~delete-selection-mode~
 (add-to-list 'auto-mode-alist '("\\.pde\\'" . java-mode))
 #+end_src
 *** Jupyter-emacs
-
+#+begin_src emacs-lisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((emacs-lisp . t)
+   (python . t)
+   (jupyter . t)))
+#+end_src
 #+begin_src emacs-lisp
 (set-popup-rule! "\*jupyter-repl...*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
@@ -1024,10 +1071,10 @@ Unicode bug?
 Maybe one day, there will be a way to use Jupyter without crying... Emacs 27 bug
 in Jupyter emacs, REPL freezes with (relatively) large code blocks. Workaround
 from [[https://github.com/nnicandro/emacs-jupyter/issues/219]], but it removes
-fontification from REPL. No activity since August on repo....
+fontification from REPL. (seems to be fixed with new version)
 #+begin_src emacs-lisp
-(add-hook 'jupyter-repl-mode-hook
-          (lambda () (font-lock-mode 0)))
+;; (add-hook 'jupyter-repl-mode-hook
+;;           (lambda () (font-lock-mode 0)))
 #+end_src
 
 **** Spyder-like experience
@@ -1086,11 +1133,21 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
 )
 (add-hook 'jupyter-repl-interaction-mode-hook
           #'jupyter-nb-keybindings)
-
 #+end_src
 
+*** Javascript
+#+begin_src emacs-lisp
+(after! rjsx-mode
+  (setq js-indent-level 2))
+#+end_src
+
+Associate js files with ~js2-mode~ not ~rjsx-mode~
+#+begin_src emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.js.*$" . js2-mode))
+#+end_src
 
 *** C++
+**** Help projectile
 #+begin_src emacs-lisp
 (after! projectile
   (projectile-register-project-type 'cmake '("CMakeLists.txt")
@@ -1103,9 +1160,26 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
                                   :package "cmake --build . --target package")
   )
 #+end_src
-
+**** Clangd configuration
+Find mac clangd path
 #+begin_src emacs-lisp
+(if (eq system-type 'darwin)
+    (setq lsp-clangd-binary-path "/Library/Developer/CommandLineTools/usr/bin/clangd")
+)
+#+end_src
+And setup lsp to use it
+#+begin_src emacs-lisp
+(setq lsp-clients-clangd-args '("-j=3"
+                                "--background-index"
+                                "--clang-tidy"
+                                "--completion-style=detailed"
+                                "--header-insertion=never"
+                                "--header-insertion-decorators=0"))
+(after! lsp-clangd (set-lsp-priority! 'clangd 2))
+#+end_src
 
+**** LSP settings
+#+begin_src emacs-lisp
 (use-package lsp-mode
   :config
   (setq lsp-vetur-format-options-tab-size 4)
@@ -1116,7 +1190,10 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
   ;(add-to-list 'lsp-file-watch-ignored "[/\\\\]\\data")
   ;(add-to-list 'lsp-file-watch-ignored "[/\\\\]\\bin")
 )
+#+end_src
 
+**** Clang format
+#+begin_src emacs-lisp
 ;; clang-format
 (use-package clang-format
 	:ensure t
@@ -1140,22 +1217,61 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
 		tab-width 2
 		c-basic-offset 2))
 (add-hook 'c++-mode-hook 'my-c++-mode-hook)
+#+end_src
 
-;; DAP THIS
+
+
+*** DAP MODE
+#+begin_src emacs-lisp
+;; (leaf dap-mode
+;;   :ensure t
+;;   :init
+;;   (dap-mode 1)
+;;   (dap-tooltip-mode 1)
+;;   (dap-auto-configure-mode 1)
+;;   (dap-ui-controls-mode 1)
+;;   :require t dap-lldb
+;;   ;; :bind
+;;   ;; (:dap-mode-map
+;;   ;;  ([f5] . dap-debug)
+;;   ;;  ("M-d i" . dap-step-in)
+;;   ;;  ("M-d o" . dap-step-out)
+;;   ;;  ("M-d n" . dap-next)
+;;   ;;  ("M-d g" . dap-continue)
+;;   ;;  ("M-d t" . dap-breakpoint-toggle))
+;;   :config
+;;   (leaf dap-ui
+;;     :ensure nil
+;;     :require t
+;;     :config
+;;     (dap-ui-mode 1))
+;;   :custom
+;;   (dap-auto-configure-features . '(sessions locals breakpoints expressions repl controls tooltip))
+;;   (dap-lldb-debug-program . `(,(expand-file-name "~/.vscode/extensions/lanza.lldb-vscode-0.2.3/bin/darwin/bin/lldb-vscode"))))
+
 (use-package dap-mode
- :config
- (dap-mode 1)
+  :init
  (require 'dap-hydra)
  (require 'dap-launch)
- (require 'dap-cpptools)
+ (require 'dap-ui)
+ (require 'dap-lldb)
+ (dap-mode 1)
+ (dap-ui-mode 1)
+  (dap-tooltip-mode 1)
+  (dap-auto-configure-mode 1)
+  (dap-ui-controls-mode 1)
+  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra)))
+ :config
+
  (setq dap-print-io 1)
-; (require 'dap-gdb-lldb)	; download and expand lldb-vscode to the =~/.extensions/webfreak.debug= ;gdb-lldb
-; (use-package dap-lldb
- ; :disabled t)
- (use-package dap-ui
-   :ensure nil
-   :config
-   (dap-ui-mode 1)))
+ (setq dap-lldb-debug-program `(, "/opt/homebrew/opt/llvm/bin/lldb-vscode"))
+ (setq dap-auto-configure-features '(sessions locals controls tooltip))
+ )
+ ;(setq dap-lldb-debug-program `(,(expand-file-name "~/.vscode/extensions/lanza.lldb-vscode-0.2.3/bin/darwin/bin/lldb-vscode"))))
+;;  (use-package dap-ui
+;;    :ensure nil
+;;    :config
+;;    (dap-ui-mode 1)))
 
 ;; (add-hook! 'gud-mode-hook
 ;;            #'company-mode)
@@ -1173,35 +1289,34 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
 ;;   (setq dap-lldb-debug-program "/Users/colormotor/.vscode/extensions/lanza.lldb-vscode-0.2.2/bin/darwin/bin/lldb-vscode"))
 #+end_src
 
-*** DAP MODE
 Some good hints and code below: https://emacs-lsp.github.io/dap-mode/page/how-to/
 #+begin_src emacs-lisp
 ;; -*- lexical-binding: t -*-
-(define-minor-mode +dap-running-session-mode
-  "A mode for adding keybindings to running sessions"
-  nil
-  nil
-  (make-sparse-keymap)
-  (evil-normalize-keymaps) ;; if you use evil, this is necessary to update the keymaps
-  ;; The following code adds to the dap-terminated-hook
-  ;; so that this minor mode will be deactivated when the debugger finishes
-  (when +dap-running-session-mode
-    (let ((session-at-creation (dap--cur-active-session-or-die)))
-      (add-hook 'dap-terminated-hook
-                (lambda (session)
-                  (when (eq session session-at-creation)
-                    (+dap-running-session-mode -1)))))))
+;; (define-minor-mode +dap-running-session-mode
+;;   "A mode for adding keybindings to running sessions"
+;;   nil
+;;   nil
+;;   (make-sparse-keymap)
+;;   (evil-normalize-keymaps) ;; if you use evil, this is necessary to update the keymaps
+;;   ;; The following code adds to the dap-terminated-hook
+;;   ;; so that this minor mode will be deactivated when the debugger finishes
+;;   (when +dap-running-session-mode
+;;     (let ((session-at-creation (dap--cur-active-session-or-die)))
+;;       (add-hook 'dap-terminated-hook
+;;                 (lambda (session)
+;;                   (when (eq session session-at-creation)
+;;                     (+dap-running-session-mode -1)))))))
 
-;; Activate this minor mode when dap is initialized
-(add-hook 'dap-session-created-hook '+dap-running-session-mode)
+;; ;; Activate this minor mode when dap is initialized
+;; (add-hook 'dap-session-created-hook '+dap-running-session-mode)
 
-;; Activate this minor mode when hitting a breakpoint in another file
-(add-hook 'dap-stopped-hook '+dap-running-session-mode)
+;; ;; Activate this minor mode when hitting a breakpoint in another file
+;; (add-hook 'dap-stopped-hook '+dap-running-session-mode)
 
-;; Activate this minor mode when stepping into code in another file
-(add-hook 'dap-stack-frame-changed-hook (lambda (session)
-                                          (when (dap--session-running session)
-                                            (+dap-running-session-mode 1))))
+;; ;; Activate this minor mode when stepping into code in another file
+;; (add-hook 'dap-stack-frame-changed-hook (lambda (session)
+;;                                           (when (dap--session-running session)
+;;                                             (+dap-running-session-mode 1))))
 #+end_src
 
 - Other recent hints: https://www.reddit.com/r/emacs/comments/mxiqt6/how_to_setup_and_use_dapmode_for_c/
