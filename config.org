@@ -26,6 +26,17 @@ sudo add-apt-repository ppa:kelleyk/emacs
 sudo apt update
 sudo apt install emacs26
 #+end_example
+*** Debugging
+#+begin_src emacs-lisp
+;; (defadvice remove-hook (before debug-selection-hook (hook function &optional local))
+;;   (if (and (eq hook 'pre-command-hook)
+;;            (eq function 'delete-selection-pre-hook))
+;;       (raise "Removing delete-selection-pre-hook")))
+
+;; (ad-activate 'remove-hook)
+;; (ad-deactivate 'remove-hook)
+#+end_src
+
 
 ** Notes from doom config
 Here are some additional functions/macros that could help you configure Doom:
@@ -93,6 +104,12 @@ The following is from [[https://gitlab.com/justinekizhak/dotfiles/blob/master/em
 (setq delete-selection-mode t)
 #+end_src
 
+Does it have to do with smartparens mode?
+https://github.com/doomemacs/doomemacs/issues/3609
+#+begin_src emacs-lisp
+(remove-hook 'doom-first-buffer-hook #'smartparens-global-mode)
+#+end_src
+
 Also shift select (this luckily does not get disabled)
 #+begin_src emacs-lisp
 (setq shift-select-mode t)
@@ -156,7 +173,7 @@ I like to switch around between these:
 ;; (setq doom-theme 'doom-one)
 ;; (setq doom-theme 'doom-laserwave) ; kinda nice
 ;; (setq doom-theme 'doom-zenburn) ; kinda nice greyish
-;; (setq doom-theme 'doom-snazzy) ; kinda nice ++
+(setq doom-theme 'doom-snazzy) ; kinda nice ++
 ;; (setq doom-theme 'doom-rouge) ; kinda nice maybe
 ;; (setq doom-theme 'doom-nord) ; very gray
 ;;
@@ -165,15 +182,15 @@ I like to switch around between these:
 ;; (setq doom-theme 'doom-challenger-deep) ; nice
 ;; (setq doom-theme 'doom-sourcerer) ; nice gray/purple
 ;; (setq doom-theme 'doom-tomorrow-night)
-(setq doom-theme 'doom-gruvbox) ; brown/orange
+;; (setq doom-theme 'doom-gruvbox) ; brown/orange
 ;; (setq doom-theme 'doom-material)
 ;; (setq doom-theme 'doom-oceanic-next) ; contrasty
 ;; (setq doom-theme 'doom-Iosvkem)
-;; (setq doom-theme 'doom-nord-light) ; LIGHT
+(setq doom-theme 'doom-nord-light) ; LIGHT
 ;; (setq doom-theme 'doom-wilmersorf) ; kinda nice (LIGHT)
 ;; (setq doom-theme 'doom-opera) ; OK
 ;; (setq doom-theme 'doom-opera-light) ; OK (LIGHT)
-(load-theme doom-theme t) ;'doom-snazzy)
+;; (load-theme doom-theme t) ;'doom-snazzy)
 #+end_src
 
 This determines the style of line numbers in effect. If set to ~nil~, line
@@ -431,11 +448,10 @@ Prettification is cool but slow, and seems to be broken (at least on mac) for or
 ;;     (setq +pretty-code-symbols-alist '(org-mode nil ))))
 #+end_src
 
-If you use `org' and don't want your org files in the default location below,
-change `org-directory'. It must be set before org ~loads!~
-
+Setting directory for org files and roam
 #+begin_src emacs-lisp
 (setq org-directory "~/Dropbox/org/")
+(setq org-roam-directory "~/Dropbox/roam/")
 #+end_src
 
 Enable shift select and tabs in org mode a
@@ -448,6 +464,23 @@ Make sure delete selection is active
 #+begin_src emacs-lisp
 (after! org
   (setq delete-selection-mode t))
+#+end_src
+
+Org appear makes hidden links appear when cursor is in the link
+#+begin_src emacs-lisp
+(use-package! org-appear
+  :after org
+  :hook (org-mode . org-appear-mode)
+  :config (setq
+           org-appear-autolinks t
+           org-appear-autoentities t
+           org-appear-autosubmarkers t ))
+#+end_src
+
+And show inline images by default
+#+begin_src emacs-lisp
+(setq org-display-inline-images t)
+(setq org-startup-with-inline-images "inlineimages")
 #+end_src
 *** Src captions
 Want to add captions to src-block generated images.
@@ -536,6 +569,27 @@ Export html with latex macros ([[https://emacs.stackexchange.com/questions/54703
 
 (use-package! oc-natbib
   :after oc)
+#+end_src
+*** Org date format
+#+begin_src emacs-lisp
+;; ORG-EXPORT TIMESTAMPS
+;; custom format to 'euro' timestamp
+;; (setq-default org-display-custom-times t)
+;; (setq org-time-stamp-custom-formats '("<%d.%m.%Y>" . "<%d.%m.%Y %a %H:%M>"))
+(setq-default org-display-custom-times t)
+(setq org-time-stamp-custom-formats '("<%a %b %e, %Y>" . "<%a %b %e %Y %H:%M>"))
+
+                        (defun org-export-filter-timestamp-remove-brackets (timestamp backend info)
+  "removes relevant brackets from a timestamp"
+  (cond
+   ((org-export-derived-backend-p backend 'latex)
+    (replace-regexp-in-string "[<>]\\|[][]" "" timestamp))
+   ((org-export-derived-backend-p backend 'html)
+    (replace-regexp-in-string "&[lg]t;\\|[][]" "" timestamp))))
+
+(eval-after-load 'ox '(add-to-list
+                       'org-export-filter-timestamp-functions
+                       'org-export-filter-timestamp-remove-brackets))
 #+end_src
 
 *** Org-ref (disabled, dropping it for org-cite)
@@ -1055,7 +1109,7 @@ Also seems that AucTex resets the ~delete-selection-mode~
 (set-popup-rule! "\*jupyter-repl...*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
 **** Workarounds
-Unicode bug?
+***** Unicode bug?
 #+begin_src emacs-lisp
 (defun delete-non-displayable ()
   "Delete characters not contained in the used fonts and therefore non-displayable."
@@ -1075,6 +1129,15 @@ fontification from REPL. (seems to be fixed with new version)
 #+begin_src emacs-lisp
 ;; (add-hook 'jupyter-repl-mode-hook
 ;;           (lambda () (font-lock-mode 0)))
+#+end_src
+***** More unicode whoes
+Still some stuff that does not display correctly
+https://github.com/nnicandro/emacs-jupyter/issues/366#issuecomment-985730376
+#+begin_src emacs-lisp
+(defun display-ansi-colors ()
+  (ansi-color-apply-on-region (point-min) (point-max)))
+
+(add-hook 'org-babel-after-execute-hook #'display-ansi-colors)
 #+end_src
 
 **** Spyder-like experience
@@ -1265,58 +1328,38 @@ And setup lsp to use it
 
  (setq dap-print-io 1)
  (setq dap-lldb-debug-program `(, "/opt/homebrew/opt/llvm/bin/lldb-vscode"))
- (setq dap-auto-configure-features '(sessions locals controls tooltip))
+ (setq dap-auto-configure-features '(sessions locals controls breakpoints expressions repl tooltip))
  )
- ;(setq dap-lldb-debug-program `(,(expand-file-name "~/.vscode/extensions/lanza.lldb-vscode-0.2.3/bin/darwin/bin/lldb-vscode"))))
-;;  (use-package dap-ui
-;;    :ensure nil
-;;    :config
-;;    (dap-ui-mode 1)))
-
-;; (add-hook! 'gud-mode-hook
-;;            #'company-mode)
-;; (require 'gud-lldb)
-
-;; (use-package dap-mode
-;;   :ensure t
-;;   :commands dap-mode
-;;   :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra)))
-;;   :config
-;;   (dap-mode 1)
-;;   (require 'dap-ui)
-;;   (dap-ui-mode 1)
-;;   (require 'dap-lldb)
-;;   (setq dap-lldb-debug-program "/Users/colormotor/.vscode/extensions/lanza.lldb-vscode-0.2.2/bin/darwin/bin/lldb-vscode"))
 #+end_src
 
 Some good hints and code below: https://emacs-lsp.github.io/dap-mode/page/how-to/
 #+begin_src emacs-lisp
 ;; -*- lexical-binding: t -*-
-;; (define-minor-mode +dap-running-session-mode
-;;   "A mode for adding keybindings to running sessions"
-;;   nil
-;;   nil
-;;   (make-sparse-keymap)
-;;   (evil-normalize-keymaps) ;; if you use evil, this is necessary to update the keymaps
-;;   ;; The following code adds to the dap-terminated-hook
-;;   ;; so that this minor mode will be deactivated when the debugger finishes
-;;   (when +dap-running-session-mode
-;;     (let ((session-at-creation (dap--cur-active-session-or-die)))
-;;       (add-hook 'dap-terminated-hook
-;;                 (lambda (session)
-;;                   (when (eq session session-at-creation)
-;;                     (+dap-running-session-mode -1)))))))
+(define-minor-mode +dap-running-session-mode
+  "A mode for adding keybindings to running sessions"
+  nil
+  nil
+  (make-sparse-keymap)
+  (evil-normalize-keymaps) ;; if you use evil, this is necessary to update the keymaps
+  ;; The following code adds to the dap-terminated-hook
+  ;; so that this minor mode will be deactivated when the debugger finishes
+  (when +dap-running-session-mode
+    (let ((session-at-creation (dap--cur-active-session-or-die)))
+      (add-hook 'dap-terminated-hook
+                (lambda (session)
+                  (when (eq session session-at-creation)
+                    (+dap-running-session-mode -1)))))))
 
-;; ;; Activate this minor mode when dap is initialized
-;; (add-hook 'dap-session-created-hook '+dap-running-session-mode)
+;; Activate this minor mode when dap is initialized
+(add-hook 'dap-session-created-hook '+dap-running-session-mode)
 
-;; ;; Activate this minor mode when hitting a breakpoint in another file
-;; (add-hook 'dap-stopped-hook '+dap-running-session-mode)
+;; Activate this minor mode when hitting a breakpoint in another file
+(add-hook 'dap-stopped-hook '+dap-running-session-mode)
 
-;; ;; Activate this minor mode when stepping into code in another file
-;; (add-hook 'dap-stack-frame-changed-hook (lambda (session)
-;;                                           (when (dap--session-running session)
-;;                                             (+dap-running-session-mode 1))))
+;; Activate this minor mode when stepping into code in another file
+(add-hook 'dap-stack-frame-changed-hook (lambda (session)
+                                          (when (dap--session-running session)
+                                            (+dap-running-session-mode 1))))
 #+end_src
 
 - Other recent hints: https://www.reddit.com/r/emacs/comments/mxiqt6/how_to_setup_and_use_dapmode_for_c/

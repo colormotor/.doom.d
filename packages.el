@@ -47,17 +47,23 @@
 (package! ox-ipynb
   :recipe (:host github :repo "jkitchin/ox-ipynb"))
 (package! citeproc)
-
+(package! tide)
 (use-package! pdf-tools
   :if (display-graphic-p)
   :mode ("\\.pdf$" . pdf-view-mode)
   :init (load "pdf-tools-autoloads" nil t)
   :config)
+; For doc strings (requires pip install pyment)
+(package! buftra
+    :recipe (:host github :repo "humitos/buftra.el"))
+(package! py-pyment
+    :recipe (:host github :repo "humitos/py-cmd-buffer.el"))
 
 ; Try to put minibuffer input at top, so it does not interfere with info-bar
 ; https://github.com/muffinmad/emacs-mini-frame
 (package! mini-frame)
 (package! string-inflection)
+(package! org-appear)
 ;; (package! evil-briefcase
 ;;   :recipe (:host github :repo "strickinato/evil-briefcase"))
 (package! nyan-mode) ;; Keeping track of buffer pos
@@ -65,7 +71,7 @@
 (package! lsp-python-ms)
 
 (package! parrot) ;; Toggling between symbols (e.g. true/false)
-
+(package! js-format)
   ;(pdf-tools-install)) ;; This baby gives big issues with poppler
 
 ;; (package! gud-lldb
