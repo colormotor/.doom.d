@@ -1,8 +1,27 @@
-#+TITLE: Emacs Doom Config
+#+TITLE: My Doom Emacs Config
 #+AUTHOR: Daniel Berio
 #+EMAIL: drand48@gmail.com
 #+PROPERTY: header-args :emacs-lisp :tangle yes :cache yes :results silent :comments link :exports code
 
+
+#+begin_src emacs-lisp
+(setq user-full-name "Daniel Berio"
+      user-mail-address "drand48@gmail.com")
+#+end_src
+
+Emacs is not perfect, but I just cannot find a better environment for coding,
+especially given the advantages of Org mode. Main thing I miss from editors like
+VSCode, is a simple way to add multiple cursors that span a whole text line, and
+issues I've had with "delete selection mode" (the standard in common eidtors),
+which seems to disable itself at times, with a cause that I have yet to
+identify. But, at least for my use case, the utility of Org mode by far
+outweights these drawbacks.
+
+I've been using the [[https://github.com/doomemacs/doomemacs][Doom emacs]] configuration framework for a while now, after
+trying first Spacemacs and then SciMax configurations. I found Doom to be the
+most lightweight and practical solution to fully enter the emacs rabbithole.
+
+* Doom specific (from doom config)
 To execute all and update use ~C-c C-v b~ or ~C-c C-v C-b~ or ~M-x
 org-babel-execute-buffer~
 Or ~M-x doom/reload~
@@ -12,33 +31,7 @@ Or ~M-x doom/reload~
 Doom keybindings ref:
 - https://github.com/hlissner/doom-emacs/blob/develop/modules/config/default/+evil-bindings.el
 
-** Configuration rabbithole links
-- [[https://tecosaur.github.io/emacs-config/config.html][Techosaur: Very long nice config]]
-- https://github.com/hjertnes/emacs.d/blob/master/hjertnes.org
-- https://blog.sumtypeofway.com/posts/emacs-config.html
-
-*** Install on Ubuntu
-Note that Ubuntu needs "modules" support, best way to install seems to follow these instructions:
-- [[http://ubuntuhandbook.org/index.php/2019/02/install-gnu-emacs-26-1-ubuntu-18-04-16-04-18-10][Link]]
-
-#+begin_example
-sudo add-apt-repository ppa:kelleyk/emacs
-sudo apt update
-sudo apt install emacs26
-#+end_example
-*** Debugging
-#+begin_src emacs-lisp
-;; (defadvice remove-hook (before debug-selection-hook (hook function &optional local))
-;;   (if (and (eq hook 'pre-command-hook)
-;;            (eq function 'delete-selection-pre-hook))
-;;       (raise "Removing delete-selection-pre-hook")))
-
-;; (ad-activate 'remove-hook)
-;; (ad-deactivate 'remove-hook)
-#+end_src
-
-
-** Notes from doom config
+** Introspection
 Here are some additional functions/macros that could help you configure Doom:
 
  - ~load!~ for loading external *.el files relative to this one
@@ -57,89 +50,18 @@ Here are some additional functions/macros that could help you configure Doom:
 You can also try ~gd~ (or ~C-c g d~) to jump to their definition and see how
 they are implemented.
 
-** General
-#+begin_src emacs-lisp
-(setq user-full-name "Daniel Berio"
-      user-mail-address "drand48@gmail.com")
-#+end_src
 
-Start emacs with a maximized window
-#+begin_src emacs-lisp
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
-#+end_src
 
-Do not keep undo history after quit (see [[https://github.com/hlissner/doom-emacs/issues/1407][this]]). Ditched... Undo-tree is cool,
-but unfortunately once in while it will mess up the undo history. This is rare,
-but when it does happen it is a total disaster...
-#+begin_src emacs-lisp
-;; Don't save undo-tree history
-; (after! undo-tree
-;  (setq undo-tree-auto-save-history nil))
-#+end_src
+* Example configuration links
+Some existing literate configurations to get inspiration from
+- [[https://tecosaur.github.io/emacs-config/config.html][Techosaur: Very long nice config]]
+- https://github.com/hjertnes/emacs.d/blob/master/hjertnes.org
+- https://blog.sumtypeofway.com/posts/emacs-config.html
+- http://alhassy.com/emacs.d/
 
-Counsel-grep for big files
-#+begin_src emacs-lisp
-(setq counsel-grep-base-command "rg -S -M 120 --no-heading --line-number --color never %s %s")
-#+end_src
 
-*** Delete selection mode
-Delete selection mode disables itself when some kinds of errors happen.
-Not much information on this online, found this thread that mentions the problem
-https://stackoverflow.com/questions/14954490/emacs-delete-selection-mode-disables-itself
-
-My main curiosity is: is this a problem I experience due to my limited knowledge of ELISP,
-or is it a problem commonly experienced by Emacs users? The problem seems to be happen in either
-AucTex or Jupyter-Emacs, and it does not seem to be caused by my (messy) config.
-
-This discussion is ridiculous:
-https://lists.defectivebydesign.org/archive/html/emacs-devel/2018-09/msg00816.html
-
-The following is from [[https://gitlab.com/justinekizhak/dotfiles/blob/master/emacs/doom.d/config.org][this]]
-#+begin_src emacs-lisp
-(use-package delsel
-  :disabled
-  :ensure nil
-  :config (delete-selection-mode +1))
-
-(setq delete-selection-mode t)
-#+end_src
-
-Does it have to do with smartparens mode?
-https://github.com/doomemacs/doomemacs/issues/3609
-#+begin_src emacs-lisp
-(remove-hook 'doom-first-buffer-hook #'smartparens-global-mode)
-#+end_src
-
-Also shift select (this luckily does not get disabled)
-#+begin_src emacs-lisp
-(setq shift-select-mode t)
-#+end_src
-
-*** Spelling
-#+begin_src emacs-lisp
-(use-package flyspell
-  :ensure t
-  :config
-  (setq ispell-program-name "/usr/local/bin/aspell"
-        ispell-dictionary "english"))
-#+end_src
-
-*** Disable smart parens
-#+begin_src emacs-lisp
-(remove-hook 'doom-first-buffer-hook #'smartparens-global-mode)
-#+end_src
-
-*** Figlet
-Because I like ascii text. From [https://github.com/emacsmirror/figlet/blob/master/figlet.el]
-Type ~M-x figlet~ and you will be asked for a string. If you use a prefix ~C-u
-M-x figlet~ it will ask for a font.
-#+begin_src emacs-lisp
-(load! "~/.doom.d/figlet/figlet.el")
-(setq figlet-font-dir "~/.doom.d/figlet/fonts")
-(setq figlet-default-font "computer")
-#+end_src
-
-*** Editor (from Doom original config)
+* Editor configuration
+** Fonts
 Doom exposes five (optional) variables for controlling fonts in Doom. Here
 are the three important ones:
 
@@ -157,13 +79,15 @@ font string. You generally only need these two:
 #+begin_src emacs-lisp
 ;(setq doom-font (font-spec :family "monospace" :size 14))
 ;
-;(setq doom-font (font-spec :family "Fira Code" :size 12))
+(setq doom-font (font-spec :family "Fira Code" :size 13))
+;(setq doom-font (font-spec :family "Hack Nerd Font" :size 13))
+;; (setq doom-font (font-spec :family "Source Code Pro" :size 13))
 ;(setq doom-font (font-spec :family "Fira Code" :size 14))
-(setq doom-font (font-spec :family "Monaco" :size 12))
+;(setq doom-font (font-spec :family "Monaco" :size 12))
 
 #+end_src
 
-
+** Themes and customization
 There are two ways to load a theme. Both assume the theme is installed and
 available. You can either set `doom-theme' or manually load a theme with the
 ~load-theme~~ function. This is the default:
@@ -173,11 +97,12 @@ I like to switch around between these:
 ;; (setq doom-theme 'doom-one)
 ;; (setq doom-theme 'doom-laserwave) ; kinda nice
 ;; (setq doom-theme 'doom-zenburn) ; kinda nice greyish
-(setq doom-theme 'doom-snazzy) ; kinda nice ++
+;; (setq doom-theme 'doom-snazzy) ; kinda nice ++
 ;; (setq doom-theme 'doom-rouge) ; kinda nice maybe
 ;; (setq doom-theme 'doom-nord) ; very gray
 ;;
-;; (setq doom-theme 'doom-manegarm) ; freddy kruger
+;;(setq doom-theme 'doom-manegarm) ; freddy kruger
+(setq doom-theme 'doom-sourcerer) ; nice stuff
 ;; (setq doom-theme 'doom-city-lights) ; nice greenish blue
 ;; (setq doom-theme 'doom-challenger-deep) ; nice
 ;; (setq doom-theme 'doom-sourcerer) ; nice gray/purple
@@ -186,7 +111,7 @@ I like to switch around between these:
 ;; (setq doom-theme 'doom-material)
 ;; (setq doom-theme 'doom-oceanic-next) ; contrasty
 ;; (setq doom-theme 'doom-Iosvkem)
-(setq doom-theme 'doom-nord-light) ; LIGHT
+;; (setq doom-theme 'doom-nord-light) ; LIGHT
 ;; (setq doom-theme 'doom-wilmersorf) ; kinda nice (LIGHT)
 ;; (setq doom-theme 'doom-opera) ; OK
 ;; (setq doom-theme 'doom-opera-light) ; OK (LIGHT)
@@ -199,23 +124,42 @@ numbers are disabled. For relative line numbers, set this to ~relative~.
 (setq display-line-numbers-type t)
 #+end_src
 
+*** No menu bar?
+I am using [[https://github.com/koekeishiya/yabai][Yabai]] on MacOS for window management.
+Looks like the best solution, if using yabai is:
+#+begin_example
+brew install emacs-plus --with-no-titlebar --with-native-comp
+#+end_example
 
-*** Customizations
-**** No menu bar
 #+begin_src emacs-lisp
-(menu-bar-mode -1)
+;(menu-bar-mode -1)
+(setq menu-bar-mode t
+      tool-bar-mode nil
+      scroll-bar-mode nil)
+
+;; No worky with yabai
+;; (add-to-list 'default-frame-alist '(undecorated . t))
+;; (add-to-list 'default-frame-alist '(drag-internal-border . 1))
+;; (add-to-list 'default-frame-alist '(internal-border-width . 5))
+
+;(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+;(add-to-list 'default-frame-alist '(ns-appearance . dark))
+;;(menu-bar-mode t) ; Keeping this around for Yabai on mac
 #+end_src
-**** Dividers
+
+*** Dividers
 #+begin_src emacs-lisp
 (setq window-divider-default-bottom-width 4 ; in pixels
       window-divider-default-right-width 8)
 #+end_src
-**** Completion
+
+*** Completion
 Ivy has this absurd thing that it does not let you unselect a completion, making it impossible to save a filename that is partially equal to an existing one...
 #+begin_src emacs-lisp
 (setq ivy-use-selectable-prompt t)
 #+end_src
 
+**** Vertico
 Vertico directory from https://www.rousette.org.uk/archives/hi-ho-hi-ho-it-s-back-to-doom-i-go/
 #+begin_src emacs-lisp
 (use-package! vertico-directory
@@ -244,7 +188,7 @@ Some defaults
 #+end_src
 
 
-**** Parrot mode
+*** Parrot mode (toggle bool symbols)
 Parrot mode to toggle between common boolean symbols
 #+begin_src emacs-lisp
 (use-package parrot
@@ -263,7 +207,8 @@ Parrot mode to toggle between common boolean symbols
         (:rot ("true" "false") :caps t :upcase t)
         ))
 #+end_src
-**** Tweaks
+
+*** Tweaks
 Annoying pdf-tools undo warnings
 #+begin_src emacs-lisp
 ;; (add-to-list 'warning-suppress-types '(undo discard-info))
@@ -288,7 +233,19 @@ Trying to improve slowness:
 #+end_src
 
 
-**** Key-binding tweaks
+**** Show which buffer is active with dimmer
+
+#+begin_src emacs-lisp
+(use-package! dimmer
+  :config (dimmer-mode))
+#+end_src
+
+** Start emacs with a maximized window (disabled)
+#+begin_src emacs-lisp
+;; (add-to-list 'default-frame-alist '(fullscreen . maximized))
+#+end_src
+
+** Key-bindings
 #+begin_src emacs-lisp
 ;(global-set-key (kbd "C-y") 'yank)
 (global-set-key (kbd "s-z") 'undo-fu-only-undo);undo-tree-undo)
@@ -376,14 +333,7 @@ Trying to sort out conflicts with window management
 (global-set-key (kbd "<f12>") 'toggle-frame-fullscreen)
 #+end_src
 
-**** Look and feel
-Show which buffer is active with dimmer
-#+begin_src emacs-lisp
-(use-package! dimmer
-  :config (dimmer-mode))
-#+end_src
-
-**** Evil tweaks
+*** Evil
 https://blog.meain.io/2017/how-emacs-took-over-my-vim-life/
 #+begin_src emacs-lisp
 (defun minibuffer-keyboard-quit ()
@@ -404,7 +354,66 @@ https://blog.meain.io/2017/how-emacs-took-over-my-vim-life/
 (define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
 (global-set-key [escape] 'evil-exit-emacs-state)
 #+end_src
-**** Minibuffer input
+
+**** Keybinding notes
+Note that from insert mode it is possible to ~C-o~ and then use for one time any
+of the commands below.
+
+| h      | move one character left                                                         |
+| j      | move one row down                                                               |
+| k      | move one row up                                                                 |
+| l      | move one character right                                                        |
+| w      | move to beginning of next word                                                  |
+| b      | move to previous beginning of word                                              |
+| e      | move to end of word                                                             |
+| W      | move to beginning of next word after a whitespace                               |
+| B      | move to beginning of previous word before a whitespace                          |
+| E      | move to end of word before a whitespace                                         |
+|        | All the above movements can be preceded by a count; e.g. 4j moves down 4 lines. |
+| %      | Jump to matching tag/paraenthesis                                               |
+| 0      | move to beginning of line                                                       |
+| $      | move to end of line                                                             |
+| _      | move to first non-blank character of the line                                   |
+| g_     | move to last non-blank character of the line                                    |
+| gg     | move to first line                                                              |
+| G      | move to last line                                                               |
+| nG     | move to n'th line of file (n is a number; 12G moves to line 12)                 |
+| H      | move to top of screen                                                           |
+| M      | move to middle of screen                                                        |
+| L      | move to bottom of screen                                                        |
+| z.     | scroll the line with the cursor to the center of the screen                     |
+| zt     | scroll the line with the cursor to the top                                      |
+| zb     | scroll the line with the cursor to the bottom                                   |
+| Ctrl-D | move half-page down                                                             |
+| Ctrl-U | move half-page up                                                               |
+| Ctrl-B | page up                                                                         |
+| Ctrl-F | page down                                                                       |
+| Ctrl-O | jump to last (older) cursor position                                            |
+| Ctrl-I | jump to next cursor position (after Ctrl-O)                                     |
+| Ctrl-Y | move view pane up                                                               |
+| Ctrl-E | move view pane down                                                             |
+| x      | remove char                                                                     |
+| r      | replace char                                                                    |
+| n      | next matching search pattern                                                    |
+| N      | previous matching search pattern                                                |
+| \*     | next whole word under cursor                                                    |
+| \#     | previous whole word under cursor                                                |
+| g*     | next matching search (not whole word) pattern under cursor                      |
+| g#     | previous matching search (not whole word) pattern under cursor                  |
+| %      | jump to matching bracket { } [ ] ( )                                            |
+| fX     | to next 'X' after cursor, in the same line (X is any character)                 |
+| FX     | to previous 'X' before cursor (f and F put the cursor on X)                     |
+| tX     | til next 'X' (similar to above, but cursor is before X)                         |
+| TX     | til previous 'X'                                                                |
+| ;      | repeat above, in same direction                                                 |
+
+**** Block editing
+Block/edit modify. ~C-v~ enters /visual-block/ mode, which allows rectangle
+selection with kill/yank etc. Insertion is a bit weird: press ~I~, insert at the
+first line, and pressing ~Esc~ inserts at other points after (probably for perf reasons).
+
+
+*** Minibuffer input
 The minibuffer at bottom can be annoying if you use the mouse.
 Trying https://github.com/muffinmad/emacs-mini-frame to fix it.
 The following setup is borrowed from https://github.com/gcv/dotfiles/blob/master/emacs/selectrum.el
@@ -429,43 +438,125 @@ The following setup is borrowed from https://github.com/gcv/dotfiles/blob/master
 )
 #+end_src
 
-** Calendar
-#+begin_src emacs-lisp
-;; (defun my-open-calendar ()
-;;   (interactive)
-;;   (cfw:open-calendar-buffer
-;;    :contents-sources
-;;    (list
-;;     (cfw:org-create-source "Green")  ; org-agenda source
-;;     (cfw:ical-create-source "gcal" "https://..../basic.ics" "IndianRed") ; google calendar ICS
-;;    )))
-#+end_src
-** Org mode
+** Delete/shift selection mode
 
-Prettification is cool but slow, and seems to be broken (at least on mac) for org mode
+The following is from [[https://gitlab.com/justinekizhak/dotfiles/blob/master/emacs/doom.d/config.org][this]]
 #+begin_src emacs-lisp
-;; (add-hook 'org-mode-hook (lambda ()
-;;     (setq +pretty-code-symbols-alist '(org-mode nil ))))
+(use-package delsel
+  :disabled
+  :ensure nil
+  :config (delete-selection-mode +1))
+
+(setq delete-selection-mode t)
 #+end_src
 
-Setting directory for org files and roam
+
+Also shift select (this luckily does not get disabled)
 #+begin_src emacs-lisp
-(setq org-directory "~/Dropbox/org/")
-(setq org-roam-directory "~/Dropbox/roam/")
+(setq shift-select-mode t)
 #+end_src
 
-Enable shift select and tabs in org mode a
+** Issues
+Situation seems to have improved with emacs28 on mac? Issue seems to be only related to *emacs-jupyter* and *AucTex* being active. With jupyter maybe related to REPL.
+
+Delete selection mode disables itself when some kinds of errors happen.
+Not much information on this online, found this thread that mentions the problem
+https://stackoverflow.com/questions/14954490/emacs-delete-selection-mode-disables-itself
+
+My main curiosity is: is this a problem I experience due to my limited knowledge of ELISP,
+or is it a problem commonly experienced by Emacs users? The problem seems to be happen in either
+AucTex or Jupyter-Emacs, and it does not seem to be caused by my (messy) config.
+
+This discussion is ridiculous:
+https://lists.defectivebydesign.org/archive/html/emacs-devel/2018-09/msg00816.html
+
+#+begin_src emacs-lisp
+;; (defadvice remove-hook (before debug-selection-hook (hook function &optional local))
+;;   (if (and (eq hook 'pre-command-hook)
+;;            (eq function 'delete-selection-pre-hook))
+;;       (raise "Removing delete-selection-pre-hook")))
+
+;; ;(ad-activate 'remove-hook)
+;; (ad-deactivate 'remove-hook)
+#+end_src
+
+Does it have to do with smartparens mode?
+https://github.com/doomemacs/doomemacs/issues/3609
+#+begin_src emacs-lisp
+(remove-hook 'doom-first-buffer-hook #'smartparens-global-mode)
+#+end_src
+
+*** Some old tests
+#+begin_src emacs-lisp
+;; (defun post-evil-insert (count &optional vcount skip-empty-lines)
+;;   (message "Forcing delete selection mode")
+;;   (setq delete-selection-mode t)
+;;   )
+;; (advice-add 'evil-insert :after 'post-evil-insert)
+#+end_src
+
+#+begin_src emacs-lisp
+;; (defun watch-delsel (symbol newval op where)
+;;    (message "Delsel: %s, val: %s, op: %s, where: %s" symbol newval op where)
+;; )
+
+;; (add-variable-watcher 'delete-selection-mode #'watch-delsel)
+#+end_src
+
+
+** Undo
+Do not keep undo history after quit (see [[https://github.com/hlissner/doom-emacs/issues/1407][this]]). Ditched... Undo-tree is cool,
+but unfortunately once in while it will mess up the undo history. This is rare,
+but when it does happen it is a total disaster...
+#+begin_src emacs-lisp
+;; Don't save undo-tree history
+; (after! undo-tree
+;  (setq undo-tree-auto-save-history nil))
+#+end_src
+
+** Counsel-grep for big files
+#+begin_src emacs-lisp
+(setq counsel-grep-base-command "rg -S -M 120 --no-heading --line-number --color never %s %s")
+#+end_src
+** Figlet
+Because I like ascii text. From [https://github.com/emacsmirror/figlet/blob/master/figlet.el]
+Type ~M-x figlet~ and you will be asked for a string. If you use a prefix ~C-u
+M-x figlet~ it will ask for a font.
+#+begin_src emacs-lisp
+(load! "~/.doom.d/figlet/figlet.el")
+(setq figlet-font-dir "~/.doom.d/figlet/fonts")
+(setq figlet-default-font "computer")
+#+end_src
+
+** Spelling
+#+begin_src emacs-lisp
+(use-package flyspell
+  :ensure t
+  :config
+  (setq ispell-program-name "/usr/local/bin/aspell"
+        ispell-dictionary "english"))
+#+end_src
+
+
+* Org mode (with Org-Roam)
+#+begin_src emacs-lisp
+(setq org-directory "~/Dropbox/org")
+#+end_src
+** Settings
+*** Enable shift select and tabs in org mode
 #+BEGIN_SRC emacs-lisp
 (setq org-support-shift-select 'always)
 (setq org-src-tab-acts-natively t)
 #+END_SRC
 
-Make sure delete selection is active
+*** Make sure delete selection is active
 #+begin_src emacs-lisp
 (after! org
-  (setq delete-selection-mode t))
+  (setq delete-selection-mode t)
+)
 #+end_src
 
+*** Org appear
 Org appear makes hidden links appear when cursor is in the link
 #+begin_src emacs-lisp
 (use-package! org-appear
@@ -482,6 +573,13 @@ And show inline images by default
 (setq org-display-inline-images t)
 (setq org-startup-with-inline-images "inlineimages")
 #+end_src
+*** Prettification (disabled)
+This is cool but slow, and seems to be broken (at least on mac) for org mode
+#+begin_src emacs-lisp
+;; (add-hook 'org-mode-hook (lambda ()
+;;     (setq +pretty-code-symbols-alist '(org-mode nil ))))
+#+end_src
+
 *** Src captions
 Want to add captions to src-block generated images.
 Solution by [[http://kitchingroup.cheme.cmu.edu/blog/2016/02/26/Adding-captions-and-attributes-to-figures-and-tables-from-code-blocks-in-org-mode/][Kitchin]]:
@@ -495,9 +593,9 @@ Solution by [[http://kitchingroup.cheme.cmu.edu/blog/2016/02/26/Adding-captions-
      (format "#+caption: %s" caption))))
 #+END_SRC
 
-*** Export
-
-Embed CSS by default
+*** HTML Export
+Embed CSS by default. It would be nice to set a specific doom theme here, maybe the feature will come in doom.
+For now the default css assumes a dark theme.
 
 #+begin_src emacs-lisp
 (defun my-org-inline-css-hook (exporter)
@@ -515,12 +613,14 @@ Embed CSS by default
                              (insert-file-contents final)
                              (buffer-string))
                            "/*]]>*/-->\n"
-                           "</style>\n")))))
+                           "</style>\n"))
+      )
+    )
+  )
 
 (add-hook 'org-export-before-processing-hook 'my-org-inline-css-hook)
 #+end_src
-
-*** Latex export org
+*** Latex export (org)
 Export html with latex macros ([[https://emacs.stackexchange.com/questions/54703/exporting-latex-commands-to-html-mathjax]])
 #+begin_src emacs-lisp
 ;;;###autoload
@@ -545,41 +645,22 @@ Export html with latex macros ([[https://emacs.stackexchange.com/questions/54703
    "\n#+HTML_HEAD_EXTRA: \\)</div>\n"))
 #+end_src
 
-*** Org-cite
-#+begin_src emacs-lisp
-(use-package! citeproc
-  :defer t)
-(map! :after org
-      :map org-mode-map
-      :localleader
-      :desc "Insert citation" "@" #'org-cite-insert)
-
-(use-package! citar
-  :when (featurep! :completion vertico))
-
-(use-package! oc
-  :after org citar)
-
-;;; Org-cite processors
-(use-package! oc-biblatex
-  :after oc)
-
-(use-package! oc-csl
-  :after oc)
-
-(use-package! oc-natbib
-  :after oc)
-#+end_src
 *** Org date format
-#+begin_src emacs-lisp
-;; ORG-EXPORT TIMESTAMPS
-;; custom format to 'euro' timestamp
-;; (setq-default org-display-custom-times t)
-;; (setq org-time-stamp-custom-formats '("<%d.%m.%Y>" . "<%d.%m.%Y %a %H:%M>"))
-(setq-default org-display-custom-times t)
-(setq org-time-stamp-custom-formats '("<%a %b %e, %Y>" . "<%a %b %e %Y %H:%M>"))
 
-                        (defun org-export-filter-timestamp-remove-brackets (timestamp backend info)
+*** Custom date format
+
+Having a custom date format in org is nice, but it becomes difficult to edit timestamps (e.g. ++1d for repeating).
+
+#+begin_src emacs-lisp
+
+;; (setq-default org-display-custom-times t)
+;; (setq org-time-stamp-custom-formats '("<%a %b %e, %Y>" . "<%a %b %e %Y %H:%M>"))
+#+end_src
+
+
+However, we still want to remove these brackets when exporting
+#+begin_src emacs-lisp
+(defun org-export-filter-timestamp-remove-brackets (timestamp backend info)
   "removes relevant brackets from a timestamp"
   (cond
    ((org-export-derived-backend-p backend 'latex)
@@ -591,94 +672,6 @@ Export html with latex macros ([[https://emacs.stackexchange.com/questions/54703
                        'org-export-filter-timestamp-functions
                        'org-export-filter-timestamp-remove-brackets))
 #+end_src
-
-*** Org-ref (disabled, dropping it for org-cite)
-Setup org-ref
-
-#+begin_src emacs-lisp
-;; Big hack to insert biblio entry titles
-;; unelegant simply because I do not really know LISP
-;; adapted from: http://www.mail-archive.com/emacs-orgmode@gnu.org/msg110385.html
-
-;; (defun set-format (key)
-;;   (setf (cdr (assoc key (cdr (assoc "org"
-;;                                     org-ref-formatted-citation-formats))))
-;;         "${author} ${year}. /${title}/. [[cite:${=key=}]]")
-;;   )
-
-;; (use-package! org-ref
-;;     :after org
-;;     :init
-;;     ; code to run before loading org-ref
-;;     :config
-;;     ; code to run after loading org-ref
-;;     (setq org-ref-default-bibliography '("./autograff-biblio.bib")) ; this is a list but multiple files don't seem to work
-;;     (setq org-ref-formatted-citation-backend "org")
-;;     (set-format "article")
-;;     (set-format "inproceedings")
-;;     (set-format "book")
-;;     (set-format "phdthesis")
-;;     (set-format "inbook")
-;;     (set-format "incollection")
-;;     (set-format "proceedings")
-;;     (set-format "unpublished")
-;;    )
-#+end_src
-
-Also for some reason "phdthesis" is not included in the version of bibtex used
-here. Adapted from [[https://github.com/eush77/dotfiles/blob/fede630f5ad677af9e4294b6549e1ff4ed9bfc15/emacs/.emacs.d/config/config-bibtex.el][here]]
-#+begin_src emacs-lisp
-;; (defvar my-bibtex-biblatex-entry-type-special-aliases
-;;   '(("Thesis"
-;;      ("MastersThesis" "Master's Thesis")
-;;      ("PhdThesis" "PhD Thesis"))
-;;     ("Report"
-;;      ("TechReport" "Technical Report")))
-;;   "Special entry type aliases specified in BibLaTeX.")
-
-;; (after! bibtex
-;; ;; Add special entry type aliases.
-;; (pcase-dolist (`(,aliasee . ,aliases)
-;;                my-bibtex-biblatex-entry-type-special-aliases)
-;;   (pcase-let ((`(_ _ ,required nil ,optional)
-;;                (assoc aliasee bibtex-biblatex-entry-alist)))
-;;     (dolist (alias aliases)
-;;       (add-to-list 'bibtex-biblatex-entry-alist
-;;                    (append alias
-;;                            (list (remove '("type") required)
-;;                                  nil
-;;                                  (cons '("type") optional)))))))
-
-;; (bibtex-set-dialect 'biblatex)
-;; )
-#+end_src
-#+begin_src emacs-lisp
-;; (use-package! helm-bibtex
-;;   :config
-;;   (setq helm-bibtex-bibliography '("./autograff-biblio.bib"))
-;; )
-#+end_src
-
-*** Setup org to open Zotero links (disabled)
-#+BEGIN_SRC emacs-lisp
-;; Create hyperlink on export
-;; (defun zotero-org-export (link description format)
-;;   (let ((path (concat "zotero:" link))
-;;         (desc (or description "Open in Zotero")))
-;;     (pcase format
-;;       (`html (format "<a target=\"_blank\" href=\"%s\">%s</a>" path desc))
-;;       (`latex (format "\\href{%s}{%s}" path desc))
-;;       (`texinfo (format "@uref{%s,%s}" path desc))
-;;       (`ascii (format "%s (%s)" desc path))
-;;       (t path))))
-;; ;; Setup links
-;; (add-hook 'org-mode-hook
-;;           (lambda ()
-;; (org-add-link-type "zotero"
-;;                    (lambda (path)
-;;                               (browse-url (concat "zotero:" path)))
-;;                    'zotero-org-export)))
-#+END_SRC
 
 *** Preview latex on save ([[https://emacs.stackexchange.com/questions/38198/automatically-preview-latex-in-org-mode-as-soon-as-i-finish-typing][from here]], disabled)
 #+begin_src emacs-lisp
@@ -703,6 +696,27 @@ here. Adapted from [[https://github.com/eush77/dotfiles/blob/fede630f5ad677af9e4
 ;;         :desc "Insert citation" "i"  #'org-ref-helm-insert-cite-link
 ;;         ))
 #+end_src
+
+*** Setup org to open Zotero links (disabled)
+#+BEGIN_SRC emacs-lisp
+;; Create hyperlink on export
+;; (defun zotero-org-export (link description format)
+;;   (let ((path (concat "zotero:" link))
+;;         (desc (or description "Open in Zotero")))
+;;     (pcase format
+;;       (`html (format "<a target=\"_blank\" href=\"%s\">%s</a>" path desc))
+;;       (`latex (format "\\href{%s}{%s}" path desc))
+;;       (`texinfo (format "@uref{%s,%s}" path desc))
+;;       (`ascii (format "%s (%s)" desc path))
+;;       (t path))))
+;; ;; Setup links
+;; (add-hook 'org-mode-hook
+;;           (lambda ()
+;; (org-add-link-type "zotero"
+;;                    (lambda (path)
+;;                               (browse-url (concat "zotero:" path)))
+;;                    'zotero-org-export)))
+#+END_SRC
 
 *** Preview latex fragments when cursor is elsewhere (org-fragtog)
 #+begin_src emacs-lisp
@@ -843,7 +857,322 @@ Drag and drop and paste images into org
 
 #+end_src
 
-** Magit
+
+** Org Roam
+Org roam allows to organize a database of notes with links. Some usecase links:
+
+- https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el
+- https://hugocisneros.com/org-config/#org-roam
+
+I keep roam separated from the main org directory, which I mostly use for the agenda
+#+begin_src emacs-lisp
+(setq org-roam-directory "~/Dropbox/orgroam/")
+#+end_src
+
+I then define the following note types:
+- *main*: for notes on specific topics
+- *article*: for longer "blog-like" articles that might also have code and images
+- *reference*: for notes relating to a specific paper (from my Zotero-generated biblio)
+
+#+begin_src emacs-lisp
+(after! org-roam
+    (setq org-roam-capture-templates
+            '(("m" "main" plain
+            "%?"
+            :if-new (file+head "main/${slug}.org"
+                                "#+title: ${title}\n")
+            :immediate-finish t
+            :unnarrowed t)
+            ("r" "reference" plain "%?"
+            :if-new
+            (file+head "reference/${slug}.org" "#+title: ${title}\n")
+            :immediate-finish t
+            :unnarrowed t)
+            ("a" "article" plain "%?"
+            :if-new
+            (file+head "articles/${slug}.org" "#+title: ${title}\n#+filetags: :article:\n")
+            :immediate-finish t
+            :unnarrowed t)))
+
+    (cl-defmethod org-roam-node-type ((node org-roam-node))
+    "Return the TYPE of NODE."
+    (condition-case nil
+        (file-name-nondirectory
+        (directory-file-name
+            (file-name-directory
+            (file-relative-name (org-roam-node-file node) org-roam-directory))))
+        (error "")))
+
+    (setq org-roam-node-display-template
+        (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+    (org-roam-db-autosync-mode +1)
+
+    (setq org-roam-graph-viewer "/Applications/Firefox.app/Contents/MacOS/firefox")
+)
+#+end_src
+*** Org-roam UI
+#+begin_src emacs-lisp
+(use-package! websocket
+    :after org-roam)
+
+(use-package! org-roam-ui
+    :after org-roam ;; or :after org
+;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+;;         a hookable mode anymore, you're advised to pick something yourself
+;;         if you don't care about startup time, use
+;;  :hook (after-init . org-roam-ui-mode)
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
+#+end_src
+
+
+** Calendar/Agenda
+*** Notes
+Basic keybindings:
+- ~C-c C-t~ or ~SPC m t~ -> select todo state
+- ~RET~ in normal mode toggles TODO and DONE.
+- ~SPC m d s~ org-schedule (set time and date) use shift arrows to navigate
+- ~C-c .~ edit date/time stamp
+- ~SPC o a a a~ open agenda view
+- ~SPC X~ org capture
+
+**** Scheduling:
+From https://emacs.stackexchange.com/questions/10504/understanding-scheduled-in-org-mode
+- A *plain* timestamp, ~C-c .~
+  - This is used for things like *appointments* where the entry occurs at a
+    specific date/time. Such an entry will show up in the agenda on the
+    specified day, and will not show up after that day has passed. Note that an
+    appointment in the past won't keep showing up on your agenda regardless of
+    whether you mark it DONE: if you didn't go to your doctor's appointment
+    yesterday, that doesn't mean you still have one today!
+- A *SCHEDULED* timestamp, ~C-c C-s~ (Won't be exported in ICS file!)
+  - This is used to indicate *when you intend to do the task*. It will show up on
+    the agenda on the scheduled day. If you don't complete the task at that
+    time, it will continue to show up on the agenda on the following days to
+    show you that you have not completed something that you planned to do.
+- A *DEADLINE* timestamp, ~C-c C-d~ (Won't be exported in ICS file!)
+  - This is used to indicate *when something must be completed*. Typically you
+    want to see deadlines ahead of time, so that you can do whatever it is that
+    must be done to meet them. Like a scheduled entry, if you miss a deadline it
+    will continue to appear on the agenda as past due.
+
+**** Cool feature
+*SCHEDULED* and *DEADLINE* with a *TODO* will continue appearing in agenda view (DEADLINE with a reminder in xx days, SCHEDULED if not switched to *DONE*)
+
+*** Checkboxes, make a list of checkbox items
+- [ ] Item 1 (to check/uncheck either ~RET~), ~C RET~ to make a new one
+- [ ] Or ~C-c C-c~ or ~SPC m x~ to just make check uncheck
+
+
+*** Setup
+#+begin_src emacs-lisp
+;; Looks like we need to manually set this to use the ^T templates?
+(use-package! org-journal)
+
+(setq org-agenda-files '("~/Dropbox/org/"))
+
+(after! org
+    (setq! +org-capture-todo-file (expand-file-name "todo.org" org-directory)
+           +org-capture-projects-file (expand-file-name "projects.org" org-directory)
+           +org-capture-notes-file (expand-file-name "notes.org" org-directory)
+           +org-capture-journal-file (expand-file-name "journal.org" org-directory)
+           +org-capture-agenda-file (expand-file-name "agenda.org" org-directory)
+           )
+
+    (setq org-capture-templates
+          '(("a" "Agenda" entry
+            (file+headline +org-capture-agenda-file "Inbox")
+            "* %?\nSCHEDULED:%^T\n%a":prepend t)
+            ;"* %?\n%i\n%a" :prepend t)
+            ("t" "Todo" entry
+            (file+headline +org-capture-todo-file "Inbox")
+            "* TODO %?\n%i\n%a" :prepend t)
+            ("n" "Personal notes" entry
+             (file+headline +org-capture-notes-file "Inbox")
+             "* %u %?\n%i\n%a" :prepend t)
+            ("j" "Journal" entry
+             (file+olp+datetree +org-capture-journal-file)
+             "* %U %?\n%i\n%a" :prepend t)
+            ("p" "Project todo" entry
+             (file+headline +org-capture-projects-file "Inbox")
+             "* TODO %?\n%i\n%a" :prepend t)))
+)
+
+#+end_src
+
+*** Sync with google
+Most approaches seem to be broken. E.g. gcal is sensitie to changes in Google security policy.
+Current best approach: sync into Google Calandar using:
+- https://gist.github.com/florisvanvugt/c1c0e1c9a782b46430cf2854238a285f
+- or https://orgmode.org/worg/org-tutorials/org-google-sync.html
+Currently exporting to https://www.enist.org/ical/exported.ics.
+Problem is that Google calendar does not update often enough. To solve the issue we can use a script:
+- https://script.google.com/home/projects/1bSj7h6TPyh09menAGgmBh9RL6SEHgOdh_YZZyfEi97Uc1EoQHdelIzc7/edit
+
+To set up regular exporting save the following to ~~/.doom.d/bin/export_calendar~:
+#+begin_example emacs-lisp
+#!/usr/bin/env doomscript
+
+(defcli! export-calendar (&args files)
+  ;; Make sure .doom.d/bin is in path for this to work
+  (require 'doom-start)          ; load your user config
+  (org-icalendar-combine-agenda-files)
+)  ; and export it
+
+(run! "export-calendar" (cdr (member "--" argv)))
+#+end_example
+and make it executable with ~chmod +x ~/.doom.d/export_calendar~ it.
+Then make a script ~publish_calendar.sh~ to be placed together with org files (similar to the ones above) and schedule sync by opening ~crontab -e~ (VI) and writing
+#+begin_example
+MAILTO=""
+5,20,35,50 * * * * sh ~/Dropbox/org/publish_calendar.sh >> ~/tmp/publish_cron_log.txt
+#+end_example
+Note that ~crontab -l~ shows current cron schedules
+
+**** Note!
+~crontab~ does not know about homebrew. So using commands like ~gawk~ and ~wget~ will require the following lines before 'MAIL':
+#+begin_example
+SHELL=/bin/zsh
+PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin
+#+end_example
+
+**** Two way integration?
+https://orgmode.org/worg/org-tutorials/org-google-sync.html
+
+We will need ~gawk~ and ~wget~:
+#+begin_example
+brew install wget
+brew install gawk
+#+end_example
+~gawk~ might require unlinking ~awk~ (is it OK?)
+#+begin_example
+brew unlink awk
+#+end_example
+
+Fetch ics links from google and outlook, and create a ~fetch_calendars.sh~ file:
+#+begin_example
+#!/usr/bin/env sh
+
+ICS2ORG=~/Dropbox/org/ical2org.awk
+
+ICSFILE=~/tmp/google.ics
+URL=url here...
+
+wget -O $ICSFILE $URL
+$ICS2ORG < $ICSFILE > ~/Dropbox/org/googlecal.org
+
+ICSFILE=~/tmp/outlook.ics
+URL=url here...
+
+wget -O $ICSFILE $URL
+$ICS2ORG < $ICSFILE > ~/Dropbox/org/outlookcal.org
+#+end_example
+
+with ~crontab -e~ add:
+#+begin_example
+5,20,35,50 * * * * sh ~/Dropbox/org/fetch_calendars.sh &> /dev/null #sync org files
+#+end_example
+
+*** Setup
+Org gcal exists, but broken. Eneded up using a complex script setup
+https://orgmode.org/worg/org-tutorials/org-google-sync.html
+
+#+begin_src emacs-lisp
+;;; Taken pretty much verbatim from https://orgmode.org/worg/org-tutorials/org-google-sync.html
+;;; Thanks to those developers!
+
+;; https://stackoverflow.com/questions/23463962/emacs-export-calendar-bad-timezone-format-in-ics
+(after! org
+  (setq org-icalendar-timezone "Europe/London")
+  (setq org-icalendar-combined-agenda-file "~/Dropbox/org/export.ics") ;; See ~/.doom.d/bin/export_calendar
+  ;; Add scheduled and deadline to calendar
+  (setq! org-icalendar-include-todo t
+         org-icalendar-use-deadline '(event-if-todo event-if-not-todo todo-due)
+         org-icalendar-use-scheduled '(event-if-todo event-if-not-todo todo-start))
+  ;;; define tags that should be excluded
+  (setq org-icalendar-exclude-tags (list "imported" "noexport" "google" "private"))
+)
+#+end_src
+
+#+begin_src emacs-lisp
+(defun sync-calendars ()
+  (interactive)
+  (shell-command "export_calendar; sh ~/Dropbox/org/fetch_calendars.sh; sh ~/Dropbox/org/publish_calendar.sh")
+)
+#+end_src
+
+** Org-cite
+Switching to this from Org-ref. See [[https://blog.tecosaur.com/tmio/2021-07-31-citations.html][Techosaur]] and [[https://kristofferbalintona.me/posts/202206141852/][This]] for usage.
+
+#+begin_src emacs-lisp
+(use-package! citeproc
+  :defer t)
+(map! :after org
+      :map org-mode-map
+      :localleader
+      :desc "Insert citation" "@" #'org-cite-insert)
+
+(use-package! citar
+  :when (featurep! :completion vertico))
+
+(use-package! oc
+  :after org citar)
+
+;;; Org-cite processors
+(use-package! oc-biblatex
+  :after oc)
+
+(use-package! oc-csl
+  :after oc)
+
+(use-package! oc-natbib
+  :after oc)
+#+end_src
+
+Keep zotero and a global bib file synched:
+#+begin_src emacs-lisp
+(after! citar
+  (setq! citar-bibliography '("~/Dropbox/org/zotero-biblio.bib"))
+  (setq citar-notes-paths '("~/Dropbox/roam"))
+  )
+
+;; (use-package! citar-org-roam
+;;   :after citar org-roam
+;;   :no-require
+;;   :config (citar-org-roam-mode))
+
+;; Create a new node from a bibliographic source. taken from
+;; https://jethrokuan.github.io/org-roam-guide/ and https://kristofferbalintona.me/posts/202206141852/
+(defun cm/org-roam-node-from-cite (keys-entries)
+    (interactive (list (citar-select-ref :multiple nil :rebuild-cache t)))
+    (let ((title (citar--format-entry-no-widths (cdr keys-entries)
+                                                "${author editor} (${date year issued:4}) ${title}")))
+      (org-roam-capture- :templates
+                         '(("r" "reference" plain "%?" :if-new
+                            (file+head "reference/${citekey}.org"
+                                       ":PROPERTIES:
+:ROAM_REFS: [cite:@${citekey}]
+:END:
+,#+title: ${title}\n")
+                            :immediate-finish t
+                            :unnarrowed t))
+                         :info (list :citekey (car keys-entries))
+                         :node (org-roam-node-create :title title)
+                         :props '(:finalize find-file))))
+
+(map!
+ :map org-roam-mode-map
+ :leader
+ :desc "Add citation reference"
+ "n r c" #'cm/org-roam-node-from-cite)
+#+end_src
+
+
+
+* Magit (git)
 Performance improvements
 #+begin_src emacs-lisp
 (use-package! magit
@@ -858,8 +1187,24 @@ Do not show whitespace diffs
 (setq ediff-diff-options "-w")
 #+end_src
 
-** Latex (AucTex + RefTex)
-And set pdf-tools internal latex viewer
+** Keybinding notes
+   | M-x magit-status | Git status                                                      |
+   | k                | over file will delete it                                        |
+   | s                | over a file will stage it                                       |
+   | u                | over a file will unstage it                                     |
+   | c                | commit, a commit message win will popup then C-c C-c to commit. |
+   | g                | update status (eg when modifying files)                         |
+   | P P              | push                                                            |
+   | f f              | pull                                                            |
+   | tab              | expands file diffs                                              |
+   | b c              | create branch                                                   |
+   | q                | exit                                                            |
+
+   When writing commit message ~C-c C-c~ to save and close.
+   Emergency: ~C-c C-k~ force quit
+
+* Latex (AucTex + RefTex)
+I use the pdf-tools internal latex viewer
 But note that currently issues arise with ~PKG_CONFIG~ and poppler.
 A workaround seems to be to manually compile ~epdfinfo~ with
 #+begin_example
@@ -871,6 +1216,13 @@ make -s install
 Really annoying since this needs to be done for each ~doom upgrade~.
 
 
+To view pdfs first time need to:
+~M-x pdf-tools-install~
+
+** Keybinding notes
+~C-c C-c~ compile/view etc
+
+** Config
 #+begin_src emacs-lisp
 (setq +latex-viewers '(pdf-tools))
 #+end_src
@@ -897,11 +1249,6 @@ Try to get pdf to always popup on side
 #+begin_src emacs-lisp
 (set-popup-rule! "\*.pdf" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
-Trying to get rid of the ~epdfinfo: Destination not found~ error.
-See [https://github.com/politza/pdf-tools/issues/302]
-#+begin_src emacs-lisp
-(add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
-#+end_src
 
 Ask for master file (~Tex-master~ multifile support)? Ideally we would want
 AucTex to always ask (~nil~), but this is set in the local variables of a buffer
@@ -917,10 +1264,6 @@ Get RefTex to search for valid biblios
 (setq reftex-use-external-file-finders t)
 #+end_src
 
-Setting up IVY bibtex
-#+begin_src emacs-lisp
-;(setq ivy-bibtex-default-action 'ivy-bibtex-insert-key)
-#+end_src
 
 #+begin_src emacs-lisp
 ;; Using pdflatex as the default compiler for .tex files
@@ -930,6 +1273,13 @@ Setting up IVY bibtex
 ;; In AUCTex, make PDF by default (can toggle with C-c C-t C-p)
 (add-hook 'LaTeX-mode-hook '(lambda () (TeX-PDF-mode 1)))
 #+end_src
+** Issues
+Trying to get rid of the ~epdfinfo: Destination not found~ error.
+See [https://github.com/politza/pdf-tools/issues/302]
+#+begin_src emacs-lisp
+(add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
+#+end_src
+
 
 *** AucTex is sloooow
 Slowness with backspace
@@ -940,8 +1290,9 @@ Slowness with backspace
 ;;   (map-delete sp-pairs 'tex-mode)
 ;;   (map-delete sp-pairs 'plain-tex-mode))
 #+end_src
-*** Nomenclature support
-And... AucTex does not automatically support nomencalture so (from [https://tex.stackexchange.com/questions/36582/using-nomenclature-and-emacs])
+** Nomenclature support
+I needed "nomenclature" for my thesis... but
+AucTex does not automatically support nomencalture so (from [https://tex.stackexchange.com/questions/36582/using-nomenclature-and-emacs])
 #+begin_src emacs-lisp
 ;; nomenclature for latex
 ;; (eval-after-load "tex"
@@ -973,8 +1324,8 @@ the previous closing bracket with quotes?? (**NB** this does not really work)
         ))
 #+end_src
 
-*** Title case for bibtex entries
-Convert bibtex entries to Title Case, from
+** Title case for bibtex entries
+This is a snippet to convert bibtex entries to Title Case, from
 http://kitchingroup.cheme.cmu.edu/blog/2014/10/12/Title-casing-bibtex-entry-journal-titles/
 
 To use, put this at beginning of bibtex file
@@ -1032,7 +1383,7 @@ entries in articles."
       (bibtex-fill-entry))))
 #+end_src
 
-*** Wordcount
+** Wordcount
 Tex word count with master file (from
 [https://superuser.com/questions/125027/word-count-for-latex-within-emacs])
 #+begin_src emacs-lisp
@@ -1081,7 +1432,8 @@ Also seems that AucTex resets the ~delete-selection-mode~
 (add-hook 'LaTeX-mode-hook '(lambda () (global-set-key (kbd "C-e") 'move-end-of-line)))
 #+end_src
 
-** Coding
+
+* Coding
 #+begin_src emacs-lisp
 (setq flycheck-checker-error-threshold 2500)
 #+end_src
@@ -1092,12 +1444,14 @@ Also seems that AucTex resets the ~delete-selection-mode~
 # (require 'ox-ipynb)
 # #+end_src
 
-*** Additional file extensions
+** Additional file extensions
 #+begin_src emacs-lisp
 ; Processing
 (add-to-list 'auto-mode-alist '("\\.pde\\'" . java-mode))
 #+end_src
-*** Jupyter-emacs
+
+** Jupyter-emacs
+While limited in some ways, and not much maintained [[https://github.com/nnicandro/emacs-jupyter][emacs jupyter]] is still my favourite way to code Python
 #+begin_src emacs-lisp
 (org-babel-do-load-languages
  'org-babel-load-languages
@@ -1108,8 +1462,8 @@ Also seems that AucTex resets the ~delete-selection-mode~
 #+begin_src emacs-lisp
 (set-popup-rule! "\*jupyter-repl...*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
-**** Workarounds
-***** Unicode bug?
+*** Workarounds
+**** Unicode bug?
 #+begin_src emacs-lisp
 (defun delete-non-displayable ()
   "Delete characters not contained in the used fonts and therefore non-displayable."
@@ -1130,7 +1484,7 @@ fontification from REPL. (seems to be fixed with new version)
 ;; (add-hook 'jupyter-repl-mode-hook
 ;;           (lambda () (font-lock-mode 0)))
 #+end_src
-***** More unicode whoes
+**** More unicode whoes
 Still some stuff that does not display correctly
 https://github.com/nnicandro/emacs-jupyter/issues/366#issuecomment-985730376
 #+begin_src emacs-lisp
@@ -1140,12 +1494,15 @@ https://github.com/nnicandro/emacs-jupyter/issues/366#issuecomment-985730376
 (add-hook 'org-babel-after-execute-hook #'display-ansi-colors)
 #+end_src
 
-**** Spyder-like experience
-Have the REPL appear on the right
+*** Spyder-like experience
+Here I try to tweak emacs jupyter to behave more like [[https://www.spyder-ide.org][Spyder]] (my second favourite).
+
+**** Have the REPL appear on the right
 #+begin_src emacs-lisp
 (set-popup-rule! "^\\*Python" :side 'right :width 0.5)
 #+end_src
 
+**** Code execution
 Tell jupyter emacs to send code to repl
 #+begin_src emacs-lisp
 (setq jupyter-repl-echo-eval-p t)
@@ -1154,7 +1511,6 @@ Tell jupyter emacs to send code to repl
 
 Send code between ~#%%~ pairs or end of file. Stores last executed cell so we can re-execute it
 with ~jupyter-execute-last~.
-
 #+begin_src emacs-lisp
 (defvar last-executed-cell "")
 (defun jupyter-send-cell()
@@ -1183,6 +1539,8 @@ with ~jupyter-execute-last~.
 )
 #+end_src
 
+I still use ~C-c C-c~ to execute code blocks, although that becomes confusing if having to switch to spyder
+
 Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b538970ad851d368ee5a65/emacs/shared/keybindings.emacs][this]].
 #+begin_src emacs-lisp
 (defun unset-jupyter-keys ()
@@ -1198,7 +1556,7 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
           #'jupyter-nb-keybindings)
 #+end_src
 
-*** Javascript
+** Javascript
 #+begin_src emacs-lisp
 (after! rjsx-mode
   (setq js-indent-level 2))
@@ -1209,8 +1567,9 @@ Associate js files with ~js2-mode~ not ~rjsx-mode~
 (add-to-list 'auto-mode-alist '("\\.js.*$" . js2-mode))
 #+end_src
 
-*** C++
-**** Help projectile
+** C++
+*** Projectile
+Help projectile know where a project is
 #+begin_src emacs-lisp
 (after! projectile
   (projectile-register-project-type 'cmake '("CMakeLists.txt")
@@ -1223,7 +1582,7 @@ Associate js files with ~js2-mode~ not ~rjsx-mode~
                                   :package "cmake --build . --target package")
   )
 #+end_src
-**** Clangd configuration
+*** Clangd configuration
 Find mac clangd path
 #+begin_src emacs-lisp
 (if (eq system-type 'darwin)
@@ -1241,7 +1600,7 @@ And setup lsp to use it
 (after! lsp-clangd (set-lsp-priority! 'clangd 2))
 #+end_src
 
-**** LSP settings
+*** LSP settings
 #+begin_src emacs-lisp
 (use-package lsp-mode
   :config
@@ -1255,7 +1614,31 @@ And setup lsp to use it
 )
 #+end_src
 
-**** Clang format
+*** Clang format
+Clang format is cool, when you actually use it everywhere. This configuration just activates it if a ~.clang-format~ file is specified in a directory. This is the format I typically use
+#+begin_example
+---
+BasedOnStyle: Google
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignAfterOpenBracket: true
+AlignOperands: true
+AllowAllArgumentsOnNextLine: false
+BinPackArguments: false
+BinPackParameters: false
+IndentWidth: 2
+ColumnLimit: 0
+...
+#+end_example
+If this is the case, formatting will extend to all subdirectories. To disable it in a specific subdirectoy (e.g. for some dependency), I will crate another ~.clang-forat~ file in the directory:
+#+begin_example
+{
+    "DisableFormat": true,
+    "SortIncludes": false
+}
+#+end_example
+
+
 #+begin_src emacs-lisp
 ;; clang-format
 (use-package clang-format
@@ -1284,34 +1667,8 @@ And setup lsp to use it
 
 
 
-*** DAP MODE
+** DAP MODE (Debugging)
 #+begin_src emacs-lisp
-;; (leaf dap-mode
-;;   :ensure t
-;;   :init
-;;   (dap-mode 1)
-;;   (dap-tooltip-mode 1)
-;;   (dap-auto-configure-mode 1)
-;;   (dap-ui-controls-mode 1)
-;;   :require t dap-lldb
-;;   ;; :bind
-;;   ;; (:dap-mode-map
-;;   ;;  ([f5] . dap-debug)
-;;   ;;  ("M-d i" . dap-step-in)
-;;   ;;  ("M-d o" . dap-step-out)
-;;   ;;  ("M-d n" . dap-next)
-;;   ;;  ("M-d g" . dap-continue)
-;;   ;;  ("M-d t" . dap-breakpoint-toggle))
-;;   :config
-;;   (leaf dap-ui
-;;     :ensure nil
-;;     :require t
-;;     :config
-;;     (dap-ui-mode 1))
-;;   :custom
-;;   (dap-auto-configure-features . '(sessions locals breakpoints expressions repl controls tooltip))
-;;   (dap-lldb-debug-program . `(,(expand-file-name "~/.vscode/extensions/lanza.lldb-vscode-0.2.3/bin/darwin/bin/lldb-vscode"))))
-
 (use-package dap-mode
   :init
  (require 'dap-hydra)

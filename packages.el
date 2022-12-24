@@ -29,6 +29,14 @@
 (package! jupyter
    :recipe (:host github :repo "nnicandro/emacs-jupyter"))
 
+(unpin! org-gcal)
+(package! org-gcal
+  :recipe (:host github :repo "kidd/org-gcal.el"))
+
+(unpin! org-roam)
+(package! org-roam-ui)
+
+(package! org-caldav)
 (package! elpy)
 (package! yasnippet)
 (package! windresize) ;; Resize windows with arrows
@@ -48,11 +56,11 @@
   :recipe (:host github :repo "jkitchin/ox-ipynb"))
 (package! citeproc)
 (package! tide)
-(use-package! pdf-tools
-  :if (display-graphic-p)
-  :mode ("\\.pdf$" . pdf-view-mode)
-  :init (load "pdf-tools-autoloads" nil t)
-  :config)
+;; (use-package! pdf-tools
+;;   :if (display-graphic-p)
+;;   :mode ("\\.pdf$" . pdf-view-mode)
+;;   :init (load "pdf-tools-autoloads" nil t)
+;;   :config)
 ; For doc strings (requires pip install pyment)
 (package! buftra
     :recipe (:host github :repo "humitos/buftra.el"))
@@ -64,6 +72,8 @@
 (package! mini-frame)
 (package! string-inflection)
 (package! org-appear)
+(package! org-journal)
+
 ;; (package! evil-briefcase
 ;;   :recipe (:host github :repo "strickinato/evil-briefcase"))
 (package! nyan-mode) ;; Keeping track of buffer pos
@@ -73,6 +83,8 @@
 (package! parrot) ;; Toggling between symbols (e.g. true/false)
 (package! js-format)
   ;(pdf-tools-install)) ;; This baby gives big issues with poppler
+
+(package! citar-org-roam)
 
 ;; (package! gud-lldb
 ;;   :recipe (:host github :repo "extbit/gud"))
