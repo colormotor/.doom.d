@@ -948,12 +948,12 @@ From https://emacs.stackexchange.com/questions/10504/understanding-scheduled-in-
     appointment in the past won't keep showing up on your agenda regardless of
     whether you mark it DONE: if you didn't go to your doctor's appointment
     yesterday, that doesn't mean you still have one today!
-- A *SCHEDULED* timestamp, ~C-c C-s~ (Won't be exported in ICS file!)
+- A *SCHEDULED* timestamp, ~C-c C-s~
   - This is used to indicate *when you intend to do the task*. It will show up on
     the agenda on the scheduled day. If you don't complete the task at that
     time, it will continue to show up on the agenda on the following days to
     show you that you have not completed something that you planned to do.
-- A *DEADLINE* timestamp, ~C-c C-d~ (Won't be exported in ICS file!)
+- A *DEADLINE* timestamp, ~C-c C-d~
   - This is used to indicate *when something must be completed*. Typically you
     want to see deadlines ahead of time, so that you can do whatever it is that
     must be done to meet them. Like a scheduled entry, if you miss a deadline it
