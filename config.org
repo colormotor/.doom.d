@@ -10,16 +10,17 @@
 #+end_src
 
 Emacs is not perfect, but I just cannot find a better environment for coding,
-especially given the advantages of Org mode. Main thing I miss from editors like
-VSCode, is a simple way to add multiple cursors that span a whole text line, and
-issues I've had with "delete selection mode" (the standard in common eidtors),
-which seems to disable itself at times, with a cause that I have yet to
-identify. But, at least for my use case, the utility of Org mode by far
-outweights these drawbacks.
+especially given the advantages of /Org mode/. The main thing that I miss in Emacs, compared to
+editors like Visual Studion Code, is a simple way to add multiple cursors that span a whole
+text line.  and issues I've had with "delete selection mode" (the standard in
+common eidtors), which seems to disable itself at times, with a cause that I
+have yet to identify. But, at least for my use case, the utility of Org mode by
+far outweights these drawbacks.
 
 I've been using the [[https://github.com/doomemacs/doomemacs][Doom emacs]] configuration framework for a while now, after
 trying first Spacemacs and then SciMax configurations. I found Doom to be the
 most lightweight and practical solution to fully enter the emacs rabbithole.
+
 
 * Doom specific (from doom config)
 To execute all and update use ~C-c C-v b~ or ~C-c C-v C-b~ or ~M-x
@@ -61,6 +62,18 @@ Some existing literate configurations to get inspiration from
 
 
 * Editor configuration
+** Splash screen
+See https://discourse.doomemacs.org/t/how-to-change-your-splash-screen/57
+
+Remove menu
+#+begin_src emacs-lisp
+(remove-hook '+doom-dashboard-functions #'doom-dashboard-widget-shortmenu)
+#+end_src
+And add agenda view
+#+begin_src emacs-lisp
+(add-hook! '+doom-dashboard-functions :append (org-agenda-list))
+#+end_src
+
 ** Fonts
 Doom exposes five (optional) variables for controlling fonts in Doom. Here
 are the three important ones:
@@ -80,6 +93,8 @@ font string. You generally only need these two:
 ;(setq doom-font (font-spec :family "monospace" :size 14))
 ;
 (setq doom-font (font-spec :family "Fira Code" :size 13))
+;; (setq doom-font (font-spec :family "Fira Code" :size 16)) ; <- for presentations
+
 ;(setq doom-font (font-spec :family "Hack Nerd Font" :size 13))
 ;; (setq doom-font (font-spec :family "Source Code Pro" :size 13))
 ;(setq doom-font (font-spec :family "Fira Code" :size 14))
@@ -102,8 +117,8 @@ I like to switch around between these:
 ;; (setq doom-theme 'doom-nord) ; very gray
 ;;
 ;;(setq doom-theme 'doom-manegarm) ; freddy kruger
-(setq doom-theme 'doom-sourcerer) ; nice stuff
-;; (setq doom-theme 'doom-city-lights) ; nice greenish blue
+;; (setq doom-theme 'doom-sourcerer) ; nice stuff
+(setq doom-theme 'doom-city-lights) ; nice greenish blue
 ;; (setq doom-theme 'doom-challenger-deep) ; nice
 ;; (setq doom-theme 'doom-sourcerer) ; nice gray/purple
 ;; (setq doom-theme 'doom-tomorrow-night)
@@ -514,14 +529,33 @@ but when it does happen it is a total disaster...
 ;  (setq undo-tree-auto-save-history nil))
 #+end_src
 
+** DIRED
+Just some notes
+| C-x d   | start dired in desired :) dir.        |
+| s       | toggle sorting order                  |
+| < and > | navigate                              |
+| RET     | visit current item                    |
+| o       | visit current file (keepd dired open) |
+| C       | copy file                             |
+| P       | print file                            |
+| D       | delete file                           |
+| R       | rename file                           |
+| +       | create new dir                        |
+| ^       | Up one dir                            |
+
+
 ** Counsel-grep for big files
 #+begin_src emacs-lisp
 (setq counsel-grep-base-command "rg -S -M 120 --no-heading --line-number --color never %s %s")
 #+end_src
+
 ** Figlet
 Because I like ascii text. From [https://github.com/emacsmirror/figlet/blob/master/figlet.el]
-Type ~M-x figlet~ and you will be asked for a string. If you use a prefix ~C-u
-M-x figlet~ it will ask for a font.
+Type ~M-x figlet~ or ~M-x figlet-comment~ and you will be asked for a string.
+If you use a prefix ~C-u
+M-x figlet~ it will ask for a font (does not work in doom).
+Use ~M-x figlet-preview-fonts~ to see a list of fonts (images/names).
+
 #+begin_src emacs-lisp
 (load! "~/.doom.d/figlet/figlet.el")
 (setq figlet-font-dir "~/.doom.d/figlet/fonts")
@@ -537,6 +571,10 @@ M-x figlet~ it will ask for a font.
         ispell-dictionary "english"))
 #+end_src
 
+* Quarto mode
+#+begin_src emacs-lisp
+(require 'quarto-mode)
+#+end_src
 
 * Org mode (with Org-Roam)
 #+begin_src emacs-lisp
@@ -885,7 +923,7 @@ I then define the following note types:
             :unnarrowed t)
             ("r" "reference" plain "%?"
             :if-new
-            (file+head "reference/${slug}.org" "#+title: ${title}\n")
+            (file+head "references/${slug}.org" "#+title: ${title}\n")
             :immediate-finish t
             :unnarrowed t)
             ("a" "article" plain "%?"
@@ -897,11 +935,11 @@ I then define the following note types:
     (cl-defmethod org-roam-node-type ((node org-roam-node))
     "Return the TYPE of NODE."
     (condition-case nil
-        (file-name-nondirectory
-        (directory-file-name
-            (file-name-directory
-            (file-relative-name (org-roam-node-file node) org-roam-directory))))
-        (error "")))
+       (file-name-nondirectory
+       (directory-file-name
+           (file-name-directory
+           (file-relative-name (org-roam-node-file node) org-roam-directory))))
+       (error "")))
 
     (setq org-roam-node-display-template
         (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
@@ -994,15 +1032,44 @@ From https://emacs.stackexchange.com/questions/10504/understanding-scheduled-in-
              (file+headline +org-capture-notes-file "Inbox")
              "* %u %?\n%i\n%a" :prepend t)
             ("j" "Journal" entry
-             (file+olp+datetree +org-capture-journal-file)
-             "* %U %?\n%i\n%a" :prepend t)
+             (file+datetree +org-capture-journal-file) ; +olp+
+             "* %U %?\n%i" :prepend t) ; \n%a
             ("p" "Project todo" entry
              (file+headline +org-capture-projects-file "Inbox")
              "* TODO %?\n%i\n%a" :prepend t)))
 )
 
 #+end_src
+**** Org superagenda
+#+begin_src emacs-lisp
 
+(setq org-agenda-skip-scheduled-if-done t
+      org-agenda-skip-deadline-if-done t
+      org-agenda-include-deadlines t
+      org-agenda-block-separator nil
+      org-agenda-tags-column 100 ;; from testing this seems to be a good value
+      org-agenda-compact-blocks nil
+      org-agenda-block-separator "_"
+      org-agenda-span 10)
+
+
+(use-package! org-super-agenda
+  :after org-agenda
+  :init
+  (setq org-super-agenda-groups '((:name "Today"
+                                         :time-grid t
+                                         :scheduled today)
+                                  (:name "Important"
+                                         :priority "A")
+                                  (:name "Due today"
+                                         :deadline today)
+                                  (:name "Overdue"
+                                         :deadline past)
+                                  (:name "Due soon"
+                                         :deadline future)))
+  :config
+  (org-super-agenda-mode))
+#+end_src
 *** Sync with google
 Most approaches seem to be broken. E.g. gcal is sensitie to changes in Google security policy.
 Current best approach: sync into Google Calandar using:
@@ -1135,8 +1202,9 @@ Switching to this from Org-ref. See [[https://blog.tecosaur.com/tmio/2021-07-31-
 Keep zotero and a global bib file synched:
 #+begin_src emacs-lisp
 (after! citar
-  (setq! citar-bibliography '("~/Dropbox/org/zotero-biblio.bib"))
-  (setq citar-notes-paths '("~/Dropbox/roam"))
+  (setq org-cite-global-bibliography '("~/Dropbox/orgroam/zotero-biblio.bib"))
+  (setq! citar-bibliography '("~/Dropbox/orgroam/zotero-biblio.bib"))
+  (setq citar-notes-paths '("~/Dropbox/orgroam"))
   )
 
 ;; (use-package! citar-org-roam
@@ -1144,24 +1212,61 @@ Keep zotero and a global bib file synched:
 ;;   :no-require
 ;;   :config (citar-org-roam-mode))
 
-;; Create a new node from a bibliographic source. taken from
-;; https://jethrokuan.github.io/org-roam-guide/ and https://kristofferbalintona.me/posts/202206141852/
-(defun cm/org-roam-node-from-cite (keys-entries)
-    (interactive (list (citar-select-ref :multiple nil :rebuild-cache t)))
-    (let ((title (citar--format-entry-no-widths (cdr keys-entries)
-                                                "${author editor} (${date year issued:4}) ${title}")))
+ (defun cm/org-roam-node-from-cite (entry-key)
+    (interactive (list (citar-select-ref)))
+    (let ((title (citar-format--entry
+                  "${author editor:30} (${date year issued:4}) :: ${title}"
+                  (citar-get-entry entry-key))))
       (org-roam-capture- :templates
-                         '(("r" "reference" plain "%?" :if-new
-                            (file+head "reference/${citekey}.org"
-                                       ":PROPERTIES:
-:ROAM_REFS: [cite:@${citekey}]
-:END:
-,#+title: ${title}\n")
+                         `(("r" "reference" plain
+                            "%?"
+                            :if-new (file+head "references/${citekey}.org"
+                                     ,(concat
+                                       ":properties:\n"
+                                       "  :roam_refs: [cite:@${citekey}]\n"
+                                       "  :end:\n"
+                                       "  #+title: ${title}\n"))
                             :immediate-finish t
                             :unnarrowed t))
-                         :info (list :citekey (car keys-entries))
+                         :info (list :citekey entry-key)
                          :node (org-roam-node-create :title title)
                          :props '(:finalize find-file))))
+
+;; ;; Create a new node from a bibliographic source. taken from
+;; ;; https://jethrokuan.github.io/org-roam-guide/ and https://kristofferbalintona.me/posts/202206141852/
+;;  (defun cm/org-roam-node-from-cite (keys-entries)
+;;   (interactive (list (citar-select-refs :multiple nil)))
+;;   (let ((title  (citar-format--entry "${author editor}  (${date year issued:4}) ${title}"
+;;                                      (citar-get-entry keys-entries))))
+;;     (org-roam-capture- :templates
+;;                        '(("r" "reference" plain "%?" :if-new
+;;                           (file+head "reference/${citekey}.org"
+;;                                      ":PROPERTIES:
+;;   :ROAM_REFS: [cite:@${citekey}]
+;;   :END:
+;;   #+title: ${title}\n")
+;;                           :immediate-finish t
+;;                           :unnarrowed t))
+;;                        :info (list :citekey (car keys-entries))
+;;                        :node (org-roam-node-create :title title)
+;;                        :props '(:finalize find-file))))
+
+;; (defun cm/org-roam-node-from-cite (key-entry) ;(keys-entries)
+;;     (interactive (list (citar-select-ref))) ; :multiple nil :rebuild-cache t)))
+;;     (let ((title (citar-format--entry key-entry ; (cdr keys-entries)
+;;                                                 "${author editor} (${date year issued:4}) ${title}")))
+;;       (org-roam-capture- :templates
+;;                          '(("r" "reference" plain "%?" :if-new
+;;                             (file+head "reference/${citekey}.org"
+;;                                        ":PROPERTIES:
+;; :ROAM_REFS: [cite:@${citekey}]
+;; :END:
+;; ,#+title: ${title}\n")
+;;                             :immediate-finish t
+;;                             :unnarrowed t))
+;;                          :info (list :citekey key-entry) ;(car keys-entries))
+;;                          :node (org-roam-node-create :title title)
+;;                          :props '(:finalize find-file))))
 
 (map!
  :map org-roam-mode-map
@@ -1173,7 +1278,9 @@ Keep zotero and a global bib file synched:
 
 
 * Magit (git)
-Performance improvements
+
+Defo the best git client out there.
+** Performance improvements
 #+begin_src emacs-lisp
 (use-package! magit
     :config
@@ -1182,7 +1289,8 @@ Performance improvements
     (setq magit-revert-buffers 1)
     )
 #+end_src
-Do not show whitespace diffs
+
+** Do not show whitespace diffs
 #+begin_src emacs-lisp
 (setq ediff-diff-options "-w")
 #+end_src
@@ -1555,6 +1663,27 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
 (add-hook 'jupyter-repl-interaction-mode-hook
           #'jupyter-nb-keybindings)
 #+end_src
+** Ox-ipynb
+#+begin_src emacs-lisp
+(use-package! ox-ipynb)
+#+end_src
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'ox-ipynb-kernelspecs
+	     '(jupyter-python . (kernelspec . ((display_name . "Python 3")
+                                              (language . "python")
+                                              (name . "python3")))))
+
+(add-to-list 'ox-ipynb-language-infos
+	     '(jupyter-python . (language_info . ((codemirror_mode . ((name . ipython)
+								      (version . 3)))
+						  (file_extension . ".py")
+						  (mimetype . "text/x-python")
+						  (name . "python")
+						  (nbconvert_exporter . "python")
+						  (pygments_lexer . "ipython3")
+						  (version . "3.5.2")))))
+#+END_SRC
 
 ** Javascript
 #+begin_src emacs-lisp
@@ -1665,7 +1794,27 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 (add-hook 'c++-mode-hook 'my-c++-mode-hook)
 #+end_src
 
-
+** Completion
+From https://tecosaur.github.io/emacs-config/config.html
+#+begin_src emacs-lisp
+(after! company
+  (setq company-idle-delay 0.01
+        company-minimum-prefix-length 2
+        company-tooltip-idle-delay 0.1)
+  (setq company-show-numbers t)
+  (add-hook 'evil-normal-state-entry-hook #'company-abort)) ;; make aborting less annoying.
+#+end_src
+** Copilot
+#+begin_src emacs-lisp
+;; accept completion from copilot and fallback to company
+(use-package! copilot
+  :hook (prog-mode . copilot-mode)
+  :bind (:map copilot-completion-map
+              ("<tab>" . 'copilot-accept-completion)
+              ("TAB" . 'copilot-accept-completion)
+              ("C-TAB" . 'copilot-accept-completion-by-word)
+              ("C-<tab>" . 'copilot-accept-completion-by-word)))
+#+end_src
 
 ** DAP MODE (Debugging)
 #+begin_src emacs-lisp

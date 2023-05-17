@@ -24,10 +24,10 @@
 (unpin! zmq)
 (package! zmq
    :recipe (:host github :repo "nnicandro/emacs-zmq"))
-
+(unpin! polymode)
 (unpin! jupyter)
 (package! jupyter
-   :recipe (:host github :repo "nnicandro/emacs-jupyter"))
+   :recipe (:host github :repo "nnicandro/emacs-jupyter")) ; :branch "next"))
 
 (unpin! org-gcal)
 (package! org-gcal
@@ -49,18 +49,14 @@
 (package! google-c-style)
 ;(package! realgud-lldb)
 (unpin! dap-mode)
+
 (package! dap-mode)
 (package! image+)
-(package! ox-ipynb)
 (package! ox-ipynb
   :recipe (:host github :repo "jkitchin/ox-ipynb"))
 (package! citeproc)
 (package! tide)
-;; (use-package! pdf-tools
-;;   :if (display-graphic-p)
-;;   :mode ("\\.pdf$" . pdf-view-mode)
-;;   :init (load "pdf-tools-autoloads" nil t)
-;;   :config)
+
 ; For doc strings (requires pip install pyment)
 (package! buftra
     :recipe (:host github :repo "humitos/buftra.el"))
@@ -85,6 +81,14 @@
   ;(pdf-tools-install)) ;; This baby gives big issues with poppler
 
 (package! citar-org-roam)
+
+(package! org-super-agenda)
+(package! quarto-mode)
+
+(package! conda)
+
+(package! copilot
+  :recipe (:host github :repo "zerolfx/copilot.el" :files ("*.el" "dist")))
 
 ;; (package! gud-lldb
 ;;   :recipe (:host github :repo "extbit/gud"))

@@ -20,7 +20,7 @@
        ;;japanese
 
        :completion
-       (company) ; +childframe) slooooow!   ; the ultimate code completion backend
+       (company +childframe) ; +childframe) slooooow!   ; the ultimate code completion backend
        ;;helm              ; the *other* search engine for love and life
        ;;ido               ; the other *other* search engine...
        ;; ivy                      ; a search engine for love and life
@@ -163,7 +163,7 @@
        ;;php               ; perl's insecure younger brother
        ;;plantuml          ; diagrams for confusing people more
        ;;purescript        ; javascript, but functional
-       (python) ; +lsp +pyright)   ; beautiful is better than ugly (LSP still sloooow )
+       (python +lsp +pyright)   ; beautiful is better than ugly (LSP still sloooow )
        ;;qt                ; the 'cutest' gui framework ever
        ;;racket            ; a DSL for DSLs
        ;;rest              ; Emacs as a REST clientxx
