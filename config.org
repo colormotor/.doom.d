@@ -1183,7 +1183,7 @@ Switching to this from Org-ref. See [[https://blog.tecosaur.com/tmio/2021-07-31-
       :desc "Insert citation" "@" #'org-cite-insert)
 
 (use-package! citar
-  :when (featurep! :completion vertico))
+  :when (modulep! :completion vertico))
 
 (use-package! oc
   :after org citar)
@@ -1561,11 +1561,13 @@ Also seems that AucTex resets the ~delete-selection-mode~
 ** Jupyter-emacs
 While limited in some ways, and not much maintained [[https://github.com/nnicandro/emacs-jupyter][emacs jupyter]] is still my favourite way to code Python
 #+begin_src emacs-lisp
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((emacs-lisp . t)
-   (python . t)
-   (jupyter . t)))
+(after! org
+        (org-babel-do-load-languages
+        'org-babel-load-languages
+        '((emacs-lisp . t)
+        (python . t)
+        (jupyter . t)))
+)
 #+end_src
 #+begin_src emacs-lisp
 (set-popup-rule! "\*jupyter-repl...*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)

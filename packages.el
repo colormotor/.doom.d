@@ -21,13 +21,13 @@
 
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;(package! some-package)
-(unpin! zmq)
-(package! zmq
-   :recipe (:host github :repo "nnicandro/emacs-zmq"))
+; (unpin! zmq)
+; (package! zmq
+;   :recipe (:host github :repo "nnicandro/emacs-zmq"))
 (unpin! polymode)
-(unpin! jupyter)
-(package! jupyter
-   :recipe (:host github :repo "nnicandro/emacs-jupyter")) ; :branch "next"))
+; (unpin! jupyter)
+; (package! jupyter
+;   :recipe (:host github :repo "nnicandro/emacs-jupyter")) ; :branch "next"))
 
 (unpin! org-gcal)
 (package! org-gcal
