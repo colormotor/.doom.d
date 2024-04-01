@@ -21,7 +21,6 @@ I've been using the [[https://github.com/doomemacs/doomemacs][Doom emacs]] confi
 trying first Spacemacs and then SciMax configurations. I found Doom to be the
 most lightweight and practical solution to fully enter the emacs rabbithole.
 
-
 * Doom specific (from doom config)
 To execute all and update use ~C-c C-v b~ or ~C-c C-v C-b~ or ~M-x
 org-babel-execute-buffer~
@@ -73,6 +72,12 @@ And add agenda view
 #+begin_src emacs-lisp
 (add-hook! '+doom-dashboard-functions :append (org-agenda-list))
 #+end_src
+** Pixel scrolling
+I LOVE emacs, but damn it is pretty ridiculous that in 2023 it is still not possible to smoothly scroll images.
+Setting the following to ~1~ completely blocks Emacs:
+#+begin_src emacs-lisp
+(pixel-scroll-mode 0)
+#+end_src
 
 ** Fonts
 Doom exposes five (optional) variables for controlling fonts in Doom. Here
@@ -116,9 +121,9 @@ I like to switch around between these:
 ;; (setq doom-theme 'doom-rouge) ; kinda nice maybe
 ;; (setq doom-theme 'doom-nord) ; very gray
 ;;
-;;(setq doom-theme 'doom-manegarm) ; freddy kruger
+(setq doom-theme 'doom-manegarm) ; freddy kruger
 ;; (setq doom-theme 'doom-sourcerer) ; nice stuff
-(setq doom-theme 'doom-city-lights) ; nice greenish blue
+;; (setq doom-theme 'doom-city-lights) ; nice greenish blue
 ;; (setq doom-theme 'doom-challenger-deep) ; nice
 ;; (setq doom-theme 'doom-sourcerer) ; nice gray/purple
 ;; (setq doom-theme 'doom-tomorrow-night)
@@ -236,8 +241,8 @@ Annoying pdf-tools undo warnings
 
 Modeline, add the nyan cat leaving a CO2 rainbow trail. For some bling since it is so [[https://www.theverge.com/2021/2/18/22287956/nyan-cat-crypto-art-foundation-nft-sale-chris-torres][valuable]] now
 #+begin_src emacs-lisp
-(nyan-mode t)
-(setq doom-modeline-modal-icon nil)
+;(nyan-mode t)
+;(setq doom-modeline-modal-icon nil)
 #+end_src
 
 Trying to improve slowness:
@@ -557,9 +562,9 @@ M-x figlet~ it will ask for a font (does not work in doom).
 Use ~M-x figlet-preview-fonts~ to see a list of fonts (images/names).
 
 #+begin_src emacs-lisp
-(load! "~/.doom.d/figlet/figlet.el")
-(setq figlet-font-dir "~/.doom.d/figlet/fonts")
-(setq figlet-default-font "computer")
+;(load! "~/.doom.d/figlet/figlet.el")
+;(setq figlet-font-dir "~/.doom.d/figlet/fonts")
+;(setq figlet-default-font "computer")
 #+end_src
 
 ** Spelling
@@ -573,7 +578,7 @@ Use ~M-x figlet-preview-fonts~ to see a list of fonts (images/names).
 
 * Quarto mode
 #+begin_src emacs-lisp
-(require 'quarto-mode)
+;; (require 'quarto-mode)
 #+end_src
 
 * Org mode (with Org-Roam)
@@ -581,6 +586,12 @@ Use ~M-x figlet-preview-fonts~ to see a list of fonts (images/names).
 (setq org-directory "~/Dropbox/org")
 #+end_src
 ** Settings
+*** Issue: (autoload 'org-eldoc-get-src-lang "org-eldoc")
+From here https://github.com/doomemacs/doomemacs/issues/7633 quickfix
+#+begin_src emacs-lisp
+(autoload 'org-eldoc-get-src-lang "org-eldoc")
+#+end_src
+
 *** Enable shift select and tabs in org mode
 #+BEGIN_SRC emacs-lisp
 (setq org-support-shift-select 'always)
@@ -642,7 +653,7 @@ For now the default css assumes a dark theme.
     (let* ((dir (ignore-errors (file-name-directory (buffer-file-name))))
            (path (concat dir "style.css"))
            (homestyle (or (null dir) (null (file-exists-p path))))
-           (final (if homestyle "~/.doom.d/latex.css" path))) ;; <- set your own style file path
+           (final (if homestyle "~/.config/doom/latex.css" path))) ;; <- set your own style file path
       (setq org-html-head-include-default-style nil)
       (setq org-html-head (concat
                            "<style type=\"text/css\">\n"
@@ -761,6 +772,7 @@ However, we still want to remove these brackets when exporting
 (add-hook 'org-mode-hook 'org-fragtog-mode)
 #+end_src
 
+Make latex preview not freeze emacs (seems to work only with Emacs2.9+)
 #+begin_src emacs-lisp
 '(org-preview-latex-process-alist
        (quote
@@ -789,6 +801,7 @@ However, we still want to remove these brackets when exporting
               :image-converter
               ("convert -density %D -trim -antialias %f -quality 100 %O")))))
 #+end_src
+
 #+begin_src emacs-lisp
 (use-package! cdlatex
     :after (:any org-mode LaTeX-mode)
@@ -948,6 +961,7 @@ I then define the following note types:
     (setq org-roam-graph-viewer "/Applications/Firefox.app/Contents/MacOS/firefox")
 )
 #+end_src
+
 *** Org-roam UI
 #+begin_src emacs-lisp
 (use-package! websocket
@@ -1008,7 +1022,7 @@ From https://emacs.stackexchange.com/questions/10504/understanding-scheduled-in-
 *** Setup
 #+begin_src emacs-lisp
 ;; Looks like we need to manually set this to use the ^T templates?
-(use-package! org-journal)
+;; (use-package! org-journal)
 
 (setq org-agenda-files '("~/Dropbox/org/"))
 
@@ -1281,13 +1295,14 @@ Keep zotero and a global bib file synched:
 
 Defo the best git client out there.
 ** Performance improvements
+The following does not work no more?
 #+begin_src emacs-lisp
-(use-package! magit
-    :config
-    ; code to run after loading magit
-    (setq magit-commit-show-diff nil)
-    (setq magit-revert-buffers 1)
-    )
+;(use-package! magit
+;    :config
+;    ; code to run after loading magit
+;    (setq magit-commit-show-diff nil)
+;    (setq magit-revert-buffers 1)
+;    )
 #+end_src
 
 ** Do not show whitespace diffs
@@ -1552,6 +1567,7 @@ Also seems that AucTex resets the ~delete-selection-mode~
 # (require 'ox-ipynb)
 # #+end_src
 
+
 ** Additional file extensions
 #+begin_src emacs-lisp
 ; Processing
@@ -1569,6 +1585,13 @@ While limited in some ways, and not much maintained [[https://github.com/nnicand
         (jupyter . t)))
 )
 #+end_src
+
+Since update this seems to be necessary?
+https://github.com/emacs-jupyter/jupyter/issues/306
+#+begin_src emacs-lisp
+(require 'ob-jupyter)
+#+end_src
+
 #+begin_src emacs-lisp
 (set-popup-rule! "\*jupyter-repl...*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
@@ -1800,11 +1823,13 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 From https://tecosaur.github.io/emacs-config/config.html
 #+begin_src emacs-lisp
 (after! company
-  (setq company-idle-delay 0.01
+  (setq company-idle-delay 0.1
         company-minimum-prefix-length 2
-        company-tooltip-idle-delay 0.1)
+        company-tooltip-idle-delay 0.5)
   (setq company-show-numbers t)
-  (add-hook 'evil-normal-state-entry-hook #'company-abort)) ;; make aborting less annoying.
+  (add-hook 'evil-normal-state-entry-hook #'company-abort)
+  (setq company-global-modes '(not org-mode))
+  ) ;; make aborting less annoying.
 #+end_src
 ** Copilot
 #+begin_src emacs-lisp
