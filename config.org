@@ -1567,6 +1567,12 @@ Also seems that AucTex resets the ~delete-selection-mode~
 # (require 'ox-ipynb)
 # #+end_src
 
+** Polymode (disabled)
+Overkill since I just really need this for Python/Jupyter source blocks
+#+begin_src emacs-lisp
+;(use-package! poly-org
+;  :after org)
+#+end_src
 
 ** Additional file extensions
 #+begin_src emacs-lisp
@@ -1583,6 +1589,8 @@ While limited in some ways, and not much maintained [[https://github.com/nnicand
         '((emacs-lisp . t)
         (python . t)
         (jupyter . t)))
+        (setq org-babel-default-header-args:jupyter-python '((:async . "yes")
+                                                             (:kernel . "python3")))
 )
 #+end_src
 
