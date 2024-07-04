@@ -1198,7 +1198,7 @@ Switching to this from Org-ref. See [[https://blog.tecosaur.com/tmio/2021-07-31-
       :desc "Insert citation" "@" #'org-cite-insert)
 
 (use-package! citar
-  :when (featurep! :completion vertico))
+  :when (modulep! :completion vertico))
 
 (use-package! oc
   :after org citar)
@@ -1568,6 +1568,12 @@ Also seems that AucTex resets the ~delete-selection-mode~
 # (require 'ox-ipynb)
 # #+end_src
 
+** Polymode (disabled)
+Overkill since I just really need this for Python/Jupyter source blocks
+#+begin_src emacs-lisp
+;(use-package! poly-org
+;  :after org)
+#+end_src
 
 ** Additional file extensions
 #+begin_src emacs-lisp
@@ -1578,12 +1584,15 @@ Also seems that AucTex resets the ~delete-selection-mode~
 ** Jupyter-emacs
 While limited in some ways, and not much maintained [[https://github.com/nnicandro/emacs-jupyter][emacs jupyter]] is still my favourite way to code Python
 #+begin_src emacs-lisp
-(advice-remove #'org-babel-do-load-languages #'ignore)
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((emacs-lisp . t)
-   (python . t)
-   (jupyter . t)))
+(after! org
+        (org-babel-do-load-languages
+        'org-babel-load-languages
+        '((emacs-lisp . t)
+        (python . t)
+        (jupyter . t)))
+        (setq org-babel-default-header-args:jupyter-python '((:async . "yes")
+                                                             (:kernel . "python3")))
+)
 #+end_src
 
 Since update this seems to be necessary?

@@ -61,6 +61,9 @@
 (package! jupyter
    :recipe (:host github :repo "nnicandro/emacs-jupyter")) ; :branch "next"))
 
+;; (package! polymode)
+;; (package! poly-org)
+
 ;; (unpin! org-gcal)
 ;; (package! org-gcal
 ;;   :recipe (:host github :repo "kidd/org-gcal.el"))
