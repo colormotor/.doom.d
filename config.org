@@ -121,8 +121,9 @@ I like to switch around between these:
 ;; (setq doom-theme 'doom-rouge) ; kinda nice maybe
 ;; (setq doom-theme 'doom-nord) ; very gray
 ;;
-(setq doom-theme 'doom-manegarm) ; freddy kruger
-;; (setq doom-theme 'doom-sourcerer) ; nice stuff
+;;(setq doom-theme 'doom-manegarm) ; freddy kruger
+(setq doom-theme 'doom-sourcerer) ; nice stuff
+;;(setq doom-theme 'doom-meltbus) ; too black and white
 ;; (setq doom-theme 'doom-city-lights) ; nice greenish blue
 ;; (setq doom-theme 'doom-challenger-deep) ; nice
 ;; (setq doom-theme 'doom-sourcerer) ; nice gray/purple
@@ -268,8 +269,8 @@ Trying to improve slowness:
 ** Key-bindings
 #+begin_src emacs-lisp
 ;(global-set-key (kbd "C-y") 'yank)
-(global-set-key (kbd "s-z") 'undo-fu-only-undo);undo-tree-undo)
-(global-set-key (kbd "s-Z") 'undo-fu-only-redo);undo-tree-redo)
+(global-set-key (kbd "s-z") 'undo);undo-tree-undo)
+(global-set-key (kbd "s-Z") 'undo-redo);undo-tree-redo)
 (global-set-key (kbd "s-v") 'yank)
 (global-set-key (kbd "s-c") 'evil-yank)
 ;(global-set-key (kbd "s-a") 'mark-whole-buffer)
@@ -562,9 +563,9 @@ M-x figlet~ it will ask for a font (does not work in doom).
 Use ~M-x figlet-preview-fonts~ to see a list of fonts (images/names).
 
 #+begin_src emacs-lisp
-;(load! "~/.doom.d/figlet/figlet.el")
-;(setq figlet-font-dir "~/.doom.d/figlet/fonts")
-;(setq figlet-default-font "computer")
+(load! "~/.config/doom/figlet/figlet.el")
+(setq figlet-font-dir "~/.config/doom/figlet/fonts")
+(setq figlet-default-font "computer")
 #+end_src
 
 ** Spelling
