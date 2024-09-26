@@ -1463,6 +1463,7 @@ I typically want to open the notebook to test it, but the ~my-ipynb-export-to-ip
 
 * Magit (git)
 
+
 Defo the best git client out there.
 ** Performance improvements
 The following does not work no more?
