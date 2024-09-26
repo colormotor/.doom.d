@@ -56,7 +56,7 @@
 (unpin! zmq)
 (package! zmq
    :recipe (:host github :repo "nnicandro/emacs-zmq"))
-(unpin! polymode)
+
 (unpin! jupyter)
 (package! jupyter
    :recipe (:host github :repo "nnicandro/emacs-jupyter")) ; :branch "next"))
@@ -103,6 +103,8 @@
 
 (package! image+)
 (package! org-make-toc)
+
+(package! polymode)
 ;;
 ;; ;(package! realgud-lldb)
 

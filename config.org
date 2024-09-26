@@ -269,6 +269,11 @@ Trying to improve slowness:
 
 ** Key-bindings
 #+begin_src emacs-lisp
+(global-set-key (kbd "M-S-<right>") nil)
+(global-set-key (kbd "M-S-<left>") nil)
+(global-set-key (kbd "M-<right>") nil)
+(global-set-key (kbd "M-<left>") nil)
+
 ;(global-set-key (kbd "C-y") 'yank)
 (global-set-key (kbd "s-z") 'undo);undo-tree-undo)
 (global-set-key (kbd "s-Z") 'undo-redo);undo-tree-redo)
@@ -293,6 +298,9 @@ Trying to improve slowness:
 (define-key evil-normal-state-map (kbd "C-w") 'kill-region)
 (define-key evil-visual-state-map (kbd "C-w") 'kill-region)
 
+(define-key evil-insert-state-map (kbd "M-<left>") 'backward-sexp)
+(define-key evil-insert-state-map (kbd "M-<right>") 'forward-sexp)
+
 ; I find some of these evil key-bindings are really odd...
 (define-key evil-insert-state-map (kbd "C-x C-s") 'save-buffer)
 
@@ -311,6 +319,15 @@ Trying to improve slowness:
 ;;         ))
 #+end_src
 
+For org mode disable ~M-S-<right>~ and ~M-S-<left>~ when in source code
+#+begin_src emacs-lisp
+(after! org
+  (add-hook 'org-src-mode-hook
+            (lambda ()
+              (define-key org-src-mode-map (kbd "M-S-<right>") nil)
+              (define-key org-src-mode-map (kbd "M-S-<left>") nil))))
+#+END_SRC
+
 Some key bindings I am used to
 #+begin_src emacs-lisp
 ;; Use C-u, C-d also in insert mode
@@ -320,6 +337,17 @@ Some key bindings I am used to
 (global-set-key (kbd "C-d") 'evil-scroll-down)
 (global-set-key (kbd "C-e") 'move-end-of-line)
 (global-set-key (kbd "s-/") 'evilnc-comment-or-uncomment-lines)
+
+;; (global-set-key (kbd "M-<right>") 'forward-sexp)
+;; (global-set-key (kbd "M-<left>") 'backward-sexp)
+;; (global-set-key (kbd "C-<right>") 'forward-word)
+;; (global-set-key (kbd "C-<left>") 'backward-word)
+;; Unset these so shift select should pick them up?
+
+
+;; (global-set-key (kbd "M-S-<right>") 'forward-sexp)
+;; (global-set-key (kbd "M-S-<left>") 'backward-sexp)
+
 #+end_src
 
 Ace window. For multiple windows shows letters for selection
@@ -335,9 +363,9 @@ String inflection (from-to-snake-case)
 
 Trying to sort out conflicts with window management
 #+begin_src emacs-lisp
-(global-set-key (kbd "C-<S-up>") nil)
-(global-set-key (kbd "C-<S-down>") nil)
-(global-set-key (kbd "C-<S-left>") nil)
+; (global-set-key (kbd "C-<S-up>") nil)
+; (global-set-key (kbd "C-<S-down>") nil)
+; (global-set-key (kbd "C-<S-left>") nil)
 
 (defun org-unset-alt-keys ()
   (define-key org-mode-map (kbd "C-<S-up>") nil)
@@ -476,6 +504,7 @@ The following is from [[https://gitlab.com/justinekizhak/dotfiles/blob/master/em
 
 Also shift select (this luckily does not get disabled)
 #+begin_src emacs-lisp
+
 (setq shift-select-mode t)
 #+end_src
 
@@ -589,6 +618,7 @@ Use ~M-x figlet-preview-fonts~ to see a list of fonts (images/names).
 (setq org-directory "~/Dropbox/org")
 #+end_src
 ** Settings
+
 *** org modern
 #+begin_src emacs-lisp
 ; (global-org-modern-mode)
@@ -1148,10 +1178,7 @@ Most approaches seem to be broken. E.g. gcal is sensitie to changes in Google se
 Current best approach: sync into Google Calandar using:
 - https://gist.github.com/florisvanvugt/c1c0e1c9a782b46430cf2854238a285f
 - or https://orgmode.org/worg/org-tutorials/org-google-sync.html
-Currently exporting to https://www.enist.org/ical/exported.ics.
-Problem is that Google calendar does not update often enough. To solve the issue we can use a script:
-- https://script.google.com/home/projects/1bSj7h6TPyh09menAGgmBh9RL6SEHgOdh_YZZyfEi97Uc1EoQHdelIzc7/edit
-
+*See orgroam under fat.etc Calendar section for specific links used.*
 To set up regular exporting save the following to ~~/.doom.d/bin/export_calendar~:
 #+begin_example emacs-lisp
 #!/usr/bin/env doomscript
@@ -1253,7 +1280,8 @@ Switching to this from Org-ref. See [[https://blog.tecosaur.com/tmio/2021-07-31-
 (map! :after org
       :map org-mode-map
       :localleader
-      :desc "Insert citation" "@" #'org-cite-insert)
+      :desc "Insert citation" "@" #'org-cite-insert
+      :desc "Formatted reference" "-" #'citar-insert-reference)
 
 (use-package! citar
   :when (modulep! :completion vertico))
@@ -1416,10 +1444,12 @@ If section-name is not provided, it defaults to 'References'."
 
 I typically want to open the notebook to test it, but the ~my-ipynb-export-to-ipynb-no-results-file-and-open~ function used from the menu defines its own ~ox-ipynb-preprocess-hook~. It is possible to modify the backend interface with:
 #+begin_src emacs-lisp
+(with-eval-after-load 'ox-ipynb
 (org-export-define-derived-backend 'custom-jupyter-notebook 'org
   :menu-entry
   '(?n "Export to custom jupyter notebook"
        ((?r "to nb (no results) and open" my-ipynb-export-to-ipynb-no-results-file-and-open))))
+)
 
 (defun my-ipynb-export-to-ipynb-no-results-file-and-open (&optional async subtreep visible-only body-only info)
   (let ((ox-ipynb-preprocess-hook '((lambda ()
@@ -1444,6 +1474,7 @@ The following does not work no more?
 ;    (setq magit-revert-buffers 1)
 ;    )
 #+end_src
+
 
 ** Do not show whitespace diffs
 #+begin_src emacs-lisp
@@ -1710,6 +1741,64 @@ Also seems that AucTex resets the ~delete-selection-mode~
 ** Polymode (disabled)
 Overkill since I just really need this for Python/Jupyter source blocks
 #+begin_src emacs-lisp
+;; (require 'polymode)
+
+;; Define the Python host mode
+;; (define-hostmode poly-python-hostmode
+;;   :mode 'python-mode)
+
+;; ;; ;; Define the Org inner mode with custom delimiters for %[org and %]
+;; ;; (define-innermode poly-org-innermode
+;; ;;   :mode 'org-mode
+;; ;;   :head-matcher "^[[:space:]]*%\\[org[[:space:]]*$"  ;; Match %[org as the start of the block
+;; ;;   :tail-matcher "^[[:space:]]*%\\][[:space:]]*$"     ;; Match %] as the end of the block
+;; ;;   :head-mode 'host
+;; ;;   :tail-mode 'host
+;; ;;   :allow-nested nil  ;; Disable nesting, to avoid complexity
+;; ;;   :keep-in-mode t)   ;; Keep the inner block in org-mode for proper fontification
+
+;; ;; Define the Org inner mode with custom delimiters for '''org and '''
+;; (define-innermode poly-org-innermode
+;;   :mode 'org-mode
+;;   :head-matcher "^[[:space:]]*'''org[[:space:]]*$"  ;; Match '''org as the start of the block
+;;   :tail-matcher "^[[:space:]]*'''[[:space:]]*$"     ;; Match ''' as the end of the block
+;;   :head-mode 'host
+;;   :tail-mode 'host
+;;   :allow-nested nil  ;; Disable nesting if not needed, it can cause issues
+;;   :keep-in-mode t)   ;; Keep the org block in org-mode (for proper highlighting)
+
+;; ;; Define the polymode for Python with Org inner mode
+;; (define-polymode poly-python-org-mode
+;;   :hostmode 'poly-python-hostmode
+;;   :innermodes '(poly-org-innermode))
+
+;; ;; Function to trigger polymode based on content
+;; (defun maybe-poly-python-org-mode ()
+;;   "Switch to poly-python-org-mode if the buffer contains Org-mode blocks."
+;;   (when (save-excursion
+;;           (goto-char (point-min))
+;;           (re-search-forward "'''org" nil t))  ;; Look for '''org in the buffer
+;;     (poly-python-org-mode)))
+
+;; ;; Hook to apply the polymode only when necessary
+;; (add-hook 'python-mode-hook #'maybe-poly-python-org-mode)
+#+end_src
+
+Polymode runins indentation in Python
+#+begin_src emacs-lisp
+;; (defun my-disable-org-indent-in-polymode ()
+;;   "Disable Org-mode indentation only when in polymode within a Python file."
+;;   (when (and (bound-and-true-p polymode-mode)  ;; Check if polymode is active
+;;              (eq major-mode 'org-mode)        ;; Check if current mode is Org
+;;              (string= (symbol-name (pm-host-chunkmode major-mode))
+;;                       "poly-python-hostmode")) ;; Check if host mode is Python
+;;     (setq-local org-adapt-indentation nil)    ;; Disable Org indentation
+;;     (setq-local org-startup-indented nil)))
+
+;; (add-hook 'org-mode-hook #'my-disable-org-indent-in-polymode)
+#+end_src
+
+#+begin_src emacs-lisp
 ;(use-package! poly-org
 ;  :after org)
 #+end_src
@@ -1722,15 +1811,23 @@ Overkill since I just really need this for Python/Jupyter source blocks
 
 ** Jupyter-emacs
 While limited in some ways, and not much maintained [[https://github.com/nnicandro/emacs-jupyter][emacs jupyter]] is still my favourite way to code Python
+
+Some links in regard:
+- https://sqrtminusone.xyz/posts/2021-05-01-org-python/
+
 #+begin_src emacs-lisp
 (after! org
         (org-babel-do-load-languages
         'org-babel-load-languages
         '((emacs-lisp . t)
         (python . t)
+        (octave . t)
         (jupyter . t)))
         (setq org-babel-default-header-args:jupyter-python '((:async . "yes")
                                                              (:kernel . "python3")))
+)
+(after! jupyter
+          (org-babel-jupyter-aliases-from-kernelspecs t)
 )
 #+end_src
 
