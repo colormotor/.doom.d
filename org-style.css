@@ -91,6 +91,13 @@ video {
   vertical-align: middle;
 }
 
+img {
+        max-width: 100%;
+        height: auto;
+        displiay: block;
+        text-align: center;
+}/* Inherit fonts for inputs and buttons */
+
 /*
  * Remove default fieldset styles.
  */
@@ -321,6 +328,9 @@ figure {
 }
 figure img {
   max-width: 100%;
+}
+figure p {
+  text-align: center;
 }
 
 figcaption {

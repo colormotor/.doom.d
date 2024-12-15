@@ -57,9 +57,14 @@
 (package! zmq
    :recipe (:host github :repo "nnicandro/emacs-zmq"))
 
-(unpin! jupyter)
-(package! jupyter
-   :recipe (:host github :repo "nnicandro/emacs-jupyter")) ; :branch "next"))
+
+;; (use-package jupyter
+;;   :demand t
+;;   :after (:all org python))
+; (unpin! jupyter)
+;; (package! jupyter
+;;    :recipe (:host github :repo "nnicandro/emacs-jupyter")) ; :branch "next"))
+
 
 ;; (package! polymode)
 ;; (package! poly-org)

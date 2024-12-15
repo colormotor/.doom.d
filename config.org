@@ -1,4 +1,3 @@
-#+TITLE: My Doom Emacs Config
 #+AUTHOR: Daniel Berio
 #+EMAIL: drand48@gmail.com
 #+PROPERTY: header-args :emacs-lisp :tangle yes :cache yes :results silent :comments link :exports code
@@ -67,11 +66,11 @@ See https://discourse.doomemacs.org/t/how-to-change-your-splash-screen/57
 
 Remove menu
 #+begin_src emacs-lisp
-(remove-hook '+doom-dashboard-functions #'doom-dashboard-widget-shortmenu)
+; (remove-hook '+doom-dashboard-functions #'doom-dashboard-widget-shortmenu)
 #+end_src
-And add agenda view
+And add agenda view (annoying)
 #+begin_src emacs-lisp
-(add-hook! '+doom-dashboard-functions :append (org-agenda-list))
+; (add-hook! '+doom-dashboard-functions :append (org-agenda-list))
 #+end_src
 ** Pixel scrolling
 I LOVE emacs, but damn it is pretty ridiculous that in 2023 it is still not possible to smoothly scroll images.
@@ -275,16 +274,16 @@ Trying to improve slowness:
 (global-set-key (kbd "M-<left>") nil)
 
 ;(global-set-key (kbd "C-y") 'yank)
-(global-set-key (kbd "s-z") 'undo);undo-tree-undo)
-(global-set-key (kbd "s-Z") 'undo-redo);undo-tree-redo)
-(global-set-key (kbd "s-v") 'yank)
-(global-set-key (kbd "s-c") 'evil-yank)
-;(global-set-key (kbd "s-a") 'mark-whole-buffer)
-(global-set-key (kbd "s-x") 'kill-region)
-(global-set-key (kbd "s-s") 'save-buffer)
-(global-set-key (kbd "s-f") '+default/search-buffer)
-(global-set-key (kbd "s-p") nil)
-(global-set-key (kbd "C-;") 'iedit-mode) ; Multiple editing
+;; (global-set-key (kbd "s-z") 'undo);undo-tree-undo)
+;; (global-set-key (kbd "s-Z") 'undo-redo);undo-tree-redo)
+;; (global-set-key (kbd "s-v") 'yank)
+;; (global-set-key (kbd "s-c") 'evil-yank)
+;; ;(global-set-key (kbd "s-a") 'mark-whole-buffer)
+;; (global-set-key (kbd "s-x") 'kill-region)
+;; (global-set-key (kbd "s-s") 'save-buffer)
+;; (global-set-key (kbd "s-f") '+default/search-buffer)
+;; (global-set-key (kbd "s-p") nil)
+;; (global-set-key (kbd "C-;") 'iedit-mode) ; Multiple editing
 ; Just to avoid issues when switching editors
 
 (define-key evil-insert-state-map (kbd "C-e") 'move-end-of-line)
@@ -325,7 +324,10 @@ For org mode disable ~M-S-<right>~ and ~M-S-<left>~ when in source code
   (add-hook 'org-src-mode-hook
             (lambda ()
               (define-key org-src-mode-map (kbd "M-S-<right>") nil)
-              (define-key org-src-mode-map (kbd "M-S-<left>") nil))))
+              (define-key org-src-mode-map (kbd "M-S-<left>") nil)
+              (define-key org-src-mode-map (kbd "C-a") nil)
+              (define-key org-src-mode-map (kbd "C-e") nil)
+              )))
 #+END_SRC
 
 Some key bindings I am used to
@@ -363,47 +365,44 @@ String inflection (from-to-snake-case)
 
 Trying to sort out conflicts with window management
 #+begin_src emacs-lisp
-; (global-set-key (kbd "C-<S-up>") nil)
-; (global-set-key (kbd "C-<S-down>") nil)
-; (global-set-key (kbd "C-<S-left>") nil)
 
-(defun org-unset-alt-keys ()
-  (define-key org-mode-map (kbd "C-<S-up>") nil)
-  (define-key org-mode-map (kbd "C-<S-down>") nil)
-  (define-key org-mode-map (kbd "C-<S-left>") nil)
-)
+;; (defun org-unset-alt-keys ()
+;;   (define-key org-mode-map (kbd "C-<S-up>") nil)
+;;   (define-key org-mode-map (kbd "C-<S-down>") nil)
+;;   (define-key org-mode-map (kbd "C-<S-left>") nil)
+;; )
 
-(defun evil-org-unset-alt-keys ()
-   (define-key evil-org-mode-map (kbd "C-<S-up>") nil)
-   (define-key evil-org-mode-map (kbd "C-<S-down>") nil)
-   (define-key evil-org-mode-map (kbd "C-<S-left>") nil)
-)
-(with-eval-after-load 'org (org-unset-alt-keys))
-(with-eval-after-load 'evil-org (evil-org-unset-alt-keys))
+;; (defun evil-org-unset-alt-keys ()
+;;    (define-key evil-org-mode-map (kbd "C-<S-up>") nil)
+;;    (define-key evil-org-mode-map (kbd "C-<S-down>") nil)
+;;    (define-key evil-org-mode-map (kbd "C-<S-left>") nil)
+;; )
+;; (with-eval-after-load 'org (org-unset-alt-keys))
+;; (with-eval-after-load 'evil-org (evil-org-unset-alt-keys))
 
-(global-set-key (kbd "<f12>") 'toggle-frame-fullscreen)
+;; (global-set-key (kbd "<f12>") 'toggle-frame-fullscreen)
 #+end_src
 
 *** Evil
 https://blog.meain.io/2017/how-emacs-took-over-my-vim-life/
 #+begin_src emacs-lisp
-(defun minibuffer-keyboard-quit ()
-  "Abort recursive edit.
-        In Delete Selection mode, if the mark is active, just deactivate it;
-        then it takes a second \\[keyboard-quit] to abort the minibuffer."
-  (interactive)
-  (if (and delete-selection-mode transient-mark-mode mark-active)
-      (setq deactivate-mark  t)
-    (when (get-buffer "*Completions*") (delete-windows-on "*Completions*"))
-    (abort-recursive-edit)))
-(define-key evil-normal-state-map [escape] 'keyboard-quit)
-(define-key evil-visual-state-map [escape] 'keyboard-quit)
-(define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
-(define-key minibuffer-local-ns-map [escape] 'minibuffer-keyboard-quit)
-(define-key minibuffer-local-completion-map [escape] 'minibuffer-keyboard-quit)
-(define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
-(define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
-(global-set-key [escape] 'evil-exit-emacs-state)
+;; (defun minibuffer-keyboard-quit ()
+;;   "Abort recursive edit.
+;;         In Delete Selection mode, if the mark is active, just deactivate it;
+;;         then it takes a second \\[keyboard-quit] to abort the minibuffer."
+;;   (interactive)
+;;   (if (and delete-selection-mode transient-mark-mode mark-active)
+;;       (setq deactivate-mark  t)
+;;     (when (get-buffer "*Completions*") (delete-windows-on "*Completions*"))
+;;     (abort-recursive-edit)))
+;; (define-key evil-normal-state-map [escape] 'keyboard-quit)
+;; (define-key evil-visual-state-map [escape] 'keyboard-quit)
+;; (define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
+;; (define-key minibuffer-local-ns-map [escape] 'minibuffer-keyboard-quit)
+;; (define-key minibuffer-local-completion-map [escape] 'minibuffer-keyboard-quit)
+;; (define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
+;; (define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
+;; (global-set-key [escape] 'evil-exit-emacs-state)
 #+end_src
 
 **** Keybinding notes
@@ -685,20 +684,27 @@ Embed CSS by default. It would be nice to set a specific doom theme here, maybe 
 For now the default css assumes a dark theme.
 
 #+begin_src emacs-lisp
-
 (defun my-org-inline-css-hook (exporter)
   "Insert custom inline css"
   (when (eq exporter 'html)
-    (let* ((dir (ignore-errors (file-name-directory (buffer-file-name))))
-           (path (concat dir "style.css"))
-           (homestyle (or (null dir) (null (file-exists-p path))))
-           (final (if homestyle "~/.config/doom/latex.css" path))) ;; <- set your own style file path
+    ;; (let* ((dir (ignore-errors (file-name-directory (buffer-file-name))))
+    ;;        (path (concat dir "style.css"))
+    ;;        (homestyle (or (null dir) (null (file-exists-p path))))
+    ;;        (final (if homestyle "~/.config/doom/latex.css" path))) ;; <- set your own style file path
+      (let* ((dir (ignore-errors (file-name-directory (buffer-file-name))))
+           (path (when dir (concat dir "style.css")))
+           (final (if (and path (file-exists-p path))
+                      path
+                    "~/.config/doom/latex.css"))) ;; Default to the home CSS
+      (message "Inserting CSS from %s" final)
       (setq org-html-head-include-default-style nil)
-      (setq org-html-head (concat
+      (setq org-html-head-extra (concat
                            "<style type=\"text/css\">\n"
                            "<!--/*--><![CDATA[/*><!--*/\n"
                            (with-temp-buffer
-                             (insert-file-contents final)
+                             (condition-case nil
+                                 (insert-file-contents final)
+                               (error (message "Failed to read CSS file at %s" final)))
                              (buffer-string))
                            "/*]]>*/-->\n"
                            "</style>\n"))
@@ -706,7 +712,7 @@ For now the default css assumes a dark theme.
     )
   )
 
-(add-hook 'org-export-before-processing-hook 'my-org-inline-css-hook)
+(add-hook 'org-export-before-parsing-hook 'my-org-inline-css-hook)
 
 (defun my-org-export-with-theme (orig-fun &rest args)
   "Advice function to apply a theme during org export and revert after."
@@ -722,6 +728,8 @@ For now the default css assumes a dark theme.
       (mapc (lambda (theme) (load-theme (intern theme) t)) original-themes))))
 
 (advice-add 'org-html-export-to-html :around #'my-org-export-with-theme)
+
+
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1399,9 +1407,9 @@ and then copy this into the temporary buffer used by ox-ipynb for export
 If section-name is not provided, it defaults to 'References'."
     (let* ((section-name (or section-name "References"))
            (current-file (buffer-file-name (current-buffer)))
-           (tmp-file "_tmp.org")
+           (tmp-file "_tmp.md") ;;org")
            (bibliography-section (concat "* " section-name "\n#+print_bibliography:\n"))
-           (bibliography-start (concat "^\\*+ " (regexp-quote section-name))))
+           (bibliography-start (concat "^\\##+ " (regexp-quote section-name))))
 
       ;; Remove the bibliography section from current file if it exists
       ;; And add it followed by the required org-cite format
@@ -1412,27 +1420,42 @@ If section-name is not provided, it defaults to 'References'."
 
       ;; Export to a temp file
       (let ((org-export-babel-evaluate nil)) ;; No code exec
-          (org-export-to-file 'org tmp-file))
+          (org-export-to-file 'md tmp-file))
 
       ;; Remove the section used for export
       (remove-org-section-by-name section-name)
 
       ;; Copy the formatted version from the tmp file
-      (with-temp-file tmp-file
-        (org-mode)
+      (with-temp-buffer
+        (markdown-mode)  ;; Use markdown-mode instead of org-mode
         (insert-file-contents tmp-file)
         (goto-char (point-min))
-        (when (re-search-forward bibliography-start nil t)
-          (goto-char (match-beginning 0))
-          (org-copy-subtree)))
+        (let ((section-start "# References")) ;; Adjust this to match the markdown header
+        (when (re-search-forward (concat "^" section-start) nil t)  ;; Search for the Markdown header
+        (forward-line 1)  ;; Move to the line after the section header
+        (let ((section-contents (buffer-substring (point) (point-max)))) ;; Copy till the end of the document
+                (kill-new section-contents)))))  ;; Copy to the kill ring (clipboard)
+
+      ;; (with-temp-file tmp-file
+      ;;   (org-mode)
+      ;;   (insert-file-contents tmp-file)
+      ;;   (goto-char (point-min))
+      ;;   (when (re-search-forward bibliography-start nil t)
+      ;;     (goto-char (match-beginning 0))
+      ;;     (org-copy-subtree)))
 
       ;; Finally paste it in the current buffer
       (save-excursion
               (goto-char (point-max))
-              (org-paste-subtree))
+              (insert "\n* References\n")
+              (insert "\n#+begin_export html\n")
+              (insert (current-kill 0))
+              ;(org-paste-subtree)
+              (insert "\n#+end_export\n")
+              )
 
       ;; Cleanup
-      (delete-file tmp-file)
+      ;; (delete-file tmp-file)
 ))
 
 (with-eval-after-load 'ox-ipynb
@@ -1566,6 +1589,15 @@ Get RefTex to search for valid biblios
 (setq TeX-save-query nil)
 ;; In AUCTex, make PDF by default (can toggle with C-c C-t C-p)
 (add-hook 'LaTeX-mode-hook '(lambda () (TeX-PDF-mode 1)))
+#+end_src
+
+Use the "SPC-m-@" to insert citations (like org mode)
+#+begin_src emacs-lisp
+(map! :after auctex
+      :map LaTeX-mode-map
+      :localleader
+      :desc "Insert citation" "@" #'citar-insert-citation
+)
 #+end_src
 ** Issues
 Trying to get rid of the ~epdfinfo: Destination not found~ error.
@@ -1816,7 +1848,14 @@ Some links in regard:
 - https://sqrtminusone.xyz/posts/2021-05-01-org-python/
 
 #+begin_src emacs-lisp
+(use-package jupyter
+  :demand t
+  :after (:all org python))
+
+; Since update this seems to be necessary?
+; https://github.com/emacs-jupyter/jupyter/issues/306
 (after! org
+        ; (require 'ob-jupyter)
         (org-babel-do-load-languages
         'org-babel-load-languages
         '((emacs-lisp . t)
@@ -1826,15 +1865,14 @@ Some links in regard:
         (setq org-babel-default-header-args:jupyter-python '((:async . "yes")
                                                              (:kernel . "python3")))
 )
-(after! jupyter
-          (org-babel-jupyter-aliases-from-kernelspecs t)
-)
+
 #+end_src
 
-Since update this seems to be necessary?
-https://github.com/emacs-jupyter/jupyter/issues/306
+Also issues when loading, with a need to manually require ~ob-jupyter~ (see ; https://github.com/emacs-jupyter/jupyter/issues/306), but with a very specific ordering. Simply requiring results in a weird break with magit commits (~C-c C-c~ unbound)
 #+begin_src emacs-lisp
-(require 'ob-jupyter)
+(after! (:all org python)
+  (require 'ob-jupyter)
+)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1895,7 +1933,7 @@ with ~jupyter-execute-last~.
   (interactive)
   (save-excursion
   (if (not (search-backward-regexp "#\s*%%" nil t))
-        (message "Not in a cell")
+        (python-shell-send-buffer) ;(message "Not in a cell")
       (forward-line)
       (beginning-of-line)
       (set-mark (point))
