@@ -29,17 +29,17 @@
     position: relative;
     overflow: auto;
     padding-top: 1.2em;
-    background-color: #111;
-    color: #ccc
+    background-color: #eee;
+    color: #222
   }
   pre.src:before {
     display: none;
     position: absolute;
-    background-color: #333;
+    background-color: #eee;
     top: -10px;
     right: 10px;
     padding: 3px;
-    border: 1px solid black;
+    border: 1px solid #555;
   }
   pre.src:hover:before { display: inline; margin-top: 14px;}
   /* Languages per Org manual */

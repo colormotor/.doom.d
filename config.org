@@ -57,6 +57,7 @@ Some existing literate configurations to get inspiration from
 - [[https://tecosaur.github.io/emacs-config/config.html][Techosaur: Very long nice config]]
 - https://github.com/hjertnes/emacs.d/blob/master/hjertnes.org
 - https://blog.sumtypeofway.com/posts/emacs-config.html
+- https://zzamboni.org/post/my-doom-emacs-configuration-with-commentary/
 - http://alhassy.com/emacs.d/
 
 
@@ -278,6 +279,7 @@ Trying to improve slowness:
 (global-set-key (kbd "s-s") 'save-buffer)
 (global-set-key (kbd "s-f") '+default/search-buffer)
 (global-set-key (kbd "s-p") nil)
+(global-set-key (kbd "C-;") 'iedit-mode) ; Multiple editing
 ; Just to avoid issues when switching editors
 
 (define-key evil-insert-state-map (kbd "C-e") 'move-end-of-line)
@@ -587,6 +589,11 @@ Use ~M-x figlet-preview-fonts~ to see a list of fonts (images/names).
 (setq org-directory "~/Dropbox/org")
 #+end_src
 ** Settings
+*** org modern
+#+begin_src emacs-lisp
+; (global-org-modern-mode)
+#+end_src
+
 *** Issue: (autoload 'org-eldoc-get-src-lang "org-eldoc")
 From here https://github.com/doomemacs/doomemacs/issues/7633 quickfix
 #+begin_src emacs-lisp
@@ -648,6 +655,7 @@ Embed CSS by default. It would be nice to set a specific doom theme here, maybe 
 For now the default css assumes a dark theme.
 
 #+begin_src emacs-lisp
+
 (defun my-org-inline-css-hook (exporter)
   "Insert custom inline css"
   (when (eq exporter 'html)
@@ -669,30 +677,25 @@ For now the default css assumes a dark theme.
   )
 
 (add-hook 'org-export-before-processing-hook 'my-org-inline-css-hook)
+
+(defun my-org-export-with-theme (orig-fun &rest args)
+  "Advice function to apply a theme during org export and revert after."
+  (let* ((export-theme 'leuven) ;; Replace with your desired theme
+         (original-themes (mapcar #'symbol-name custom-enabled-themes))) ;; Store the current themes
+    ;; Load the desired theme for export
+    (load-theme export-theme t)
+    ;; Perform the export
+    (unwind-protect
+        (apply orig-fun args)
+      ;; Revert to the original themes
+      (disable-theme export-theme)
+      (mapc (lambda (theme) (load-theme (intern theme) t)) original-themes))))
+
+(advice-add 'org-html-export-to-html :around #'my-org-export-with-theme)
 #+end_src
-*** Latex export (org)
-Export html with latex macros ([[https://emacs.stackexchange.com/questions/54703/exporting-latex-commands-to-html-mathjax]])
+
 #+begin_src emacs-lisp
-;;;###autoload
-(with-eval-after-load "org"
-  (add-to-list 'org-src-lang-modes '("latex-macros" . latex)))
-
-(defvar org-babel-default-header-args:latex-macros
-  '((:results . "raw")
-    (:exports . "results")))
-
-(defun prefix-all-lines (pre body)
-  (with-temp-buffer
-    (insert body)
-    (string-insert-rectangle (point-min) (point-max) pre)
-    (buffer-string)))
-
-(defun org-babel-execute:latex-macros (body _params)
-  (concat
-   (prefix-all-lines "#+LATEX_HEADER: " body)
-   "\n#+HTML_HEAD_EXTRA: <div style=\"display: none\"> \\(\n"
-   (prefix-all-lines "#+HTML_HEAD_EXTRA: " body)
-   "\n#+HTML_HEAD_EXTRA: \\)</div>\n"))
+(setq org-export-with-broken-links t)
 #+end_src
 
 *** Org date format
@@ -721,19 +724,6 @@ However, we still want to remove these brackets when exporting
 (eval-after-load 'ox '(add-to-list
                        'org-export-filter-timestamp-functions
                        'org-export-filter-timestamp-remove-brackets))
-#+end_src
-
-*** Preview latex on save ([[https://emacs.stackexchange.com/questions/38198/automatically-preview-latex-in-org-mode-as-soon-as-i-finish-typing][from here]], disabled)
-#+begin_src emacs-lisp
-;; (defun my/org-render-latex-fragments ()
-;;   (if (org-list-latex-overlays)
-;;       (progn (org-toggle-latex-fragment)
-;;              (org-toggle-latex-fragment))
-;;     (org-toggle-latex-fragment)))
-
-;; (add-hook 'org-mode-hook
-;;           (lambda ()
-;;             (add-hook 'after-save-hook 'my/org-render-latex-fragments nil 'make-the-hook-local)))
 #+end_src
 
 *** Counsel key-bindings (disabled)
@@ -768,59 +758,6 @@ However, we still want to remove these brackets when exporting
 ;;                    'zotero-org-export)))
 #+END_SRC
 
-*** Preview latex fragments when cursor is elsewhere (org-fragtog)
-#+begin_src emacs-lisp
-(add-hook 'org-mode-hook 'org-fragtog-mode)
-#+end_src
-
-Make latex preview not freeze emacs (seems to work only with Emacs2.9+)
-#+begin_src emacs-lisp
-'(org-preview-latex-process-alist
-       (quote
-       ((dvipng :programs
-         ("lualatex" "dvipng")
-         :description "dvi > png" :message "you need to install the programs: latex and dvipng." :image-input-type "dvi" :image-output-type "png" :image-size-adjust
-         (1.0 . 1.0)
-         :latex-compiler
-         ("lualatex -output-format dvi -interaction nonstopmode -output-directory %o %f")
-         :image-converter
-         ("dvipng -fg %F -bg %B -D %D -T tight -o %O %f"))
- (dvisvgm :programs
-          ("latex" "dvisvgm")
-          :description "dvi > svg" :message "you need to install the programs: latex and dvisvgm." :use-xcolor t :image-input-type "xdv" :image-output-type "svg" :image-size-adjust
-          (1.7 . 1.5)
-          :latex-compiler
-          ("xelatex -no-pdf -interaction nonstopmode -output-directory %o %f")
-          :image-converter
-          ("dvisvgm %f -n -b min -c %S -o %O"))
- (imagemagick :programs
-              ("latex" "convert")
-              :description "pdf > png" :message "you need to install the programs: latex and imagemagick." :use-xcolor t :image-input-type "pdf" :image-output-type "png" :image-size-adjust
-              (1.0 . 1.0)
-              :latex-compiler
-              ("xelatex -no-pdf -interaction nonstopmode -output-directory %o %f")
-              :image-converter
-              ("convert -density %D -trim -antialias %f -quality 100 %O")))))
-#+end_src
-
-#+begin_src emacs-lisp
-(use-package! cdlatex
-    :after (:any org-mode LaTeX-mode)
-    :hook
-    ((LaTeX-mode . turn-on-cdlatex)
-     (org-mode . turn-on-org-cdlatex)))
-
-(use-package! company-math
-    :after (:any org-mode TeX-mode)
-    :config
-    (set-company-backend! 'org-mode 'company-math-symbols-latex)
-    (set-company-backend! 'TeX-mode 'company-math-symbols-latex)
-    (set-company-backend! 'org-mode 'company-latex-commands)
-    (set-company-backend! 'TeX-mode 'company-latex-commands)
-    (setq company-tooltip-align-annotations t)
-    (setq company-math-allow-latex-symbols-in-faces t))
-#+end_src
-
 *** Drag and drop
 Drag and drop and paste images into org
 #+begin_src emacs-lisp
@@ -840,50 +777,6 @@ Drag and drop and paste images into org
     (concat "./" dir-name "/"  (file-name-nondirectory path))
     )
   )
-
-;; (defun my-dnd-func (event)
-;;   (interactive "e")
-;;   (goto-char (nth 1 (event-start event)))
-;;   (x-focus-frame nil)
-;;   (let* ((payload (car (last event)))
-;;          (type (car payload))
-;;          (fname (cadr payload))
-;;          (img-regexp "\\(png\\|jp[e]?g\\)\\>"))
-;;     (cond
-;;      ;; insert image link
-;;      ((and  (eq 'drag-n-drop (car event))
-;;             (eq 'file type)
-;;             (string-match img-regexp fname))
-;;       (insert (format "[[file:%s]]" (copy-and-get-relative-path fname "images"))) ; (file-name-base buffer-file-name)
-;;       (org-display-inline-images t t))
-;;      ;; insert image link with caption
-;;      ((and  (eq 'C-drag-n-drop (car event))
-;;             (eq 'file type)
-;;             (string-match img-regexp fname))
-;;       (insert "#+ATTR_ORG: :width 300\n")
-;;       (insert (concat  "#+CAPTION: " (read-input "Caption: ") "\n"))
-;;       (insert (format "[[file:%s]]"  (copy-and-get-relative-path fname "images")))
-;;       (org-display-inline-images t t))
-;;      ;; C-drag-n-drop to open a file
-;;      ((and  (eq 'C-drag-n-drop (car event))
-;;             (eq 'file type))
-;;       (find-file fname))
-;;      ((and (eq 'M-drag-n-drop (car event))
-;;            (eq 'file type))
-;;       (insert (format "[[attachfile:%s]]"  (copy-and-get-relative-path fname "files"))))
-;;      ;; regular drag and drop on file
-;;      ((eq 'file type)
-;;       (insert (format "[[%s]]\n" (copy-and-get-relative-path fname "files")))
-;;       )
-;;      (t
-;;       (error "I am not equipped for dnd on %s" payload)))))
-
-
-
-;(define-key org-mode-map (kbd "<drag-n-drop>") 'my-dnd-func)
-;(define-key org-mode-map (kbd "<C-drag-n-drop>") 'my-dnd-func)
-;(define-key org-mode-map (kbd "<M-drag-n-drop>") 'my-dnd-func)
-
 ;; Insert files in org mode
 ;; From http://kitchingroup.cheme.cmu.edu/blog/2015/07/10/Drag-images-and-files-onto-org-mode-and-insert-a-link-to-them/
 
@@ -909,6 +802,173 @@ Drag and drop and paste images into org
 
 #+end_src
 
+
+** Latex support
+*** Preview latex fragments when cursor is elsewhere (org-fragtog)
+Anoying situation is that if I repaat the same symbol more than once in an equation env (also inline),
+the latex preview will show an additional number that ruins the document layout. E.g $k$ will work, but $k$
+$k$
+Not sure how this happens
+
+
+#+begin_src emacs-lisp
+(setq org-latex-create-formula-image-program 'dvisvgm) ;dvipng)
+(setq org-preview-latex-default-process 'dvisvgm)
+
+(defun my-extend-org-format-latex-header ()
+  "Extend `org-format-latex-header` with custom LaTeX settings."
+  (let ((custom-header "\\usepackage{amsmath}
+                        \\usepackage{mathtools}
+                        \\mathtoolsset{showonlyrefs}")
+        (additional-settings "\\usepackage{hyperref}
+                              \\renewcommand{\\theequation}{\\arabic{equation}}"))
+    (setq org-format-latex-header
+          (concat (or org-format-latex-header "")
+                  "\n"
+                  custom-header
+                  "\n"
+                  additional-settings))))
+
+(with-eval-after-load 'ox-latex
+  (my-extend-org-format-latex-header))
+#+end_src
+
+Customize preview:
+#+begin_src emacs-lisp
+(add-hook 'org-mode-hook 'org-fragtog-mode)
+
+(setq org-highlight-latex-and-related '(native script entities))
+
+(after! org
+  (plist-put org-format-latex-options :foreground nil)
+  (plist-put org-format-latex-options :background nil)
+  (plist-put org-format-latex-options :scale 1.9)
+)
+
+(require 'org-src)
+(add-to-list 'org-src-block-faces '("latex" (:inherit default :extend t)))
+
+
+#+end_src
+Test it
+\[
+\sqrt{2}
+\]
+
+Do we still need this? [[https://github.com/hieutkt/dotfiles/blob/d59a8dbf18786b7a2a37098ba8552421d3440992/emacs/.doom.d/config.org#L809][source]]
+Make latex preview not freeze emacs (seems to work only with Emacs2.9+)
+#+begin_src emacs-lisp
+;; '(org-preview-latex-process-alist
+;;        (quote
+;;        ((dvipng :programs
+;;          ("lualatex" "dvipng")
+;;          :description "dvi > png" :message "you need to install the programs: latex and dvipng." :image-input-type "dvi" :image-output-type "png" :image-size-adjust
+;;          (1.0 . 1.0)
+;;          :latex-compiler
+;;          ("lualatex -output-format dvi -interaction nonstopmode -output-directory %o %f")
+;;          :image-converter
+;;          ("dvipng -fg %F -bg %B -D %D -T tight -o %O %f"))
+;;  (dvisvgm :programs
+;;           ("latex" "dvisvgm")
+;;           :description "dvi > svg" :message "you need to install the programs: latex and dvisvgm." :use-xcolor t :image-input-type "xdv" :image-output-type "svg" :image-size-adjust
+;;           (1.7 . 1.5)
+;;           :latex-compiler
+;;           ("xelatex -no-pdf -interaction nonstopmode -output-directory %o %f")
+;;           :image-converter
+;;           ("dvisvgm %f -n -b min -c %S -o %O"))
+;;  (imagemagick :programs
+;;               ("latex" "convert")
+;;               :description "pdf > png" :message "you need to install the programs: latex and imagemagick." :use-xcolor t :image-input-type "pdf" :image-output-type "png" :image-size-adjust
+;;               (1.0 . 1.0)
+;;               :latex-compiler
+;;               ("xelatex -no-pdf -interaction nonstopmode -output-directory %o %f")
+;;               :image-converter
+;;               ("convert -density %D -trim -antialias %f -quality 100 %O")))))
+
+;; (setq org-latex-preview-process-alist
+;;       `((dvipng :programs
+;;          ("latex" "dvipng")
+;;          :description "dvi > png" :message "you need to install the programs: latex and dvipng." :image-input-type "dvi" :image-output-type "png" :latex-compiler
+;;          ("%l -interaction nonstopmode -output-directory %o %f")
+;;          :latex-precompiler
+;;          ("%l -output-directory %o -ini -jobname=%b \"&%L\" mylatexformat.ltx %f")
+;;          :image-converter
+;;          ("dvipng --follow -D %D -T tight --depth --height -o %B-%%09d.png %f")
+;;          :transparent-image-converter
+;;          ("dvipng --follow -D %D -T tight -bg Transparent --depth --height -o %B-%%09d.png %f"))
+;;         (dvisvgm :programs
+;;                  ("latex" "dvisvgm")
+;;                  :description "dvi > svg" :message "you need to install the programs: latex and dvisvgm." :image-input-type "dvi" :image-output-type "svg" :latex-compiler
+;;                  ("%l -interaction nonstopmode -output-directory %o %f")
+;;                  :latex-precompiler
+;;                  ("%l -output-directory %o -ini -jobname=%b \"&%L\" mylatexformat.ltx %f")
+;;                  :image-converter
+;;                  ("dvisvgm --page=1- --optimize --clipjoin --relative --no-fonts --bbox=preview -o %B-%%9p.svg %f"))
+;;         (imagemagick :programs
+;;                      ("pdflatex" "convert")
+;;                      :description "pdf > png" :message "you need to install the programs: latex and imagemagick." :image-input-type "pdf" :image-output-type "png" :latex-compiler
+;;                      ("pdflatex -interaction nonstopmode -output-directory %o %f")
+;;                      :latex-precompiler
+;;                      ("pdftex -output-directory %o -ini -jobname=%b \"&pdflatex\" mylatexformat.ltx %f")
+;;                      :image-converter
+;;                      ("convert -density %D -trim -antialias %f -quality 100 %B-%%09d.png"))))
+#+end_src
+
+#+begin_src emacs-lisp
+;; (use-package! cdlatex
+;;     :after (:any org-mode LaTeX-mode)
+;;     :hook
+;;     ((LaTeX-mode . turn-on-cdlatex)
+;;      (org-mode . turn-on-org-cdlatex)))
+
+;; (use-package! company-math
+;;     :after (:any org-mode TeX-mode)
+;;     :config
+;;     (set-company-backend! 'org-mode 'company-math-symbols-latex)
+;;     (set-company-backend! 'TeX-mode 'company-math-symbols-latex)
+;;     (set-company-backend! 'org-mode 'company-latex-commands)
+;;     (set-company-backend! 'TeX-mode 'company-latex-commands)
+;;     (setq company-tooltip-align-annotations t)
+;;     (setq company-math-allow-latex-symbols-in-faces t))
+#+end_src
+
+*** Preview latex on save ([[https://emacs.stackexchange.com/questions/38198/automatically-preview-latex-in-org-mode-as-soon-as-i-finish-typing][from here]], disabled)
+#+begin_src emacs-lisp
+;; (defun my/org-render-latex-fragments ()
+;;   (if (org-list-latex-overlays)
+;;       (progn (org-toggle-latex-fragment)
+;;              (org-toggle-latex-fragment))
+;;     (org-toggle-latex-fragment)))
+
+;; (add-hook 'org-mode-hook
+;;           (lambda ()
+;;             (add-hook 'after-save-hook 'my/org-render-latex-fragments nil 'make-the-hook-local)))
+#+end_src
+
+*** Latex export (org)
+Export html with latex macros ([[https://emacs.stackexchange.com/questions/54703/exporting-latex-commands-to-html-mathjax]])
+#+begin_src emacs-lisp
+;;;###autoload
+(with-eval-after-load "org"
+  (add-to-list 'org-src-lang-modes '("latex-macros" . latex)))
+
+(defvar org-babel-default-header-args:latex-macros
+  '((:results . "raw")
+    (:exports . "results")))
+
+(defun prefix-all-lines (pre body)
+  (with-temp-buffer
+    (insert body)
+    (string-insert-rectangle (point-min) (point-max) pre)
+    (buffer-string)))
+
+(defun org-babel-execute:latex-macros (body _params)
+  (concat
+   (prefix-all-lines "#+LATEX_HEADER: " body)
+   "\n#+HTML_HEAD_EXTRA: <div style=\"display: none\"> \\(\n"
+   (prefix-all-lines "#+HTML_HEAD_EXTRA: " body)
+   "\n#+HTML_HEAD_EXTRA: \\)</div>\n"))
+#+end_src
 
 ** Org Roam
 Org roam allows to organize a database of notes with links. Some usecase links:
@@ -980,8 +1040,6 @@ I then define the following note types:
           org-roam-ui-update-on-save t
           org-roam-ui-open-on-start t))
 #+end_src
-
-
 ** Calendar/Agenda
 *** Notes
 Basic keybindings:
@@ -1289,7 +1347,88 @@ Keep zotero and a global bib file synched:
  :desc "Add citation reference"
  "n r c" #'cm/org-roam-node-from-cite)
 #+end_src
+*** Org-cite and ox-ipynb
+Org cite does not seem to work with Jupyter notebook export by default (see this [[https://github.com/jkitchin/ox-ipynb/issues/51][issue]]).
+This is a hacky solution where I export a temporary org file with formatted references in a named section
+and then copy this into the temporary buffer used by ox-ipynb for export
+#+begin_src emacs-lisp
+(defun remove-org-section-by-name (section-name)
+    "Remove a section with SECTION-NAME in the current Org buffer if it exists."
+    (let ((section-heading (concat "^\\*+ " (regexp-quote section-name))))
+      (save-excursion
+      (goto-char (point-min))
+      (when (re-search-forward section-heading nil t)
+        (let ((start (match-beginning 0)))
+          (org-back-to-heading t) ;; Move to the beginning of the heading
+          (org-cut-subtree)))
+      )
+    )
+    nil
+  )
 
+ (defun print-inline-bibliography (&optional section-name)
+    "Create a formatted bibliography section for the current org file.
+If section-name is not provided, it defaults to 'References'."
+    (let* ((section-name (or section-name "References"))
+           (current-file (buffer-file-name (current-buffer)))
+           (tmp-file "_tmp.org")
+           (bibliography-section (concat "* " section-name "\n#+print_bibliography:\n"))
+           (bibliography-start (concat "^\\*+ " (regexp-quote section-name))))
+
+      ;; Remove the bibliography section from current file if it exists
+      ;; And add it followed by the required org-cite format
+      (remove-org-section-by-name section-name)
+      (save-excursion
+        (goto-char (point-max))
+        (insert bibliography-section))
+
+      ;; Export to a temp file
+      (let ((org-export-babel-evaluate nil)) ;; No code exec
+          (org-export-to-file 'org tmp-file))
+
+      ;; Remove the section used for export
+      (remove-org-section-by-name section-name)
+
+      ;; Copy the formatted version from the tmp file
+      (with-temp-file tmp-file
+        (org-mode)
+        (insert-file-contents tmp-file)
+        (goto-char (point-min))
+        (when (re-search-forward bibliography-start nil t)
+          (goto-char (match-beginning 0))
+          (org-copy-subtree)))
+
+      ;; Finally paste it in the current buffer
+      (save-excursion
+              (goto-char (point-max))
+              (org-paste-subtree))
+
+      ;; Cleanup
+      (delete-file tmp-file)
+))
+
+(with-eval-after-load 'ox-ipynb
+  (setq ox-ipynb-preprocess-hook  '((lambda ()
+				     (print-inline-bibliography))))
+
+)
+#+end_src
+
+I typically want to open the notebook to test it, but the ~my-ipynb-export-to-ipynb-no-results-file-and-open~ function used from the menu defines its own ~ox-ipynb-preprocess-hook~. It is possible to modify the backend interface with:
+#+begin_src emacs-lisp
+(org-export-define-derived-backend 'custom-jupyter-notebook 'org
+  :menu-entry
+  '(?n "Export to custom jupyter notebook"
+       ((?r "to nb (no results) and open" my-ipynb-export-to-ipynb-no-results-file-and-open))))
+
+(defun my-ipynb-export-to-ipynb-no-results-file-and-open (&optional async subtreep visible-only body-only info)
+  (let ((ox-ipynb-preprocess-hook '((lambda ()
+				      (org-babel-map-src-blocks nil
+					(org-babel-remove-result))
+                                      (print-inline-bibliography)))))
+    (ox-ipynb-export-to-ipynb-file-and-open)))
+
+#+end_src
 
 
 * Magit (git)

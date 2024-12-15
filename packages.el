@@ -86,6 +86,7 @@
 (package! org-appear)
 (package! org-journal)
 
+(package! org-modern)
 ;; (package! windresize) ;; Resize windows with arrows
 ;; (package! dimmer)
 
