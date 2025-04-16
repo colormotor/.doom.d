@@ -75,8 +75,13 @@ And add agenda view (annoying)
 ** Pixel scrolling
 I LOVE emacs, but damn it is pretty ridiculous that in 2023 it is still not possible to smoothly scroll images.
 Setting the following to ~1~ completely blocks Emacs:
+# #+begin_src emacs-lisp
+# (pixel-scroll-mode 0)
+# #+end_src
+
 #+begin_src emacs-lisp
-(pixel-scroll-mode 0)
+(pixel-scroll-precision-mode 1)
+(setq  scroll-conservatively 0) ; Seems to a void annoying jumping?
 #+end_src
 
 ** Fonts
@@ -405,6 +410,14 @@ https://blog.meain.io/2017/how-emacs-took-over-my-vim-life/
 ;; (global-set-key [escape] 'evil-exit-emacs-state)
 #+end_src
 
+**** Fixes
+With Evil mode and insert active, shift selection uses word boundaries that is really annoying with code. Trying to fix it
+#+begin_src emacs-lisp
+(define-key evil-insert-state-map (kbd "C-S-<right>") nil)
+(define-key evil-insert-state-map (kbd "C-S-<left>")  nil)
+(define-key evil-insert-state-map (kbd "S-<right>") nil)
+(define-key evil-insert-state-map (kbd "S-<left>")  nil)
+#+end_src
 **** Keybinding notes
 Note that from insert mode it is possible to ~C-o~ and then use for one time any
 of the commands below.
@@ -1846,6 +1859,11 @@ While limited in some ways, and not much maintained [[https://github.com/nnicand
 
 Some links in regard:
 - https://sqrtminusone.xyz/posts/2021-05-01-org-python/
+
+#+begin_src emacs-lisp
+(after! org
+  (setq org-edit-src-content-indentation 0))
+#+end_src
 
 #+begin_src emacs-lisp
 (use-package jupyter
