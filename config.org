@@ -625,6 +625,19 @@ Use ~M-x figlet-preview-fonts~ to see a list of fonts (images/names).
 ;; (require 'quarto-mode)
 #+end_src
 
+* Snippets
+** Delete carriage returns
+Happens when pating from Word, see [[https://stackoverflow.com/questions/23712076/how-to-remove-m-in-emacs#:~:text=That%20is%2C%20at%20the%20prompt,(replace%20it%20with%20nothing).][stack overflow post]]
+#+begin_src emacs-lisp
+(defun delete-carrage-returns ()
+  (interactive)
+  (save-excursion
+    (goto-char 0)
+    (while (search-forward "\r" nil :noerror)
+      (replace-match ""))))
+#+end_src
+
+
 * Org mode (with Org-Roam)
 #+begin_src emacs-lisp
 (setq org-directory "~/Dropbox/org")
@@ -851,6 +864,14 @@ Drag and drop and paste images into org
     (insert (format "[[file:%s]]"  (concat "./" myvar/folder-name "/" (file-name-nondirectory image-file))  ))
     (org-display-inline-images)))
 
+#+end_src
+** Org-reveal (presentations)
+#+begin_src emacs-lisp
+(use-package! org-re-reveal
+  :after org
+  :config
+  (setq org-re-reveal-width 1280
+        org-re-reveal-height 720))
 #+end_src
 
 
@@ -1495,8 +1516,6 @@ I typically want to open the notebook to test it, but the ~my-ipynb-export-to-ip
     (ox-ipynb-export-to-ipynb-file-and-open)))
 
 #+end_src
-
-
 * Magit (git)
 
 Defo the best git client out there.
@@ -1511,7 +1530,10 @@ The following does not work no more?
 ;    )
 #+end_src
 
-
+** Diff line wrapping (?)
+#+begin_src emacs-lisp
+(setq magit-diff-toggle-refine-hunk t)
+#+end_src
 ** Do not show whitespace diffs
 #+begin_src emacs-lisp
 (setq ediff-diff-options "-w")
@@ -1553,8 +1575,29 @@ To view pdfs first time need to:
 ~C-c C-c~ compile/view etc
 
 ** Config
+Workaround for bug that emacs does not automatically set the correct mode for LaTex on startup
+#+begin_src emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.tex\\'" . LaTeX-mode))
+#+end_src
+Setup
 #+begin_src emacs-lisp
 (setq +latex-viewers '(pdf-tools))
+
+(use-package! tex
+  :defer t
+  :init
+  (setq TeX-command-default "LaTeX"
+        TeX-auto-save t
+        TeX-parse-self t
+        TeX-save-query nil
+        TeX-PDF-mode t)
+  :config
+  ;; Rebind C-c C-c to TeX-command-master
+  (map! :map LaTeX-mode-map
+        :localleader
+        :desc "Run command" "c" #'TeX-command-master)
+  (map! :map LaTeX-mode-map
+        "C-c C-c" #'TeX-command-master))
 #+end_src
 
 When Option-clicking on text, jump to pdf position.
@@ -1886,6 +1929,7 @@ Some links in regard:
 
 #+end_src
 
+
 Also issues when loading, with a need to manually require ~ob-jupyter~ (see ; https://github.com/emacs-jupyter/jupyter/issues/306), but with a very specific ordering. Simply requiring results in a weird break with magit commits (~C-c C-c~ unbound)
 #+begin_src emacs-lisp
 (after! (:all org python)
@@ -1897,6 +1941,32 @@ Also issues when loading, with a need to manually require ~ob-jupyter~ (see ; ht
 (set-popup-rule! "\*jupyter-repl...*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
 *** Workarounds
+
+**** ZMQ issues
+Constant errors
+#+begin_example
+error in process filter: zmq--subprocess-filter: Error in ZMQ subprocess: wrong-type-argument, (user-ptrp nil)
+error in process filter: Error in ZMQ subprocess: wrong-type-argument, (user-ptrp nil)
+#+end_example
+
+Maybe a solution here?
+https://github.com/emacs-jupyter/jupyter/issues/527
+#+begin_src emacs-lisp
+(setq jupyter-use-zmq nil)
+
+(defun my-jupyter-api-http-request--ignore-login-error-a
+    (func url endpoint method &rest data)
+  (cond
+   ((member endpoint '("login"))
+    (ignore-error (jupyter-api-http-error)
+      (apply func url endpoint method data)))
+   (:else
+    (apply func url endpoint method data))))
+(advice-add
+ #'jupyter-api-http-request
+ :around #'my-jupyter-api-http-request--ignore-login-error-a)
+
+#+end_src
 **** Unicode bug?
 #+begin_src emacs-lisp
 (defun delete-non-displayable ()

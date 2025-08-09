@@ -1,7 +1,7 @@
 # -*- mode: snippet -*-
 # name: figure
-# key: pltfig
-# uuid: pltfig
+# key: <fig
+# uuid: <fig
 # --
 
 plt.figure(figsize=($1,$2))

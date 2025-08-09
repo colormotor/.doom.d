@@ -49,6 +49,7 @@
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;(unpin! t)
 
+(package! evil-tutor)
 
 (package! parrot) ;; Toggling between symbols (e.g. true/false)
 (package! dimmer)
@@ -87,7 +88,7 @@
 (package! elpy)
 
 (package! mini-frame)
-(package! string-inflection)
+;; (package! string-inflection) ; Broken?
 (package! org-appear)
 (package! org-journal)
 
@@ -144,4 +145,7 @@
 
 
 (package! copilot
-  :recipe (:host github :repo "zerolfx/copilot.el" :files ("*.el" "dist")))
+  :recipe (:host github :repo "copilot-emacs/copilot.el" :files ("*.el")))
+
+;(package! copilot
+;  :recipe (:host github :repo "zerolfx/copilot.el" :files ("*.el" "dist")))
