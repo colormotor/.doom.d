@@ -1902,10 +1902,11 @@ While limited in some ways, and not much maintained [[https://github.com/nnicand
 
 Some links in regard:
 - https://sqrtminusone.xyz/posts/2021-05-01-org-python/
+- [[https://github.com/aahsnr-configs/nix-dots/blob/3d0eaa0b2b591f4a7be43ee4759d9a76f04c60be/modules/home/emacs/doom.d/jupyter-fix.md][Suggetions for setup]]
 
 #+begin_src emacs-lisp
-(after! org
-  (setq org-edit-src-content-indentation 0))
+;; (after! org
+;;   (setq org-edit-src-content-indentation 0))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1941,7 +1942,16 @@ Also issues when loading, with a need to manually require ~ob-jupyter~ (see ; ht
 (set-popup-rule! "\*jupyter-repl...*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
 *** Workarounds
-
+**** Corfu + EIN
+Jupyter seems use EIN under the hood, which messes with corfu for completion:
+#+begin_src emacs-lisp
+;; hijacking the completion-at-point-function, allowing lsp-pyright to
+;; function as the sole provider for in-buffer completions.
+(defadvice! disable-ein-jedi-setup-a (fn)
+  "Disable EIN's conflicting jedi setup."
+  :around #'ein:jedi-setup
+  (interactive))
+#+end_src
 **** ZMQ issues
 Constant errors
 #+begin_example
@@ -2189,8 +2199,17 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 		c-basic-offset 2))
 (add-hook 'c++-mode-hook 'my-c++-mode-hook)
 #+end_src
+** Code formatiing
+#+begin_src emacs-lisp
+;; (set-formatter! 'ruff '("ruff" "format" "-"))
+;; ;(set-formatter! 'latexindent '("latexindent" "-g" "/dev/null"))
+(with-eval-after-load 'eglot
+   (add-to-list 'eglot-server-programs
+                '(python-ts-mode . ("ruff-lsp"))))
+#+end_src
 
 ** Completion
+*** Company
 From https://tecosaur.github.io/emacs-config/config.html
 #+begin_src emacs-lisp
 (after! company
@@ -2202,6 +2221,25 @@ From https://tecosaur.github.io/emacs-config/config.html
   (setq company-global-modes '(not org-mode))
   ) ;; make aborting less annoying.
 #+end_src
+
+*** Cofu
+
+From [[https://github.com/robbert-vdh/dotfiles/blob/282b5393f54ecea91c8ad004cdf417b6e1ad24d2/modules/emacs/doom/config.org#corfu][here]]:
+#+begin_src emacs-lisp
+(after! vertico
+  (setq vertico-count 10))
+
+(after! corfu
+  :config
+  (setq corfu-auto-resize nil
+        corfu-auto-delay 0.2)
+  (setq tab-always-indent t)
+  (define-key corfu-map [tab] nil)
+  (define-key corfu-map "\t" nil)
+  )
+#+end_src
+
+
 ** Copilot
 #+begin_src emacs-lisp
 ;; accept completion from copilot and fallback to company
