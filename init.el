@@ -21,7 +21,7 @@
        ;;layout            ; auie,ctsrnm is the superior home row
 
        :completion
-       (company +childframe)          ; the ultimate code completion backend 
+       ;(company +childframe)          ; the ultimate code completion backend
        ;;helm              ; the *other* search engine for love and life
        ;;ido               ; the other *other* search engine...
        ;;ivy               ; a search engine for love and life
@@ -161,6 +161,7 @@
        ;;nix               ; I hereby declare "nix geht mehr!"
        ;;ocaml             ; an objective camel
        (org
+         +pretty
          +jupyter
          +roam2
          +pandoc

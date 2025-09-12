@@ -93,6 +93,10 @@
 (package! org-journal)
 
 (package! org-modern)
+
+;; Enable multiple major modes in a single buffer
+(package! mmm-mode)
+
 ;; (package! windresize) ;; Resize windows with arrows
 ;; (package! dimmer)
 
