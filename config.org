@@ -1837,112 +1837,166 @@ Also seems that AucTex resets the ~delete-selection-mode~
 # (require 'ox-ipynb)
 # #+end_src
 
-** Polymode (disabled)
-Overkill since I just really need this for Python/Jupyter source blocks
-#+begin_src emacs-lisp
-;; (require 'polymode)
-
-;; Define the Python host mode
-;; (define-hostmode poly-python-hostmode
-;;   :mode 'python-mode)
-
-;; ;; ;; Define the Org inner mode with custom delimiters for %[org and %]
-;; ;; (define-innermode poly-org-innermode
-;; ;;   :mode 'org-mode
-;; ;;   :head-matcher "^[[:space:]]*%\\[org[[:space:]]*$"  ;; Match %[org as the start of the block
-;; ;;   :tail-matcher "^[[:space:]]*%\\][[:space:]]*$"     ;; Match %] as the end of the block
-;; ;;   :head-mode 'host
-;; ;;   :tail-mode 'host
-;; ;;   :allow-nested nil  ;; Disable nesting, to avoid complexity
-;; ;;   :keep-in-mode t)   ;; Keep the inner block in org-mode for proper fontification
-
-;; ;; Define the Org inner mode with custom delimiters for '''org and '''
-;; (define-innermode poly-org-innermode
-;;   :mode 'org-mode
-;;   :head-matcher "^[[:space:]]*'''org[[:space:]]*$"  ;; Match '''org as the start of the block
-;;   :tail-matcher "^[[:space:]]*'''[[:space:]]*$"     ;; Match ''' as the end of the block
-;;   :head-mode 'host
-;;   :tail-mode 'host
-;;   :allow-nested nil  ;; Disable nesting if not needed, it can cause issues
-;;   :keep-in-mode t)   ;; Keep the org block in org-mode (for proper highlighting)
-
-;; ;; Define the polymode for Python with Org inner mode
-;; (define-polymode poly-python-org-mode
-;;   :hostmode 'poly-python-hostmode
-;;   :innermodes '(poly-org-innermode))
-
-;; ;; Function to trigger polymode based on content
-;; (defun maybe-poly-python-org-mode ()
-;;   "Switch to poly-python-org-mode if the buffer contains Org-mode blocks."
-;;   (when (save-excursion
-;;           (goto-char (point-min))
-;;           (re-search-forward "'''org" nil t))  ;; Look for '''org in the buffer
-;;     (poly-python-org-mode)))
-
-;; ;; Hook to apply the polymode only when necessary
-;; (add-hook 'python-mode-hook #'maybe-poly-python-org-mode)
-#+end_src
-
-Polymode runins indentation in Python
-#+begin_src emacs-lisp
-;; (defun my-disable-org-indent-in-polymode ()
-;;   "Disable Org-mode indentation only when in polymode within a Python file."
-;;   (when (and (bound-and-true-p polymode-mode)  ;; Check if polymode is active
-;;              (eq major-mode 'org-mode)        ;; Check if current mode is Org
-;;              (string= (symbol-name (pm-host-chunkmode major-mode))
-;;                       "poly-python-hostmode")) ;; Check if host mode is Python
-;;     (setq-local org-adapt-indentation nil)    ;; Disable Org indentation
-;;     (setq-local org-startup-indented nil)))
-
-;; (add-hook 'org-mode-hook #'my-disable-org-indent-in-polymode)
-#+end_src
-
-#+begin_src emacs-lisp
-;(use-package! poly-org
-;  :after org)
-#+end_src
-
 ** Additional file extensions
 #+begin_src emacs-lisp
 ; Processing
 (add-to-list 'auto-mode-alist '("\\.pde\\'" . java-mode))
 #+end_src
 
+** Polymode
+*** Enable org/md comments in Python
+Code written by ChatGPT. Allows to write comments that get fontified with the syntax
+#+begin_example
+#%% [org]
+'''
+Some org mode stuff
+'''
+#+end_example
+or
+#+begin_example
+#%% [md]
+'''
+Some MD stuff
+'''
+#+end_example
+
+#+begin_src emacs-lisp
+;;; --- Compact polymode for [org] + [md] cells in Python ---
+
+;; Org submode without indentation (only inside islands)
+(define-derived-mode org-noindent-mode org-mode "OrgNoIndent"
+  (setq-local org-adapt-indentation nil
+              org-startup-indented nil
+              electric-indent-inhibit t
+              indent-line-function #'indent-relative)
+  (ignore-errors (org-indent-mode -1))
+  (electric-indent-local-mode -1))
+
+(use-package! polymode
+  :defer t
+  :config
+  ;; Hosts
+  (define-hostmode poly-python-hostmode    :mode 'python-mode)
+  (define-hostmode poly-python-ts-hostmode :mode 'python-ts-mode)
+
+  ;; ---- Helpers (DRY) ----
+  (defun my/poly--build-head (tags)
+    "Build head matcher: '#%% [TAGS]' (+ optional blanks) + opening '''/\"\"\"."
+    (concat
+     "^[ \t]*# ?%%[ \t]*\\[" (regexp-opt tags) "\\][^\n\r]*\\(?:\n\\|\r\n\\)"
+     "\\(?:[ \t]*\\(?:\n\\|\r\n\\)\\)*"
+     "[ \t]*\\(?:\"\"\"\\|'''\\)[ \t]*\\(?:\\n\\|\\r\\n\\)?"))
+
+  (defconst my/poly--tail "^[ \t]*\\(?:\"\"\"\\|'''\\)[ \t]*$") ; closing quotes
+  (defconst my/poly--enable-pattern "^[ \t]*# ?%%[ \t]*\\[\\(org\\|md\\|markdown\\)\\]")
+
+  ;; ---- Innermodes ----
+  (define-innermode poly-python-org-innermode
+    :mode 'org-noindent-mode
+    :head-matcher (my/poly--build-head '("org"))
+    :tail-matcher my/poly--tail
+    :head-mode 'host :tail-mode 'host)
+
+  (define-innermode poly-python-md-innermode
+    :mode 'markdown-mode
+    :head-matcher (my/poly--build-head '("md" "markdown"))
+    :tail-matcher my/poly--tail
+    :head-mode 'host :tail-mode 'host)
+
+  ;; ---- Single polymode that includes BOTH innermodes ----
+  (define-polymode poly-python+jupy-mixed
+    :hostmode 'poly-python-hostmode
+    :innermodes '(poly-python-org-innermode poly-python-md-innermode))
+  (define-polymode poly-python-ts+jupy-mixed
+    :hostmode 'poly-python-ts-hostmode
+    :innermodes '(poly-python-org-innermode poly-python-md-innermode))
+
+  ;; Auto-enable only when buffer contains a matching header.
+  ;; => bare "#%%" or "# %%" remain plain Python (code by default).
+  (defun my/py-maybe-enable-poly-jupy ()
+    (when (save-excursion
+            (save-restriction
+              (widen) (goto-char (point-min))
+              (re-search-forward my/poly--enable-pattern 4000 t)))
+      (if (derived-mode-p 'python-ts-mode)
+          (poly-python-ts+jupy-mixed)
+        (poly-python+jupy-mixed))))
+
+  (add-hook 'python-mode-hook    #'my/py-maybe-enable-poly-jupy)
+  (add-hook 'python-ts-mode-hook #'my/py-maybe-enable-poly-jupy))
+
+;;; --- Optional: smoother yasnippet interaction (tiny + DRY) ---
+(with-eval-after-load 'yasnippet
+  (defvar-local my/poly-lock-was-on nil)
+  (add-hook 'yas-before-expand-snippet-hook
+            (lambda () (when (boundp 'poly-lock-mode)
+                         (setq my/poly-lock-was-on poly-lock-mode)
+                         (when poly-lock-mode (poly-lock-mode -1)))))
+  (add-hook 'yas-after-exit-snippet-hook
+            (lambda () (when (and (boundp 'poly-lock-mode) my/poly-lock-was-on)
+                         (poly-lock-mode 1)))))
+
+#+end_src
+
+This does not play well with Yasnippet since fontification starts early
+#+begin_src emacs-lisp
+;;; Pause poly/jit/font-lock while yas expands (prevents lockups)
+(with-eval-after-load 'yasnippet
+  (defun my/yas--with-fontification-paused (fn &rest args)
+    (let* ((had-poly (and (boundp 'poly-lock-mode) poly-lock-mode))
+           (had-jit  (and (fboundp 'jit-lock-mode)
+                          (boundp 'jit-lock-mode) (symbol-value 'jit-lock-mode)))
+           (had-fl   font-lock-mode))
+      (unwind-protect
+          (progn
+            (when had-poly (poly-lock-mode -1))
+            (when had-jit  (jit-lock-mode -1))
+            (when had-fl   (font-lock-mode -1))
+            (apply fn args))
+        (when had-fl   (font-lock-mode 1))
+        (when (fboundp 'jit-lock-mode) (when had-jit  (jit-lock-mode 1)))
+        (when (boundp 'poly-lock-mode) (when had-poly (poly-lock-mode 1))))))
+
+  ;; Wrap both yas entry points
+  (advice-add 'yas-expand-snippet :around #'my/yas--with-fontification-paused)
+  (advice-add 'yas-insert-snippet :around #'my/yas--with-fontification-paused))
+
+#+end_src
 ** Jupytext setup (broken)
 #+begin_src emacs-lisp
-(use-package! mmm-mode
-  :after python
-  :init
-  (setq mmm-parse-when-idle t
-        mmm-global-mode 'maybe)
-  :config
-  ;; support both """...""" and '''...'''
-  (defvar my/mmm-py-tripleq "\\(\"\"\"\\|'''\\)")
+;; (use-package! mmm-mode
+;;   :after python
+;;   :init
+;;   (setq mmm-parse-when-idle t
+;;         mmm-global-mode 'maybe)
+;;   :config
+;;   ;; support both """...""" and '''...'''
+;;   (defvar my/mmm-py-tripleq "\\(\"\"\"\\|'''\\)")
 
-  ;; Accept "#%% [markdown]" OR "# %% [markdown]" (optional space),
-  ;; and tolerate LF or CRLF after the header.
-  (defvar my/mmm-jupytext-md-header
-    (concat "^[ \t]*# ?%%[ \t]*\\[\\(markdown\\|md\\)\\][^\n\r]*\\(?:\n\\|\r\n\\)"))
+;;   ;; Accept "#%% [markdown]" OR "# %% [markdown]" (optional space),
+;;   ;; and tolerate LF or CRLF after the header.
+;;   (defvar my/mmm-jupytext-md-header
+;;     (concat "^[ \t]*# ?%%[ \t]*\\[\\(markdown\\|md\\)\\][^\n\r]*\\(?:\n\\|\r\n\\)"))
 
-  ;; ---------- Markdown inside triple-quoted markdown cells ----------
-  (mmm-add-classes
-   '((python-jupytext-markdown
-      :submode markdown-mode
-      :face mmm-default-submode-face
-      :front (concat my/mmm-jupytext-md-header "[ \t]*" my/mmm-py-tripleq "[ \t]*\\(?:\\(?:\n\\|\r\n\\)\\)?")
-      :back  (concat "^[ \t]*" my/mmm-py-tripleq)
-      :include-front t
-      :include-back t
-      :end-not-begin t)))
+;;   ;; ---------- Markdown inside triple-quoted markdown cells ----------
+;;   (mmm-add-classes
+;;    '((python-jupytext-markdown
+;;       :submode markdown-mode
+;;       :face mmm-default-submode-face
+;;       :front (concat my/mmm-jupytext-md-header "[ \t]*" my/mmm-py-tripleq "[ \t]*\\(?:\\(?:\n\\|\r\n\\)\\)?")
+;;       :back  (concat "^[ \t]*" my/mmm-py-tripleq)
+;;       :include-front t
+;;       :include-back t
+;;       :end-not-begin t)))
 
-  ;; Attach to BOTH classic python-mode and tree-sitter python-ts-mode
-  (dolist (mode '(python-mode python-ts-mode))
-    (mmm-add-mode-ext-class mode nil 'python-jupytext-markdown))
+;;   ;; Attach to BOTH classic python-mode and tree-sitter python-ts-mode
+;;   (dolist (mode '(python-mode python-ts-mode))
+;;     (mmm-add-mode-ext-class mode nil 'python-jupytext-markdown))
 
-  ;; Turn on mmm in both modes
-  (add-hook 'python-mode-hook #'mmm-mode)
-  (add-hook 'python-ts-mode-hook #'mmm-mode)
-)
+;;   ;; Turn on mmm in both modes
+;;   (add-hook 'python-mode-hook #'mmm-mode)
+;;   (add-hook 'python-ts-mode-hook #'mmm-mode)
+;; )
 
 #+end_src
 
@@ -2264,7 +2318,7 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 #+end_src
 
 ** Completion
-*** Company
+*** Company (disabled)
 From https://tecosaur.github.io/emacs-config/config.html
 #+begin_src emacs-lisp
 ;; (after! company
@@ -2283,28 +2337,134 @@ From [[https://github.com/robbert-vdh/dotfiles/blob/282b5393f54ecea91c8ad004cdf4
 (after! vertico
   (setq vertico-count 10))
 
-(after! corfu
-  :config
-  (setq corfu-auto-resize nil
-        corfu-auto-delay 0.2)
-  (setq tab-always-indent t)
-  (define-key corfu-map [tab] nil)
-  (define-key corfu-map "\t" nil)
+(use-package! corfu
+  :init
+  (global-corfu-mode)
+  :custom
+  (corfu-auto t)
+  (corfu-cycle t)
+  (corfu-auto-delay 0.01)
   )
 #+end_src
 
 
-** Copilot
+*** Copilot
 #+begin_src emacs-lisp
 ;; accept completion from copilot and fallback to company
+;; Copilot: inline ghost text
 (use-package! copilot
   :hook (prog-mode . copilot-mode)
-  :bind (:map copilot-completion-map
-              ("<tab>" . 'copilot-accept-completion)
-              ("TAB" . 'copilot-accept-completion)
-              ("C-TAB" . 'copilot-accept-completion-by-word)
-              ("C-<tab>" . 'copilot-accept-completion-by-word)))
+  :bind
+  (
+   ("C-<return>"        . copilot-accept-completion)
+   ("C-<right>"        . copilot-next-completion)
+   ("C-<left>"        . copilot-previous-completion)
+   ("C-M-<return>"    . copilot-accept-completion-by-word)
+   )
+)
+;;   :config
+;;   ;; Prefer Copilot on TAB *only when* a Copilot suggestion is visible.
+;;   (defun +my/copilot-or-indent-or-complete ()
+;;     "Accept Copilot if visible, else indent/complete as usual."
+;;     (interactive)
+;;     (cond
+;;      ;; Copilot suggestion showing? take it.
+;;      ((and (bound-and-true-p copilot-mode)
+;;            (fboundp 'copilot--overlay-visible)
+;;            (copilot--overlay-visible))
+;;       (copilot-accept-completion))
+;;      ;; Otherwise, do the normal TAB thing (indent or complete via corfu)
+;;      (t (indent-for-tab-command))))
+
+;;   ;; Make sure TAB does the smart thing everywhere you edit code
+;;   (define-key prog-mode-map (kbd "TAB") #'+my/copilot-or-indent-or-complete)
+;;   (define-key prog-mode-map (kbd "<tab>") #'+my/copilot-or-indent-or-complete)
+
+;;   ;; When Corfu’s popup is up, keep the same TAB behavior.
+;;   (with-eval-after-load 'corfu
+;;     (define-key corfu-map (kbd "TAB") #'+my/copilot-or-indent-or-complete)
+;;     (define-key corfu-map (kbd "<tab>") #'+my/copilot-or-indent-or-complete)))
+
+;; ;; (use-package! copilot
+;; ;;   :hook (prog-mode . copilot-mode)
+;; ;;   :bind (:map copilot-completion-map
+;; ;;               ("<tab>" . 'copilot-accept-completion)
+;; ;;               ("TAB" . 'copilot-accept-completion)
+;; ;;               ("C-TAB" . 'copilot-accept-completion-by-word)
+;; ;;               ("C-<tab>" . 'copilot-accept-completion-by-word)))
 #+end_src
+
+*** Issues
+Problem is that with this setup yasnippet stops working at times
+#+begin_src emacs-lisp
+;; ;; Function to suppress completion when the prefix is "<"
+;; (defun +my/corfu-block-< (fun &rest args)
+;;   "Prevent corfu completion if the current prefix is just `<`."
+;;   (let ((prefix (buffer-substring (line-beginning-position) (point))))
+;;     (if (string-suffix-p "<" prefix)
+;;         nil
+;;       (apply fun args))))
+
+;; ;; Advice corfu to respect that rule
+;; (with-eval-after-load 'corfu
+;;   (advice-add 'corfu--capf-wrapper :around #'+my/corfu-block-<))
+
+;; (with-eval-after-load 'copilot
+;;   (add-to-list 'copilot-disable-predicates
+;;                (lambda ()
+;;                  (and (> (point) (point-min))
+;;                       (eq (char-before) ?<)))))
+#+end_src
+
+
+#+begin_src emacs-lisp
+;; Corfu assumed enabled elsewhere
+
+;; (use-package! cape
+;;   :after (corfu eglot yasnippet)
+;;   :config
+;;   ;; Only offer yasnippet when just typed "<"
+;;   (defun +my/yas-after-< () (and (bound-and-true-p yas-minor-mode)
+;;                                  (> (point) (point-min))
+;;                                  (eq (char-before) ?<)))
+
+;;   (defun +my/eglot-capf ()
+;;     (setq-local completion-at-point-functions
+;;                 (list
+;;                  (cape-super-capf
+;;                   #'eglot-completion-at-point
+;;                   (cape-capf-predicate #'cape-yasnippet #'+my/yas-after-<)))))
+
+;;   (add-hook 'eglot-managed-mode-hook #'+my/eglot-capf))
+
+;; ;; Corfu: suppress CAPF after "<"
+;; (with-eval-after-load 'corfu
+;;   (advice-add 'corfu--capf-wrapper :around
+;;               (defun +my/corfu-block-< (fun &rest args)
+;;                 (if (eq (char-before) ?<) nil (apply fun args)))))
+
+;; ;; Copilot: disable when last char is "<"
+;; (with-eval-after-load 'copilot
+;;   (add-to-list 'copilot-disable-predicates
+;;                (lambda () (eq (char-before) ?<))))
+#+end_src
+
+#+begin_src emacs-lisp
+;; to enable yasnippet-capf everywhere (optional)
+;; (add-to-list 'completion-at-point-functions #'yasnippet-capf)
+
+;; ;; to integrate yasnippet-capf with eglot completion
+;; ;; https://github.com/minad/corfu/wiki#making-a-cape-super-capf-for-eglot
+;; (defun mi/eglot-capf-with-yasnippet ()
+;;   (setq-local completion-at-point-functions
+;;               (list
+;; 	       (cape-capf-super
+;; 		#'eglot-completion-at-point
+;; 		#'yasnippet-capf))))
+;; (with-eval-after-load 'eglot
+;;   (add-hook 'eglot-managed-mode-hook #'mi/eglot-capf-with-yasnippet))
+#+end_src
+
 
 ** DAP MODE (Debugging)
 #+begin_src emacs-lisp
