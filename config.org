@@ -1820,11 +1820,15 @@ Also seems that AucTex resets the ~delete-selection-mode~
 (setq flycheck-checker-error-threshold 2500)
 #+end_src
 
-# *** Ox-Ipynb
+** Ox-Ipynb
 # Because I like notebooks but I hate writing them. Loaded in ~init.el~ from [[https://github.com/jkitchin/ox-ipynb]]
 # #+begin_src emacs-lisp
 # (require 'ox-ipynb)
 # #+end_src
+#+begin_src emacs-lisp
+;; (with-eval-after-load 'flycheck
+;;   (add-to-list 'flycheck-disabled-checkers 'python-ruff))
+#+end_src
 
 ** Polymode (disabled)
 Overkill since I just really need this for Python/Jupyter source blocks
@@ -1951,6 +1955,11 @@ Jupyter seems use EIN under the hood, which messes with corfu for completion:
   "Disable EIN's conflicting jedi setup."
   :around #'ein:jedi-setup
   (interactive))
+#+end_src
+
+Test disable flycheck
+#+begin_src emacs-lisp
+(global-flycheck-mode -1)
 #+end_src
 **** ZMQ issues
 Constant errors
