@@ -9,12 +9,12 @@
 #+end_src
 
 Emacs is not perfect, but I just cannot find a better environment for coding,
-especially given the advantages of /Org mode/. The main thing that I miss in Emacs, compared to
-editors like Visual Studion Code, is a simple way to add multiple cursors that span a whole
-text line.  and issues I've had with "delete selection mode" (the standard in
-common eidtors), which seems to disable itself at times, with a cause that I
-have yet to identify. But, at least for my use case, the utility of Org mode by
-far outweights these drawbacks.
+especially given the advantages of /Org mode/. The main thing that I miss in
+Emacs, compared to editors like Visual Studion Code, is a simple way to add
+multiple cursors that span a whole text line. and issues I've had with "delete
+selection mode" (the standard in common eidtors), which seems to disable itself
+at times, with a cause that I have yet to identify. But, at least for my use
+case, the utility of Org mode by far outweights these drawbacks.
 
 I've been using the [[https://github.com/doomemacs/doomemacs][Doom emacs]] configuration framework for a while now, after
 trying first Spacemacs and then SciMax configurations. I found Doom to be the
@@ -64,14 +64,17 @@ Some existing literate configurations to get inspiration from
 ** Splash screen
 See https://discourse.doomemacs.org/t/how-to-change-your-splash-screen/57
 
-Remove menu
+Optionals:
+
+*** Remove menu
 #+begin_src emacs-lisp
 ; (remove-hook '+doom-dashboard-functions #'doom-dashboard-widget-shortmenu)
 #+end_src
-And add agenda view (annoying)
+*** And add agenda view (annoying)
 #+begin_src emacs-lisp
 ; (add-hook! '+doom-dashboard-functions :append (org-agenda-list))
 #+end_src
+
 ** Pixel scrolling
 I LOVE emacs, but damn it is pretty ridiculous that in 2023 it is still not possible to smoothly scroll images.
 Setting the following to ~1~ completely blocks Emacs:
@@ -106,7 +109,7 @@ font string. You generally only need these two:
 ;; (setq doom-font (font-spec :family "Fira Code" :size 16)) ; <- for presentations
 
 ;(setq doom-font (font-spec :family "Hack Nerd Font" :size 13))
-;; (setq doom-font (font-spec :family "Source Code Pro" :size 13))
+;(setq doom-font (font-spec :family "Source Code Pro" :size 13))
 ;(setq doom-font (font-spec :family "Fira Code" :size 14))
 ;(setq doom-font (font-spec :family "Monaco" :size 12))
 
@@ -151,7 +154,7 @@ numbers are disabled. For relative line numbers, set this to ~relative~.
 #+end_src
 
 *** No menu bar?
-I am using [[https://github.com/koekeishiya/yabai][Yabai]] on MacOS for window management.
+I am (was) using [[https://github.com/koekeishiya/yabai][Yabai]] on MacOS for window management.
 Looks like the best solution, if using yabai is:
 #+begin_example
 brew install emacs-plus --with-no-titlebar --with-native-comp
@@ -388,7 +391,7 @@ Trying to sort out conflicts with window management
 ;; (global-set-key (kbd "<f12>") 'toggle-frame-fullscreen)
 #+end_src
 
-*** Evil
+** Evil
 https://blog.meain.io/2017/how-emacs-took-over-my-vim-life/
 #+begin_src emacs-lisp
 ;; (defun minibuffer-keyboard-quit ()
@@ -410,7 +413,7 @@ https://blog.meain.io/2017/how-emacs-took-over-my-vim-life/
 ;; (global-set-key [escape] 'evil-exit-emacs-state)
 #+end_src
 
-**** Fixes
+*** Fixes
 With Evil mode and insert active, shift selection uses word boundaries that is really annoying with code. Trying to fix it
 #+begin_src emacs-lisp
 (define-key evil-insert-state-map (kbd "C-S-<right>") nil)
@@ -418,7 +421,7 @@ With Evil mode and insert active, shift selection uses word boundaries that is r
 (define-key evil-insert-state-map (kbd "S-<right>") nil)
 (define-key evil-insert-state-map (kbd "S-<left>")  nil)
 #+end_src
-**** Keybinding notes
+*** Keybinding notes
 Note that from insert mode it is possible to ~C-o~ and then use for one time any
 of the commands below.
 
@@ -470,13 +473,13 @@ of the commands below.
 | TX     | til previous 'X'                                                                |
 | ;      | repeat above, in same direction                                                 |
 
-**** Block editing
+*** Block editing
 Block/edit modify. ~C-v~ enters /visual-block/ mode, which allows rectangle
 selection with kill/yank etc. Insertion is a bit weird: press ~I~, insert at the
 first line, and pressing ~Esc~ inserts at other points after (probably for perf reasons).
 
 
-*** Minibuffer input
+** Minibuffer input
 The minibuffer at bottom can be annoying if you use the mouse.
 Trying https://github.com/muffinmad/emacs-mini-frame to fix it.
 The following setup is borrowed from https://github.com/gcv/dotfiles/blob/master/emacs/selectrum.el
@@ -502,8 +505,8 @@ The following setup is borrowed from https://github.com/gcv/dotfiles/blob/master
 #+end_src
 
 ** Delete/shift selection mode
-
-The following is from [[https://gitlab.com/justinekizhak/dotfiles/blob/master/emacs/doom.d/config.org][this]]
+Still struggling for this to work consistently witout breaking.
+The following is from [[https://gitlab.com/justinekizhak/dotfiles/blob/master/emacs/doom.d/config.org][this]] config
 #+begin_src emacs-lisp
 (use-package delsel
   :disabled
@@ -520,18 +523,19 @@ Also shift select (this luckily does not get disabled)
 (setq shift-select-mode t)
 #+end_src
 
-** Issues
+*** Issues
 Situation seems to have improved with emacs28 on mac? Issue seems to be only related to *emacs-jupyter* and *AucTex* being active. With jupyter maybe related to REPL.
 
 Delete selection mode disables itself when some kinds of errors happen.
 Not much information on this online, found this thread that mentions the problem
 https://stackoverflow.com/questions/14954490/emacs-delete-selection-mode-disables-itself
 
-My main curiosity is: is this a problem I experience due to my limited knowledge of ELISP,
-or is it a problem commonly experienced by Emacs users? The problem seems to be happen in either
-AucTex or Jupyter-Emacs, and it does not seem to be caused by my (messy) config.
+My main curiosity is: is this a problem I experience due to my limited knowledge
+of ELISP, or is it a problem commonly experienced by Emacs users? The problem
+seems to be happen in either AucTex or Jupyter-Emacs, and it does not seem to be
+caused by my (messy) config.
 
-This discussion is ridiculous:
+This discussion is ...:
 https://lists.defectivebydesign.org/archive/html/emacs-devel/2018-09/msg00816.html
 
 #+begin_src emacs-lisp
@@ -544,13 +548,13 @@ https://lists.defectivebydesign.org/archive/html/emacs-devel/2018-09/msg00816.ht
 ;; (ad-deactivate 'remove-hook)
 #+end_src
 
-Does it have to do with smartparens mode?
+Or does it have to do with smartparens mode?
 https://github.com/doomemacs/doomemacs/issues/3609
 #+begin_src emacs-lisp
 (remove-hook 'doom-first-buffer-hook #'smartparens-global-mode)
 #+end_src
 
-*** Some old tests
+**** Some old tests
 #+begin_src emacs-lisp
 ;; (defun post-evil-insert (count &optional vcount skip-empty-lines)
 ;;   (message "Forcing delete selection mode")
@@ -569,14 +573,15 @@ https://github.com/doomemacs/doomemacs/issues/3609
 
 
 ** Undo
-Do not keep undo history after quit (see [[https://github.com/hlissner/doom-emacs/issues/1407][this]]). Ditched... Undo-tree is cool,
-but unfortunately once in while it will mess up the undo history. This is rare,
+Do not keep undo history after quit (see [[https://github.com/hlissner/doom-emacs/issues/1407][this]]). Ditched...
+Undo-tree is cool, but unfortunately *once in while it will mess up the undo history!*. This is rare,
 but when it does happen it is a total disaster...
 #+begin_src emacs-lisp
 ;; Don't save undo-tree history
 ; (after! undo-tree
 ;  (setq undo-tree-auto-save-history nil))
 #+end_src
+Undo-fu is more stable but still not perfect.
 
 ** DIRED
 Just some notes
@@ -620,14 +625,14 @@ Use ~M-x figlet-preview-fonts~ to see a list of fonts (images/names).
         ispell-dictionary "english"))
 #+end_src
 
-* Quarto mode
+* Quarto mode (disabled)
 #+begin_src emacs-lisp
 ;; (require 'quarto-mode)
 #+end_src
 
 * Snippets
 ** Delete carriage returns
-Happens when pating from Word, see [[https://stackoverflow.com/questions/23712076/how-to-remove-m-in-emacs#:~:text=That%20is%2C%20at%20the%20prompt,(replace%20it%20with%20nothing).][stack overflow post]]
+Happens when pasting from Word, see [[https://stackoverflow.com/questions/23712076/how-to-remove-m-in-emacs#:~:text=That%20is%2C%20at%20the%20prompt,(replace%20it%20with%20nothing).][stack overflow post]]
 #+begin_src emacs-lisp
 (defun delete-carrage-returns ()
   (interactive)
@@ -645,12 +650,21 @@ Happens when pating from Word, see [[https://stackoverflow.com/questions/2371207
 ** Settings
 
 *** org modern
+Enabled through ~+pretty~ so the following is not necessary
 #+begin_src emacs-lisp
 ; (global-org-modern-mode)
 #+end_src
+On mac some icons don't seem to workaround, this is a fix
+#+begin_src emacs-lisp
+(with-eval-after-load 'org-modern
+  (setq org-modern-star
+        '("◉" "○" "●" "◈" "◇" "◆" "▸" "▹" "•")))
+#+end_src
 
 *** Issue: (autoload 'org-eldoc-get-src-lang "org-eldoc")
-From here https://github.com/doomemacs/doomemacs/issues/7633 quickfix
+From here https://github.com/doomemacs/doomemacs/issues/7633:
+~Void function definition: org-eldoc-get-src-lang~
+quickfix
 #+begin_src emacs-lisp
 (autoload 'org-eldoc-get-src-lang "org-eldoc")
 #+end_src
@@ -758,11 +772,11 @@ For now the default css assumes a dark theme.
 
 #+end_src
 
+**** Export also if links are broken
 #+begin_src emacs-lisp
 (setq org-export-with-broken-links t)
 #+end_src
 
-*** Org date format
 
 *** Custom date format
 
@@ -877,12 +891,7 @@ Drag and drop and paste images into org
 
 ** Latex support
 *** Preview latex fragments when cursor is elsewhere (org-fragtog)
-Anoying situation is that if I repaat the same symbol more than once in an equation env (also inline),
-the latex preview will show an additional number that ruins the document layout. E.g $k$ will work, but $k$
-$k$
-Not sure how this happens
-
-
+Setup formatting
 #+begin_src emacs-lisp
 (setq org-latex-create-formula-image-program 'dvisvgm) ;dvipng)
 (setq org-preview-latex-default-process 'dvisvgm)
@@ -1575,9 +1584,9 @@ To view pdfs first time need to:
 ~C-c C-c~ compile/view etc
 
 ** Config
-Workaround for bug that emacs does not automatically set the correct mode for LaTex on startup
+Workaround for new emacs/doom not automatically setting the correct mode for LaTex on startup (see [[https://github.com/doomemacs/doomemacs/issues/8191][issue]]).
 #+begin_src emacs-lisp
-(add-to-list 'auto-mode-alist '("\\.tex\\'" . LaTeX-mode))
+(setq major-mode-remap-alist major-mode-remap-defaults)
 #+end_src
 Setup
 #+begin_src emacs-lisp
@@ -1591,6 +1600,7 @@ Setup
         TeX-parse-self t
         TeX-save-query nil
         TeX-PDF-mode t)
+  (add-to-list 'auto-mode-alist '("\\.tex\\'" . LaTeX-mode))
   :config
   ;; Rebind C-c C-c to TeX-command-master
   (map! :map LaTeX-mode-map
@@ -1655,6 +1665,7 @@ Use the "SPC-m-@" to insert citations (like org mode)
       :desc "Insert citation" "@" #'citar-insert-citation
 )
 #+end_src
+
 ** Issues
 Trying to get rid of the ~epdfinfo: Destination not found~ error.
 See [https://github.com/politza/pdf-tools/issues/302]
@@ -1830,79 +1841,171 @@ Also seems that AucTex resets the ~delete-selection-mode~
 ;;   (add-to-list 'flycheck-disabled-checkers 'python-ruff))
 #+end_src
 
-** Polymode (disabled)
-Overkill since I just really need this for Python/Jupyter source blocks
-#+begin_src emacs-lisp
-;; (require 'polymode)
-
-;; Define the Python host mode
-;; (define-hostmode poly-python-hostmode
-;;   :mode 'python-mode)
-
-;; ;; ;; Define the Org inner mode with custom delimiters for %[org and %]
-;; ;; (define-innermode poly-org-innermode
-;; ;;   :mode 'org-mode
-;; ;;   :head-matcher "^[[:space:]]*%\\[org[[:space:]]*$"  ;; Match %[org as the start of the block
-;; ;;   :tail-matcher "^[[:space:]]*%\\][[:space:]]*$"     ;; Match %] as the end of the block
-;; ;;   :head-mode 'host
-;; ;;   :tail-mode 'host
-;; ;;   :allow-nested nil  ;; Disable nesting, to avoid complexity
-;; ;;   :keep-in-mode t)   ;; Keep the inner block in org-mode for proper fontification
-
-;; ;; Define the Org inner mode with custom delimiters for '''org and '''
-;; (define-innermode poly-org-innermode
-;;   :mode 'org-mode
-;;   :head-matcher "^[[:space:]]*'''org[[:space:]]*$"  ;; Match '''org as the start of the block
-;;   :tail-matcher "^[[:space:]]*'''[[:space:]]*$"     ;; Match ''' as the end of the block
-;;   :head-mode 'host
-;;   :tail-mode 'host
-;;   :allow-nested nil  ;; Disable nesting if not needed, it can cause issues
-;;   :keep-in-mode t)   ;; Keep the org block in org-mode (for proper highlighting)
-
-;; ;; Define the polymode for Python with Org inner mode
-;; (define-polymode poly-python-org-mode
-;;   :hostmode 'poly-python-hostmode
-;;   :innermodes '(poly-org-innermode))
-
-;; ;; Function to trigger polymode based on content
-;; (defun maybe-poly-python-org-mode ()
-;;   "Switch to poly-python-org-mode if the buffer contains Org-mode blocks."
-;;   (when (save-excursion
-;;           (goto-char (point-min))
-;;           (re-search-forward "'''org" nil t))  ;; Look for '''org in the buffer
-;;     (poly-python-org-mode)))
-
-;; ;; Hook to apply the polymode only when necessary
-;; (add-hook 'python-mode-hook #'maybe-poly-python-org-mode)
-#+end_src
-
-Polymode runins indentation in Python
-#+begin_src emacs-lisp
-;; (defun my-disable-org-indent-in-polymode ()
-;;   "Disable Org-mode indentation only when in polymode within a Python file."
-;;   (when (and (bound-and-true-p polymode-mode)  ;; Check if polymode is active
-;;              (eq major-mode 'org-mode)        ;; Check if current mode is Org
-;;              (string= (symbol-name (pm-host-chunkmode major-mode))
-;;                       "poly-python-hostmode")) ;; Check if host mode is Python
-;;     (setq-local org-adapt-indentation nil)    ;; Disable Org indentation
-;;     (setq-local org-startup-indented nil)))
-
-;; (add-hook 'org-mode-hook #'my-disable-org-indent-in-polymode)
-#+end_src
-
-#+begin_src emacs-lisp
-;(use-package! poly-org
-;  :after org)
-#+end_src
-
 ** Additional file extensions
 #+begin_src emacs-lisp
 ; Processing
 (add-to-list 'auto-mode-alist '("\\.pde\\'" . java-mode))
 #+end_src
 
-** Jupyter-emacs
-While limited in some ways, and not much maintained [[https://github.com/nnicandro/emacs-jupyter][emacs jupyter]] is still my favourite way to code Python
+** Polymode
+*** Enable org/md comments in Python
+Code written by ChatGPT. Allows to write comments that get fontified with the syntax
+#+begin_example
+#%% [org]
+'''
+Some org mode stuff
+'''
+#+end_example
+or
+#+begin_example
+#%% [md]
+'''
+Some MD stuff
+'''
+#+end_example
+
+#+begin_src emacs-lisp
+;;; --- Compact polymode for [org] + [md] cells in Python ---
+
+;; Org submode without indentation (only inside islands)
+(define-derived-mode org-noindent-mode org-mode "OrgNoIndent"
+  (setq-local org-adapt-indentation nil
+              org-startup-indented nil
+              electric-indent-inhibit t
+              indent-line-function #'indent-relative)
+  (ignore-errors (org-indent-mode -1))
+  (electric-indent-local-mode -1))
+
+(use-package! polymode
+  :defer t
+  :config
+  ;; Hosts
+  (define-hostmode poly-python-hostmode    :mode 'python-mode)
+  (define-hostmode poly-python-ts-hostmode :mode 'python-ts-mode)
+
+  ;; ---- Helpers (DRY) ----
+  (defun my/poly--build-head (tags)
+    "Build head matcher: '#%% [TAGS]' (+ optional blanks) + opening '''/\"\"\"."
+    (concat
+     "^[ \t]*# ?%%[ \t]*\\[" (regexp-opt tags) "\\][^\n\r]*\\(?:\n\\|\r\n\\)"
+     "\\(?:[ \t]*\\(?:\n\\|\r\n\\)\\)*"
+     "[ \t]*\\(?:\"\"\"\\|'''\\)[ \t]*\\(?:\\n\\|\\r\\n\\)?"))
+
+  (defconst my/poly--tail "^[ \t]*\\(?:\"\"\"\\|'''\\)[ \t]*$") ; closing quotes
+  (defconst my/poly--enable-pattern "^[ \t]*# ?%%[ \t]*\\[\\(org\\|md\\|markdown\\)\\]")
+
+  ;; ---- Innermodes ----
+  (define-innermode poly-python-org-innermode
+    :mode 'org-noindent-mode
+    :head-matcher (my/poly--build-head '("org"))
+    :tail-matcher my/poly--tail
+    :head-mode 'host :tail-mode 'host)
+
+  (define-innermode poly-python-md-innermode
+    :mode 'markdown-mode
+    :head-matcher (my/poly--build-head '("md" "markdown"))
+    :tail-matcher my/poly--tail
+    :head-mode 'host :tail-mode 'host)
+
+  ;; ---- Single polymode that includes BOTH innermodes ----
+  (define-polymode poly-python+jupy-mixed
+    :hostmode 'poly-python-hostmode
+    :innermodes '(poly-python-org-innermode poly-python-md-innermode))
+  (define-polymode poly-python-ts+jupy-mixed
+    :hostmode 'poly-python-ts-hostmode
+    :innermodes '(poly-python-org-innermode poly-python-md-innermode))
+
+  ;; Auto-enable only when buffer contains a matching header.
+  ;; => bare "#%%" or "# %%" remain plain Python (code by default).
+  (defun my/py-maybe-enable-poly-jupy ()
+    (when (save-excursion
+            (save-restriction
+              (widen) (goto-char (point-min))
+              (re-search-forward my/poly--enable-pattern 4000 t)))
+      (if (derived-mode-p 'python-ts-mode)
+          (poly-python-ts+jupy-mixed)
+        (poly-python+jupy-mixed))))
+
+  (add-hook 'python-mode-hook    #'my/py-maybe-enable-poly-jupy)
+  (add-hook 'python-ts-mode-hook #'my/py-maybe-enable-poly-jupy))
+
+;;; --- Optional: smoother yasnippet interaction (tiny + DRY) ---
+(with-eval-after-load 'yasnippet
+  (defvar-local my/poly-lock-was-on nil)
+  (add-hook 'yas-before-expand-snippet-hook
+            (lambda () (when (boundp 'poly-lock-mode)
+                         (setq my/poly-lock-was-on poly-lock-mode)
+                         (when poly-lock-mode (poly-lock-mode -1)))))
+  (add-hook 'yas-after-exit-snippet-hook
+            (lambda () (when (and (boundp 'poly-lock-mode) my/poly-lock-was-on)
+                         (poly-lock-mode 1)))))
+
+#+end_src
+
+This does not play well with Yasnippet since fontification starts early
+#+begin_src emacs-lisp
+;;; Pause poly/jit/font-lock while yas expands (prevents lockups)
+(with-eval-after-load 'yasnippet
+  (defun my/yas--with-fontification-paused (fn &rest args)
+    (let* ((had-poly (and (boundp 'poly-lock-mode) poly-lock-mode))
+           (had-jit  (and (fboundp 'jit-lock-mode)
+                          (boundp 'jit-lock-mode) (symbol-value 'jit-lock-mode)))
+           (had-fl   font-lock-mode))
+      (unwind-protect
+          (progn
+            (when had-poly (poly-lock-mode -1))
+            (when had-jit  (jit-lock-mode -1))
+            (when had-fl   (font-lock-mode -1))
+            (apply fn args))
+        (when had-fl   (font-lock-mode 1))
+        (when (fboundp 'jit-lock-mode) (when had-jit  (jit-lock-mode 1)))
+        (when (boundp 'poly-lock-mode) (when had-poly (poly-lock-mode 1))))))
+
+  ;; Wrap both yas entry points
+  (advice-add 'yas-expand-snippet :around #'my/yas--with-fontification-paused)
+  (advice-add 'yas-insert-snippet :around #'my/yas--with-fontification-paused))
+
+#+end_src
+** Jupytext setup (broken)
+#+begin_src emacs-lisp
+;; (use-package! mmm-mode
+;;   :after python
+;;   :init
+;;   (setq mmm-parse-when-idle t
+;;         mmm-global-mode 'maybe)
+;;   :config
+;;   ;; support both """...""" and '''...'''
+;;   (defvar my/mmm-py-tripleq "\\(\"\"\"\\|'''\\)")
+
+;;   ;; Accept "#%% [markdown]" OR "# %% [markdown]" (optional space),
+;;   ;; and tolerate LF or CRLF after the header.
+;;   (defvar my/mmm-jupytext-md-header
+;;     (concat "^[ \t]*# ?%%[ \t]*\\[\\(markdown\\|md\\)\\][^\n\r]*\\(?:\n\\|\r\n\\)"))
+
+;;   ;; ---------- Markdown inside triple-quoted markdown cells ----------
+;;   (mmm-add-classes
+;;    '((python-jupytext-markdown
+;;       :submode markdown-mode
+;;       :face mmm-default-submode-face
+;;       :front (concat my/mmm-jupytext-md-header "[ \t]*" my/mmm-py-tripleq "[ \t]*\\(?:\\(?:\n\\|\r\n\\)\\)?")
+;;       :back  (concat "^[ \t]*" my/mmm-py-tripleq)
+;;       :include-front t
+;;       :include-back t
+;;       :end-not-begin t)))
+
+;;   ;; Attach to BOTH classic python-mode and tree-sitter python-ts-mode
+;;   (dolist (mode '(python-mode python-ts-mode))
+;;     (mmm-add-mode-ext-class mode nil 'python-jupytext-markdown))
+
+;;   ;; Turn on mmm in both modes
+;;   (add-hook 'python-mode-hook #'mmm-mode)
+;;   (add-hook 'python-ts-mode-hook #'mmm-mode)
+;; )
+
+#+end_src
+
+** Python and Jupyter-emacs
+While limited in some ways, and not much maintained, [[https://github.com/nnicandro/emacs-jupyter][emacs jupyter]] is still my favourite way to code Python
 
 Some links in regard:
 - https://sqrtminusone.xyz/posts/2021-05-01-org-python/
@@ -1928,7 +2031,7 @@ Some links in regard:
         (python . t)
         (octave . t)
         (jupyter . t)))
-        (setq org-babel-default-header-args:jupyter-python '((:async . "yes")
+        (setq org-babel-default-header-args:jupyter-python '((:async . "no")
                                                              (:kernel . "python3")))
 )
 
@@ -1942,9 +2045,11 @@ Also issues when loading, with a need to manually require ~ob-jupyter~ (see ; ht
 )
 #+end_src
 
+*** Setup popup position
 #+begin_src emacs-lisp
 (set-popup-rule! "\*jupyter-repl...*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
+
 *** Workarounds
 **** Corfu + EIN
 Jupyter seems use EIN under the hood, which messes with corfu for completion:
@@ -2018,7 +2123,7 @@ https://github.com/nnicandro/emacs-jupyter/issues/366#issuecomment-985730376
 #+end_src
 
 *** Spyder-like experience
-Here I try to tweak emacs jupyter to behave more like [[https://www.spyder-ide.org][Spyder]] (my second favourite).
+Here I try to tweak emacs jupyter to behave more like [[https://www.spyder-ide.org][Spyder]] (my second favourite) or VS codemirror_mode.
 
 **** Have the REPL appear on the right
 #+begin_src emacs-lisp
@@ -2078,7 +2183,9 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
 (add-hook 'jupyter-repl-interaction-mode-hook
           #'jupyter-nb-keybindings)
 #+end_src
+
 ** Ox-ipynb
+Allows to export notebooks from Org: [[https://github.com/jkitchin/ox-ipynb]].
 #+begin_src emacs-lisp
 (use-package! ox-ipynb)
 #+end_src
@@ -2109,6 +2216,20 @@ Key bindings, see [[https://github.com/lummm/config/blob/909da5468267902277b5389
 Associate js files with ~js2-mode~ not ~rjsx-mode~
 #+begin_src emacs-lisp
 (add-to-list 'auto-mode-alist '("\\.js.*$" . js2-mode))
+#+end_src
+
+** LSP settings
+#+begin_src emacs-lisp
+(use-package lsp-mode
+  :config
+  (setq lsp-vetur-format-options-tab-size 4)
+  ;(setq lsp-vetur-format-enable nil)
+  (setq lsp-prompt-projet-root t)
+  (setq lsp-auto-guess-root nil)
+  (setq lsp-enable-snippet nil)
+  ;(add-to-list 'lsp-file-watch-ignored "[/\\\\]\\data")
+  ;(add-to-list 'lsp-file-watch-ignored "[/\\\\]\\bin")
+)
 #+end_src
 
 ** C++
@@ -2144,19 +2265,6 @@ And setup lsp to use it
 (after! lsp-clangd (set-lsp-priority! 'clangd 2))
 #+end_src
 
-*** LSP settings
-#+begin_src emacs-lisp
-(use-package lsp-mode
-  :config
-  (setq lsp-vetur-format-options-tab-size 4)
-  ;(setq lsp-vetur-format-enable nil)
-  (setq lsp-prompt-projet-root t)
-  (setq lsp-auto-guess-root nil)
-  (setq lsp-enable-snippet nil)
-  ;(add-to-list 'lsp-file-watch-ignored "[/\\\\]\\data")
-  ;(add-to-list 'lsp-file-watch-ignored "[/\\\\]\\bin")
-)
-#+end_src
 
 *** Clang format
 Clang format is cool, when you actually use it everywhere. This configuration just activates it if a ~.clang-format~ file is specified in a directory. This is the format I typically use
@@ -2208,7 +2316,8 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 		c-basic-offset 2))
 (add-hook 'c++-mode-hook 'my-c++-mode-hook)
 #+end_src
-** Code formatiing
+
+** Code formating
 #+begin_src emacs-lisp
 ;; (set-formatter! 'ruff '("ruff" "format" "-"))
 ;; ;(set-formatter! 'latexindent '("latexindent" "-g" "/dev/null"))
@@ -2218,48 +2327,153 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 #+end_src
 
 ** Completion
-*** Company
+*** Company (disabled)
 From https://tecosaur.github.io/emacs-config/config.html
 #+begin_src emacs-lisp
-(after! company
-  (setq company-idle-delay 0.1
-        company-minimum-prefix-length 2
-        company-tooltip-idle-delay 0.5)
-  (setq company-show-numbers t)
-  (add-hook 'evil-normal-state-entry-hook #'company-abort)
-  (setq company-global-modes '(not org-mode))
-  ) ;; make aborting less annoying.
+;; (after! company
+;;   (setq company-idle-delay 0.1
+;;         company-minimum-prefix-length 2
+;;         company-tooltip-idle-delay 0.5)
+;;   (setq company-show-numbers t)
+;;   (add-hook 'evil-normal-state-entry-hook #'company-abort)
+;;   (setq company-global-modes '(not org-mode))
+;;   ) ;; make aborting less annoying.
 #+end_src
 
 *** Cofu
-
 From [[https://github.com/robbert-vdh/dotfiles/blob/282b5393f54ecea91c8ad004cdf417b6e1ad24d2/modules/emacs/doom/config.org#corfu][here]]:
 #+begin_src emacs-lisp
 (after! vertico
   (setq vertico-count 10))
 
-(after! corfu
-  :config
-  (setq corfu-auto-resize nil
-        corfu-auto-delay 0.2)
-  (setq tab-always-indent t)
-  (define-key corfu-map [tab] nil)
-  (define-key corfu-map "\t" nil)
+(use-package! corfu
+  :init
+  (global-corfu-mode)
+  :custom
+  (corfu-auto t)
+  (corfu-cycle t)
+  (corfu-auto-delay 0.01)
   )
 #+end_src
 
 
-** Copilot
+*** Copilot
 #+begin_src emacs-lisp
 ;; accept completion from copilot and fallback to company
+;; Copilot: inline ghost text
 (use-package! copilot
   :hook (prog-mode . copilot-mode)
-  :bind (:map copilot-completion-map
-              ("<tab>" . 'copilot-accept-completion)
-              ("TAB" . 'copilot-accept-completion)
-              ("C-TAB" . 'copilot-accept-completion-by-word)
-              ("C-<tab>" . 'copilot-accept-completion-by-word)))
+  :bind
+  (
+   ("C-<return>"        . copilot-accept-completion)
+   ("C-<right>"        . copilot-next-completion)
+   ("C-<left>"        . copilot-previous-completion)
+   ("C-M-<return>"    . copilot-accept-completion-by-word)
+   )
+)
+;;   :config
+;;   ;; Prefer Copilot on TAB *only when* a Copilot suggestion is visible.
+;;   (defun +my/copilot-or-indent-or-complete ()
+;;     "Accept Copilot if visible, else indent/complete as usual."
+;;     (interactive)
+;;     (cond
+;;      ;; Copilot suggestion showing? take it.
+;;      ((and (bound-and-true-p copilot-mode)
+;;            (fboundp 'copilot--overlay-visible)
+;;            (copilot--overlay-visible))
+;;       (copilot-accept-completion))
+;;      ;; Otherwise, do the normal TAB thing (indent or complete via corfu)
+;;      (t (indent-for-tab-command))))
+
+;;   ;; Make sure TAB does the smart thing everywhere you edit code
+;;   (define-key prog-mode-map (kbd "TAB") #'+my/copilot-or-indent-or-complete)
+;;   (define-key prog-mode-map (kbd "<tab>") #'+my/copilot-or-indent-or-complete)
+
+;;   ;; When Corfu’s popup is up, keep the same TAB behavior.
+;;   (with-eval-after-load 'corfu
+;;     (define-key corfu-map (kbd "TAB") #'+my/copilot-or-indent-or-complete)
+;;     (define-key corfu-map (kbd "<tab>") #'+my/copilot-or-indent-or-complete)))
+
+;; ;; (use-package! copilot
+;; ;;   :hook (prog-mode . copilot-mode)
+;; ;;   :bind (:map copilot-completion-map
+;; ;;               ("<tab>" . 'copilot-accept-completion)
+;; ;;               ("TAB" . 'copilot-accept-completion)
+;; ;;               ("C-TAB" . 'copilot-accept-completion-by-word)
+;; ;;               ("C-<tab>" . 'copilot-accept-completion-by-word)))
 #+end_src
+
+*** Issues
+Problem is that with this setup yasnippet stops working at times
+#+begin_src emacs-lisp
+;; ;; Function to suppress completion when the prefix is "<"
+;; (defun +my/corfu-block-< (fun &rest args)
+;;   "Prevent corfu completion if the current prefix is just `<`."
+;;   (let ((prefix (buffer-substring (line-beginning-position) (point))))
+;;     (if (string-suffix-p "<" prefix)
+;;         nil
+;;       (apply fun args))))
+
+;; ;; Advice corfu to respect that rule
+;; (with-eval-after-load 'corfu
+;;   (advice-add 'corfu--capf-wrapper :around #'+my/corfu-block-<))
+
+;; (with-eval-after-load 'copilot
+;;   (add-to-list 'copilot-disable-predicates
+;;                (lambda ()
+;;                  (and (> (point) (point-min))
+;;                       (eq (char-before) ?<)))))
+#+end_src
+
+
+#+begin_src emacs-lisp
+;; Corfu assumed enabled elsewhere
+
+;; (use-package! cape
+;;   :after (corfu eglot yasnippet)
+;;   :config
+;;   ;; Only offer yasnippet when just typed "<"
+;;   (defun +my/yas-after-< () (and (bound-and-true-p yas-minor-mode)
+;;                                  (> (point) (point-min))
+;;                                  (eq (char-before) ?<)))
+
+;;   (defun +my/eglot-capf ()
+;;     (setq-local completion-at-point-functions
+;;                 (list
+;;                  (cape-super-capf
+;;                   #'eglot-completion-at-point
+;;                   (cape-capf-predicate #'cape-yasnippet #'+my/yas-after-<)))))
+
+;;   (add-hook 'eglot-managed-mode-hook #'+my/eglot-capf))
+
+;; ;; Corfu: suppress CAPF after "<"
+;; (with-eval-after-load 'corfu
+;;   (advice-add 'corfu--capf-wrapper :around
+;;               (defun +my/corfu-block-< (fun &rest args)
+;;                 (if (eq (char-before) ?<) nil (apply fun args)))))
+
+;; ;; Copilot: disable when last char is "<"
+;; (with-eval-after-load 'copilot
+;;   (add-to-list 'copilot-disable-predicates
+;;                (lambda () (eq (char-before) ?<))))
+#+end_src
+
+#+begin_src emacs-lisp
+;; to enable yasnippet-capf everywhere (optional)
+;; (add-to-list 'completion-at-point-functions #'yasnippet-capf)
+
+;; ;; to integrate yasnippet-capf with eglot completion
+;; ;; https://github.com/minad/corfu/wiki#making-a-cape-super-capf-for-eglot
+;; (defun mi/eglot-capf-with-yasnippet ()
+;;   (setq-local completion-at-point-functions
+;;               (list
+;; 	       (cape-capf-super
+;; 		#'eglot-completion-at-point
+;; 		#'yasnippet-capf))))
+;; (with-eval-after-load 'eglot
+;;   (add-hook 'eglot-managed-mode-hook #'mi/eglot-capf-with-yasnippet))
+#+end_src
+
 
 ** DAP MODE (Debugging)
 #+begin_src emacs-lisp
