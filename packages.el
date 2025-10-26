@@ -65,7 +65,12 @@
 ; (unpin! jupyter)
 ;; (package! jupyter
 ;;    :recipe (:host github :repo "nnicandro/emacs-jupyter")) ; :branch "next"))
+(unpin! jupyter)
+(package! jupyter
+    :recipe (:host github :repo "tmurph/jupyter" :branch "devel")) ; :branch "next"))
 
+(package! chatgpt-shell)
+(package! gptel)
 
 ;; (package! polymode)
 ;; (package! poly-org)

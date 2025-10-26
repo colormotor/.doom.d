@@ -1085,7 +1085,14 @@ I then define the following note types:
             :if-new
             (file+head "articles/${slug}.org" "#+title: ${title}\n#+filetags: :article:\n")
             :immediate-finish t
-            :unnarrowed t)))
+            :unnarrowed t)
+            ("l" "llm" plain
+            "%?"
+            :if-new (file+head "llm/${slug}.org"
+                                "#+title: ${title}\n")
+            :immediate-finish t
+            :unnarrowed t)
+            ))
 
     (cl-defmethod org-roam-node-type ((node org-roam-node))
     "Return the TYPE of NODE."
@@ -1824,6 +1831,140 @@ Also seems that AucTex resets the ~delete-selection-mode~
 #+begin_src emacs-lisp
 (add-hook 'LaTeX-mode-hook '(lambda () (global-set-key (kbd "C-e") 'move-end-of-line)))
 #+end_src
+* AI
+Testing both chatgpt-shell (for chat sessions) and GPTel (for integration)
+** keybindings
+#+begin_src emacs-lisp
+(map! :leader
+      (:prefix ("l" . "LLM")
+       :desc "Chatgpt shell" "c" #'chatgpt-shell
+       :desc "GPTel Menu" "g" #'gptel-menu
+       :desc "GPTel Send" "s" #'gptel-send
+       :desc "GPTel Quick" "q" #'gptel)
+)
+#+end_src
+
+** chatgpt-shell
+Useful for "quick" chat sessions
+Stole this from [[https://github.com/dylanbmorgan/xxh-plugin-prerun-dotfiles/tree/510ec277767af3c91b0f21f0b8405dab3a1adf7d/home/.doom.d#chatgpt][here]] let's see
+#+begin_src emacs-lisp
+(use-package! chatgpt-shell
+  :config
+  (setq chatgpt-shell-provider 'deepseek
+        chatgpt-shell-deepseek-key (getenv "DEEPSEEK_API_KEY"))
+  ;(setq chatgpt-shell-model-version "gpt-4o")
+  (setq chatgpt-shell-insert-dividers t)
+  ;(setq chatgpt-shell-temperature 0.7) ; Low is more deterministic
+)
+
+#+end_src
+
+** gptel
+Pretty mindblowing demo: [[https://www.youtube.com/watch?v=bsRnh_brggM]]
+
+Extend the following to allow choice between Ollama (select a model that runs fast on M1 macs) and deepseek (existing config)
+#+begin_src emacs-lisp
+(use-package! gptel
+  :config
+  ;; Set up DeepSeek as the default backend
+  (setq gptel-backend
+        (gptel-make-deepseek "DeepSeek"
+          :host "api.deepseek.com"
+          :key (or (getenv "DEEPSEEK_API_KEY")
+                   "your-api-key-here") ; Fallback, but use env var for security
+          :models '("deepseek-chat")
+          :stream t))
+  (setq gptel-default-mode 'org-mode)
+  ;; Set default model
+  (setq gptel-model "deepseek-chat")
+
+  (setq gptel--system-message "You are a large language model living in Emacs and a helpful assistant. Respond concisely. When generating Jupyter Python code blocks, always use `#+BEGIN_SRC jupyter-python :session py` for the block definition, unless otherwise specified.")
+
+  ;; Optional: Customize other settings
+  ;; (setq gptel-temperature 0.7
+  ;;       gptel-max-tokens 4096
+  ;;       gptel-system-message "You are a helpful AI assistant.")
+)
+
+(defun my/gptel-send-context-aware ()
+  "Send region or heading to GPTel, fallback to org-ctrl-c-ctrl-c."
+  (interactive)
+  (cond
+   ((region-active-p) (gptel-send (region-beginning) (region-end)))
+   ((org-at-heading-p) (gptel-send))
+   (t (call-interactively 'org-ctrl-c-ctrl-c))))
+
+;; Only override in gptel-mode
+(define-key gptel-mode-map (kbd "C-c C-c") 'my/gptel-send-context-aware)
+
+#+end_src
+
+
+#+begin_src emacs-lisp
+(use-package! gptel
+  :config
+  ;; Set up multiple backends
+  (setq gptel-backends
+        (list
+         (gptel-make-deepseek "DeepSeek"
+           :host "api.deepseek.com"
+           :key (or (getenv "DEEPSEEK_API_KEY")
+                    "your-deepseek-api-key-here")
+           :models '("deepseek-chat")
+           :stream t)
+         (gptel-make-ollama "Ollama"
+           :host "localhost:11434"
+           :models '("llama3.2:1b" "llama3.2:3b" "phi3:mini" "qwen2.5:0.5b")
+           :stream t)))
+
+  ;; Set default backend (can be changed with gptel-set-backend)
+  (setq gptel-backend (car gptel-backends))
+  (setq gptel-default-mode 'org-mode)
+
+  ;; Set default model based on backend
+  (defun my/gptel-set-default-model ()
+    "Set default model based on current backend."
+    (cond
+     ((string= (gptel-backend-name gptel-backend) "DeepSeek")
+      (setq gptel-model "deepseek-chat"))
+     ((string= (gptel-backend-name gptel-backend) "Ollama")
+      (setq gptel-model "llama3.2:1b")))) ; Fastest M1 model
+
+  (my/gptel-set-default-model)
+
+  (setq gptel--system-message "You are a large language model living in Emacs and a helpful assistant. Respond concisely. When generating Jupyter Python code blocks, always use `#+BEGIN_SRC jupyter-python :session py` for the block definition, unless otherwise specified.")
+
+  ;; Optional: Customize other settings
+  ;; (setq gptel-temperature 0.7
+  ;;       gptel-max-tokens 4096
+  ;;       gptel-system-message "You are a helpful AI assistant.")
+)
+
+(defun my/gptel-switch-backend ()
+  "Interactively switch between GPTel backends."
+  (interactive)
+  (let ((backend-name (completing-read "Select backend: "
+                                       (mapcar 'gptel-backend-name gptel-backends)
+                                       nil t)))
+    (setq gptel-backend
+          (cl-find-if (lambda (b) (string= (gptel-backend-name b) backend-name))
+                      gptel-backends))
+    (my/gptel-set-default-model)
+    (message "Switched to %s backend with model %s" backend-name gptel-model)))
+
+(defun my/gptel-send-context-aware ()
+  "Send region or heading to GPTel, fallback to org-ctrl-c-ctrl-c."
+  (interactive)
+  (cond
+   ((region-active-p) (gptel-send (region-beginning) (region-end)))
+   ((org-at-heading-p) (gptel-send))
+   (t (call-interactively 'org-ctrl-c-ctrl-c))))
+
+;; Keybindings
+(define-key gptel-mode-map (kbd "C-c C-c") 'my/gptel-send-context-aware)
+(define-key gptel-mode-map (kbd "C-c C-b") 'my/gptel-switch-backend)
+
+#+end_src
 
 
 * Coding
@@ -2056,6 +2197,15 @@ Jupyter seems use EIN under the hood, which messes with corfu for completion:
   "Disable EIN's conflicting jedi setup."
   :around #'ein:jedi-setup
   (interactive))
+#+end_src
+**** Export markdown as Python (not Jupyter)
+#+begin_src emacs-lisp
+(after! ox-md
+  (defun +md-src-block (src-block contents info)
+    (let* ((lang (org-element-property :language src-block))
+           (code (org-export-format-code-default src-block info)))
+      (format "```%s\n%s```" (or lang "") code)))
+  (advice-add 'org-md-src-block :override #'+md-src-block))
 #+end_src
 **** ZMQ issues
 Constant errors
@@ -2315,6 +2465,21 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 (with-eval-after-load 'eglot
    (add-to-list 'eglot-server-programs
                 '(python-ts-mode . ("ruff-lsp"))))
+
+(use-package! flycheck
+  :config
+  (flycheck-define-checker python-ruff
+    "A Python syntax and style checker using Ruff."
+    :command ("ruff" "check" "--quiet" "--stdin-filename" source-original "-")
+    :standard-input t
+    :error-patterns
+    ((error line-start (file-name) ":" line ":" (optional column ":") " "
+            (or "E" "F" "W") (id (one-or-more (not (any " "))))
+            " " (message) line-end))
+    :modes (python-mode))
+  (add-to-list 'flycheck-checkers 'python-ruff)
+  ;; Prefer Ruff over others
+  (setq flycheck-checker 'python-ruff))
 #+end_src
 
 ** Completion
@@ -2329,6 +2494,10 @@ From https://tecosaur.github.io/emacs-config/config.html
 ;;   (add-hook 'evil-normal-state-entry-hook #'company-abort)
 ;;   (setq company-global-modes '(not org-mode))
 ;;   ) ;; make aborting less annoying.
+#+end_src
+
+#+begin_src emacs-lisp
+;(package! company :disable t)
 #+end_src
 
 *** Cofu
@@ -2352,16 +2521,16 @@ From [[https://github.com/robbert-vdh/dotfiles/blob/282b5393f54ecea91c8ad004cdf4
 #+begin_src emacs-lisp
 ;; accept completion from copilot and fallback to company
 ;; Copilot: inline ghost text
-(use-package! copilot
-  :hook (prog-mode . copilot-mode)
-  :bind
-  (
-   ("C-<return>"        . copilot-accept-completion)
-   ("C-<right>"        . copilot-next-completion)
-   ("C-<left>"        . copilot-previous-completion)
-   ("C-M-<return>"    . copilot-accept-completion-by-word)
-   )
-)
+;; (use-package! copilot
+;;  :hook (prog-mode . copilot-mode)
+;;  :bind
+;;  (
+;;   ("C-<return>"        . copilot-accept-completion)
+;;   ("C-<right>"        . copilot-next-completion)
+;;   ("C-<left>"        . copilot-previous-completion)
+;;   ("C-M-<return>"    . copilot-accept-completion-by-word)
+;;  )
+;; )
 ;;   :config
 ;;   ;; Prefer Copilot on TAB *only when* a Copilot suggestion is visible.
 ;;   (defun +my/copilot-or-indent-or-complete ()
