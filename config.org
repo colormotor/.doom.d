@@ -1972,11 +1972,15 @@ Extend the following to allow choice between Ollama (select a model that runs fa
 (setq flycheck-checker-error-threshold 2500)
 #+end_src
 
-# *** Ox-Ipynb
+** Ox-Ipynb
 # Because I like notebooks but I hate writing them. Loaded in ~init.el~ from [[https://github.com/jkitchin/ox-ipynb]]
 # #+begin_src emacs-lisp
 # (require 'ox-ipynb)
 # #+end_src
+#+begin_src emacs-lisp
+;; (with-eval-after-load 'flycheck
+;;   (add-to-list 'flycheck-disabled-checkers 'python-ruff))
+#+end_src
 
 ** Additional file extensions
 #+begin_src emacs-lisp
@@ -2207,6 +2211,7 @@ Jupyter seems use EIN under the hood, which messes with corfu for completion:
       (format "```%s\n%s```" (or lang "") code)))
   (advice-add 'org-md-src-block :override #'+md-src-block))
 #+end_src
+
 **** ZMQ issues
 Constant errors
 #+begin_example
