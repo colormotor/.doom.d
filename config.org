@@ -1872,12 +1872,12 @@ Extend the following to allow choice between Ollama (select a model that runs fa
           :host "api.deepseek.com"
           :key (or (getenv "DEEPSEEK_API_KEY")
                    "your-api-key-here") ; Fallback, but use env var for security
-          :models '("deepseek-chat")
+          :models '(deepseek-chat)
           :stream t))
   (setq gptel-default-mode 'org-mode)
   ;; Set default model
-  (setq gptel-model "deepseek-chat")
-
+  (setq gptel-model '(deepseek-chat)) ;"deepseek-chat")
+  (setq max-mini-window-height 1) ; Avoids bug with rewrite?
   (setq gptel--system-message "You are a large language model living in Emacs and a helpful assistant. Respond concisely. When generating Jupyter Python code blocks, always use `#+BEGIN_SRC jupyter-python :session py` for the block definition, unless otherwise specified.")
 
   ;; Optional: Customize other settings
@@ -1910,7 +1910,7 @@ Extend the following to allow choice between Ollama (select a model that runs fa
            :host "api.deepseek.com"
            :key (or (getenv "DEEPSEEK_API_KEY")
                     "your-deepseek-api-key-here")
-           :models '("deepseek-chat")
+           :models '(deepseek-chat)
            :stream t)
          (gptel-make-ollama "Ollama"
            :host "localhost:11434"
@@ -1926,7 +1926,7 @@ Extend the following to allow choice between Ollama (select a model that runs fa
     "Set default model based on current backend."
     (cond
      ((string= (gptel-backend-name gptel-backend) "DeepSeek")
-      (setq gptel-model "deepseek-chat"))
+      (setq gptel-model '(deepseek-chat)))
      ((string= (gptel-backend-name gptel-backend) "Ollama")
       (setq gptel-model "llama3.2:1b")))) ; Fastest M1 model
 
@@ -2173,7 +2173,9 @@ Some links in regard:
         (octave . t)
         (jupyter . t)))
         (setq org-babel-default-header-args:jupyter-python '((:async . "no")
-                                                             (:kernel . "python3")))
+                                                             (:kernel . "python3")
+                                                             (:var . "orgdir=(file-name-directory (buffer-file-name))")
+                                                             ))
 )
 
 #+end_src
