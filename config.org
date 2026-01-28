@@ -506,14 +506,9 @@ The following setup is borrowed from https://github.com/gcv/dotfiles/blob/master
 
 ** Delete/shift selection mode
 Still struggling for this to work consistently witout breaking.
-The following is from [[https://gitlab.com/justinekizhak/dotfiles/blob/master/emacs/doom.d/config.org][this]] config
 #+begin_src emacs-lisp
-(use-package delsel
-  :disabled
-  :ensure nil
-  :config (delete-selection-mode +1))
-
-(setq delete-selection-mode t)
+(after! delsel
+  (delete-selection-mode 1))
 #+end_src
 
 
@@ -675,12 +670,6 @@ quickfix
 (setq org-src-tab-acts-natively t)
 #+END_SRC
 
-*** Make sure delete selection is active
-#+begin_src emacs-lisp
-(after! org
-  (setq delete-selection-mode t)
-)
-#+end_src
 
 *** Org appear
 Org appear makes hidden links appear when cursor is in the link
@@ -1637,7 +1626,8 @@ From doom issues, sync latex and pdf, still bit dodgy:
 
 Try to get pdf to always popup on side
 #+begin_src emacs-lisp
-(set-popup-rule! "\*.pdf" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
+;; (set-popup-rule! "\*.pdf" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
+(set-popup-rule! "\\.pdf\\'" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
 
 Ask for master file (~Tex-master~ multifile support)? Ideally we would want
@@ -1645,8 +1635,7 @@ AucTex to always ask (~nil~), but this is set in the local variables of a buffer
 (~C-c n~ to reset). Also seems that manually setting the variable (at the end of
 the doc) does not work, so it needs to be done with ~C-c _~ at least on Mac.
 #+begin_src emacs-lisp
-(add-hook 'LaTeX-mode-hook
-          (setq-default TeX-master t))
+(add-hook 'LaTeX-mode-hook (lambda () (setq TeX-master t)))
 #+end_src
 
 Get RefTex to search for valid biblios
@@ -1799,35 +1788,17 @@ Tex word count with master file (from
                          master)))
 #+end_src
 
-Also seems that AucTex resets the ~delete-selection-mode~
+Set completios for custom commands
 #+begin_src emacs-lisp
-;(add-hook 'LaTeX-mode-hook '(lambda () (setq delete-selection-mode t)))
-(eval-after-load "tex"
-  '(progn
-     '(setq delete-selection-mode t)
-
-   '(setq TeX-complete-list
-        (append '(
-                  ("\\\\refsect{\\([^{}\n
-\\%,]*\\)" 1 LaTeX-label-list "}")
-                  ) TeX-complete-list))
- '(setq TeX-complete-list
-        (append '(
-                  ("\\\\refchap{\\([^{}\n
-\\%,]*\\)" 1 LaTeX-label-list "}")
-                  ) TeX-complete-list))
- '(setq TeX-complete-list
-        (append '(
-                  ("\\\\refig{\\([^{}\n
-\\%,]*\\)" 1 LaTeX-label-list "}")
-                  ) TeX-complete-list))
- '(setq TeX-complete-list
-        (append '(
-                  ("\\\\eqn{\\([^{}\n
-\\%,]*\\)" 1 LaTeX-label-list "}")
-                  ) TeX-complete-list))
-  ))
+(with-eval-after-load 'tex
+  (dolist (item
+           '(("\\\\refsect{\\([^{}\n\\%,]*\\)" 1 LaTeX-label-list "}")
+             ("\\\\refchap{\\([^{}\n\\%,]*\\)" 1 LaTeX-label-list "}")
+             ("\\\\refig{\\([^{}\n\\%,]*\\)" 1 LaTeX-label-list "}")
+             ("\\\\eqn{\\([^{}\n\\%,]*\\)" 1 LaTeX-label-list "}")))
+    (add-to-list 'TeX-complete-list item t)))
 #+end_src
+and end of line for latex
 #+begin_src emacs-lisp
 (add-hook 'LaTeX-mode-hook '(lambda () (global-set-key (kbd "C-e") 'move-end-of-line)))
 #+end_src
@@ -1926,7 +1897,7 @@ Extend the following to allow choice between Ollama (select a model that runs fa
     "Set default model based on current backend."
     (cond
      ((string= (gptel-backend-name gptel-backend) "DeepSeek")
-      (setq gptel-model '(deepseek-chat)))
+      (setq gptel-model 'deepseek-chat))
      ((string= (gptel-backend-name gptel-backend) "Ollama")
       (setq gptel-model "llama3.2:1b")))) ; Fastest M1 model
 
@@ -2190,7 +2161,7 @@ Also issues when loading, with a need to manually require ~ob-jupyter~ (see ; ht
 
 *** Setup popup position
 #+begin_src emacs-lisp
-(set-popup-rule! "\*jupyter-repl...*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
+(set-popup-rule! "^\\*jupyter-repl.*\\*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
 
 *** Workarounds
