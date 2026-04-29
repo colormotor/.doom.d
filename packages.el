@@ -62,12 +62,12 @@
 ;; (use-package jupyter
 ;;   :demand t
 ;;   :after (:all org python))
-; (unpin! jupyter)
+;; (unpin! jupyter)
 ;; (package! jupyter
 ;;    :recipe (:host github :repo "nnicandro/emacs-jupyter")) ; :branch "next"))
-(unpin! jupyter)
-(package! jupyter
-    :recipe (:host github :repo "tmurph/jupyter" :branch "devel")) ; :branch "next"))
+;; (unpin! jupyter)
+;; (package! jupyter
+;;     :recipe (:host github :repo "tmurph/jupyter" :branch "devel")) ; :branch "next"))
 
 (package! chatgpt-shell)
 (package! gptel)

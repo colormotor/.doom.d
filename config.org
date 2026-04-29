@@ -87,6 +87,10 @@ Setting the following to ~1~ completely blocks Emacs:
 (setq  scroll-conservatively 0) ; Seems to a void annoying jumping?
 #+end_src
 
+** Mac delay with SPC
+#+begin_src emacs-lisp
+(setq which-key-idle-delay 0.5)
+#+end_src
 ** Fonts
 Doom exposes five (optional) variables for controlling fonts in Doom. Here
 are the three important ones:
@@ -566,7 +570,10 @@ https://github.com/doomemacs/doomemacs/issues/3609
 ;; (add-variable-watcher 'delete-selection-mode #'watch-delsel)
 #+end_src
 
-
+Want to keep undo-fu active despite potential local quit (see this [[https://www.reddit.com/r/emacs/comments/1l01la3/is_emacs_undo_different_from_normal_undo/][reddit thread]].
+#+begin_src emacs-lisp
+(setq undo-fu-ignore-keyboard-quit t)
+#+end_src
 ** Undo
 Do not keep undo history after quit (see [[https://github.com/hlissner/doom-emacs/issues/1407][this]]). Ditched...
 Undo-tree is cool, but unfortunately *once in while it will mess up the undo history!*. This is rare,
@@ -1016,7 +1023,8 @@ Make latex preview not freeze emacs (seems to work only with Emacs2.9+)
 #+end_src
 
 *** Latex export (org)
-Export html with latex macros ([[https://emacs.stackexchange.com/questions/54703/exporting-latex-commands-to-html-mathjax]])
+
+**** Export html with latex macros ([[https://emacs.stackexchange.com/questions/54703/exporting-latex-commands-to-html-mathjax]])
 #+begin_src emacs-lisp
 ;;;###autoload
 (with-eval-after-load "org"
@@ -1038,6 +1046,30 @@ Export html with latex macros ([[https://emacs.stackexchange.com/questions/54703
    "\n#+HTML_HEAD_EXTRA: <div style=\"display: none\"> \\(\n"
    (prefix-all-lines "#+HTML_HEAD_EXTRA: " body)
    "\n#+HTML_HEAD_EXTRA: \\)</div>\n"))
+#+end_src
+**** Syntax highlighting on export
+Needs minted package
+#+begin_src emacs-lisp
+(after! ox-latex
+    (add-to-list 'org-latex-packages-alist '("" "minted"))
+    (setq org-latex-listings 'minted)
+
+    ;; Add the shell-escape flag
+    (setq org-latex-pdf-process '(
+                                "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+                                ;; "bibtex %b"
+                                "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+                                "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+                                ))
+
+    ;; Sample minted options.
+    (setq org-latex-minted-options '(
+                                    ;("frame" "lines")
+                                    ("fontsize" "\\scriptsize")
+                                    ; ("xleftmargin" "\\parindent")
+                                    ("linenos" "")
+                                    ))
+)
 #+end_src
 
 ** Org Roam
@@ -1350,8 +1382,9 @@ Switching to this from Org-ref. See [[https://blog.tecosaur.com/tmio/2021-07-31-
 Keep zotero and a global bib file synched:
 #+begin_src emacs-lisp
 (after! citar
-  (setq org-cite-global-bibliography '("~/Dropbox/orgroam/zotero-biblio.bib"))
-  (setq! citar-bibliography '("~/Dropbox/orgroam/zotero-biblio.bib"))
+  (setq-default org-cite-global-bibliography '("~/Dropbox/orgroam/zotero-biblio.bib"))
+  ;(setq! citar-bibliography '("~/Dropbox/orgroam/zotero-biblio.bib"))
+  (setq-default citar-bibliography '("~/Dropbox/orgroam/zotero-biblio.bib"))
   (setq citar-notes-paths '("~/Dropbox/orgroam"))
   )
 
@@ -1662,6 +1695,7 @@ Use the "SPC-m-@" to insert citations (like org mode)
 )
 #+end_src
 
+
 ** Issues
 Trying to get rid of the ~epdfinfo: Destination not found~ error.
 See [https://github.com/politza/pdf-tools/issues/302]
@@ -1903,7 +1937,26 @@ Extend the following to allow choice between Ollama (select a model that runs fa
 
   (my/gptel-set-default-model)
 
-  (setq gptel--system-message "You are a large language model living in Emacs and a helpful assistant. Respond concisely. When generating Jupyter Python code blocks, always use `#+BEGIN_SRC jupyter-python :session py` for the block definition, unless otherwise specified.")
+  (setq gptel--system-message "You are an expert AI assistant specialized living in Emacs.
+    You are an expert AI assistant specialized in:
+    1. Low-level programming and systems programming
+    2. Stable Diffusion internals, optimization, and debugging
+    3. Curve generation methods, GCAD
+    4. Optimization methods
+    5. Mathematical reasoning and numerical methods
+
+    Guidelines:
+    - Provide concise, technical answers with code examples when relevant
+    - Explain complex concepts clearly/concisely but without oversimplification
+    - Focus on practical solutions for system-level work
+    - When discussing Stable Diffusion, include PyTorch implementation details
+    - Suggest simple solutions if they exist (e.g. not a deep network if regression is sufficient
+    - Use mathematical notation when appropriate
+    - Suggest optimizations and best practices
+    - Root your answers in existing computer graphics and ML literature
+    - When generating Jupyter Python code blocks, always use `#+BEGIN_SRC jupyter-python :session py` for the block definition, unless otherwise specified
+    - Don't use typing when writing Python code
+    ")
 
   ;; Optional: Customize other settings
   ;; (setq gptel-temperature 0.7
@@ -1961,7 +2014,7 @@ Extend the following to allow choice between Ollama (select a model that runs fa
 
 ** Polymode
 *** Enable org/md comments in Python
-Code written by ChatGPT. Allows to write comments that get fontified with the syntax
+Slop code written by ChatGPT. Allows to write comments that get fontified with the syntax
 #+begin_example
 #%% [org]
 '''
@@ -2440,27 +2493,45 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 #+begin_src emacs-lisp
 ;; (set-formatter! 'ruff '("ruff" "format" "-"))
 ;; ;(set-formatter! 'latexindent '("latexindent" "-g" "/dev/null"))
-(with-eval-after-load 'eglot
-   (add-to-list 'eglot-server-programs
-                '(python-ts-mode . ("ruff-lsp"))))
+;; (with-eval-after-load 'eglot
+;;    (add-to-list 'eglot-server-programs
+;;                 '(python-ts-mode . ("ruff-lsp"))))
 
-(use-package! flycheck
-  :config
-  (flycheck-define-checker python-ruff
-    "A Python syntax and style checker using Ruff."
-    :command ("ruff" "check" "--quiet" "--stdin-filename" source-original "-")
-    :standard-input t
-    :error-patterns
-    ((error line-start (file-name) ":" line ":" (optional column ":") " "
-            (or "E" "F" "W") (id (one-or-more (not (any " "))))
-            " " (message) line-end))
-    :modes (python-mode))
-  (add-to-list 'flycheck-checkers 'python-ruff)
-  ;; Prefer Ruff over others
-  (setq flycheck-checker 'python-ruff))
+;; (use-package! flycheck
+;;   :config
+;;   (flycheck-define-checker python-ruff
+;;     "A Python syntax and style checker using Ruff."
+;;     :command ("ruff" "check" "--quiet" "--stdin-filename" source-original "-")
+;;     :standard-input t
+;;     :error-patterns
+;;     ((error line-start (file-name) ":" line ":" (optional column ":") " "
+;;             (or "E" "F" "W") (id (one-or-more (not (any " "))))
+;;             " " (message) line-end))
+;;     :modes (python-mode))
+;;   (add-to-list 'flycheck-checkers 'python-ruff)
+;;   ;; Prefer Ruff over others
+;;   (setq flycheck-checker 'python-ruff))
+#+end_src
+
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'python
+ (set-formatter! 'ruff :modes '(python-mode python-ts-mode)))
 #+end_src
 
 ** Completion
+*** Ty for Python priority
+From doom emacs docs
+#+begin_src emacs-lisp
+(with-eval-after-load 'python
+  (set-eglot-client! '(python-mode python-ts-mode) '("ty" "server")))
+
+;; Not necessary for lsp-mode users, because `ty-ls' is already priority = -1
+;; (lower = higher priority). Including this for posterity:
+(with-eval-after-load 'python
+  (set-lsp-priority! 'ty-ls -5)) ; default is -1
+#+end_src
+
 *** Company (disabled)
 From https://tecosaur.github.io/emacs-config/config.html
 #+begin_src emacs-lisp
@@ -2475,7 +2546,7 @@ From https://tecosaur.github.io/emacs-config/config.html
 #+end_src
 
 #+begin_src emacs-lisp
-;(package! company :disable t)
+;; (package! company :disable t)
 #+end_src
 
 *** Cofu
@@ -2492,53 +2563,7 @@ From [[https://github.com/robbert-vdh/dotfiles/blob/282b5393f54ecea91c8ad004cdf4
   (corfu-cycle t)
   (corfu-auto-delay 0.01)
   )
-#+end_src
 
-
-*** Copilot
-#+begin_src emacs-lisp
-;; accept completion from copilot and fallback to company
-;; Copilot: inline ghost text
-;; (use-package! copilot
-;;  :hook (prog-mode . copilot-mode)
-;;  :bind
-;;  (
-;;   ("C-<return>"        . copilot-accept-completion)
-;;   ("C-<right>"        . copilot-next-completion)
-;;   ("C-<left>"        . copilot-previous-completion)
-;;   ("C-M-<return>"    . copilot-accept-completion-by-word)
-;;  )
-;; )
-;;   :config
-;;   ;; Prefer Copilot on TAB *only when* a Copilot suggestion is visible.
-;;   (defun +my/copilot-or-indent-or-complete ()
-;;     "Accept Copilot if visible, else indent/complete as usual."
-;;     (interactive)
-;;     (cond
-;;      ;; Copilot suggestion showing? take it.
-;;      ((and (bound-and-true-p copilot-mode)
-;;            (fboundp 'copilot--overlay-visible)
-;;            (copilot--overlay-visible))
-;;       (copilot-accept-completion))
-;;      ;; Otherwise, do the normal TAB thing (indent or complete via corfu)
-;;      (t (indent-for-tab-command))))
-
-;;   ;; Make sure TAB does the smart thing everywhere you edit code
-;;   (define-key prog-mode-map (kbd "TAB") #'+my/copilot-or-indent-or-complete)
-;;   (define-key prog-mode-map (kbd "<tab>") #'+my/copilot-or-indent-or-complete)
-
-;;   ;; When Corfu’s popup is up, keep the same TAB behavior.
-;;   (with-eval-after-load 'corfu
-;;     (define-key corfu-map (kbd "TAB") #'+my/copilot-or-indent-or-complete)
-;;     (define-key corfu-map (kbd "<tab>") #'+my/copilot-or-indent-or-complete)))
-
-;; ;; (use-package! copilot
-;; ;;   :hook (prog-mode . copilot-mode)
-;; ;;   :bind (:map copilot-completion-map
-;; ;;               ("<tab>" . 'copilot-accept-completion)
-;; ;;               ("TAB" . 'copilot-accept-completion)
-;; ;;               ("C-TAB" . 'copilot-accept-completion-by-word)
-;; ;;               ("C-<tab>" . 'copilot-accept-completion-by-word)))
 #+end_src
 
 *** Issues
@@ -2563,54 +2588,6 @@ Problem is that with this setup yasnippet stops working at times
 ;;                       (eq (char-before) ?<)))))
 #+end_src
 
-
-#+begin_src emacs-lisp
-;; Corfu assumed enabled elsewhere
-
-;; (use-package! cape
-;;   :after (corfu eglot yasnippet)
-;;   :config
-;;   ;; Only offer yasnippet when just typed "<"
-;;   (defun +my/yas-after-< () (and (bound-and-true-p yas-minor-mode)
-;;                                  (> (point) (point-min))
-;;                                  (eq (char-before) ?<)))
-
-;;   (defun +my/eglot-capf ()
-;;     (setq-local completion-at-point-functions
-;;                 (list
-;;                  (cape-super-capf
-;;                   #'eglot-completion-at-point
-;;                   (cape-capf-predicate #'cape-yasnippet #'+my/yas-after-<)))))
-
-;;   (add-hook 'eglot-managed-mode-hook #'+my/eglot-capf))
-
-;; ;; Corfu: suppress CAPF after "<"
-;; (with-eval-after-load 'corfu
-;;   (advice-add 'corfu--capf-wrapper :around
-;;               (defun +my/corfu-block-< (fun &rest args)
-;;                 (if (eq (char-before) ?<) nil (apply fun args)))))
-
-;; ;; Copilot: disable when last char is "<"
-;; (with-eval-after-load 'copilot
-;;   (add-to-list 'copilot-disable-predicates
-;;                (lambda () (eq (char-before) ?<))))
-#+end_src
-
-#+begin_src emacs-lisp
-;; to enable yasnippet-capf everywhere (optional)
-;; (add-to-list 'completion-at-point-functions #'yasnippet-capf)
-
-;; ;; to integrate yasnippet-capf with eglot completion
-;; ;; https://github.com/minad/corfu/wiki#making-a-cape-super-capf-for-eglot
-;; (defun mi/eglot-capf-with-yasnippet ()
-;;   (setq-local completion-at-point-functions
-;;               (list
-;; 	       (cape-capf-super
-;; 		#'eglot-completion-at-point
-;; 		#'yasnippet-capf))))
-;; (with-eval-after-load 'eglot
-;;   (add-hook 'eglot-managed-mode-hook #'mi/eglot-capf-with-yasnippet))
-#+end_src
 
 
 ** DAP MODE (Debugging)
