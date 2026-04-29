@@ -192,6 +192,42 @@ Ivy has this absurd thing that it does not let you unselect a completion, making
 (setq ivy-use-selectable-prompt t)
 #+end_src
 
+
+**** Company (disabled)
+From https://tecosaur.github.io/emacs-config/config.html
+#+begin_src emacs-lisp
+;; (after! company
+;;   (setq company-idle-delay 0.1
+;;         company-minimum-prefix-length 2
+;;         company-tooltip-idle-delay 0.5)
+;;   (setq company-show-numbers t)
+;;   (add-hook 'evil-normal-state-entry-hook #'company-abort)
+;;   (setq company-global-modes '(not org-mode))
+;;   ) ;; make aborting less annoying.
+#+end_src
+
+#+begin_src emacs-lisp
+;; (package! company :disable t)
+#+end_src
+
+**** Cofu
+From [[https://github.com/robbert-vdh/dotfiles/blob/282b5393f54ecea91c8ad004cdf417b6e1ad24d2/modules/emacs/doom/config.org#corfu][here]]:
+#+begin_src emacs-lisp
+(after! vertico
+  (setq vertico-count 10))
+
+(use-package! corfu
+  :init
+  (global-corfu-mode)
+  :custom
+  (corfu-auto t)
+  (corfu-cycle t)
+  (corfu-auto-delay 0.01)
+  )
+
+#+end_src
+
+
 **** Vertico
 Vertico directory from https://www.rousette.org.uk/archives/hi-ho-hi-ho-it-s-back-to-doom-i-go/
 #+begin_src emacs-lisp
@@ -2524,71 +2560,16 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 From doom emacs docs
 #+begin_src emacs-lisp
 (with-eval-after-load 'python
-  (set-eglot-client! '(python-mode python-ts-mode) '("ty" "server")))
+ (set-eglot-client! '(python-mode python-ts-mode) '("ty" "server")))
 
 ;; Not necessary for lsp-mode users, because `ty-ls' is already priority = -1
 ;; (lower = higher priority). Including this for posterity:
 (with-eval-after-load 'python
-  (set-lsp-priority! 'ty-ls -5)) ; default is -1
+ (set-lsp-priority! 'ty-ls -5)) ; default is -1
 #+end_src
 
-*** Company (disabled)
-From https://tecosaur.github.io/emacs-config/config.html
-#+begin_src emacs-lisp
-;; (after! company
-;;   (setq company-idle-delay 0.1
-;;         company-minimum-prefix-length 2
-;;         company-tooltip-idle-delay 0.5)
-;;   (setq company-show-numbers t)
-;;   (add-hook 'evil-normal-state-entry-hook #'company-abort)
-;;   (setq company-global-modes '(not org-mode))
-;;   ) ;; make aborting less annoying.
-#+end_src
-
-#+begin_src emacs-lisp
-;; (package! company :disable t)
-#+end_src
-
-*** Cofu
-From [[https://github.com/robbert-vdh/dotfiles/blob/282b5393f54ecea91c8ad004cdf417b6e1ad24d2/modules/emacs/doom/config.org#corfu][here]]:
-#+begin_src emacs-lisp
-(after! vertico
-  (setq vertico-count 10))
-
-(use-package! corfu
-  :init
-  (global-corfu-mode)
-  :custom
-  (corfu-auto t)
-  (corfu-cycle t)
-  (corfu-auto-delay 0.01)
-  )
-
-#+end_src
-
-*** Issues
-Problem is that with this setup yasnippet stops working at times
-#+begin_src emacs-lisp
-;; ;; Function to suppress completion when the prefix is "<"
-;; (defun +my/corfu-block-< (fun &rest args)
-;;   "Prevent corfu completion if the current prefix is just `<`."
-;;   (let ((prefix (buffer-substring (line-beginning-position) (point))))
-;;     (if (string-suffix-p "<" prefix)
-;;         nil
-;;       (apply fun args))))
-
-;; ;; Advice corfu to respect that rule
-;; (with-eval-after-load 'corfu
-;;   (advice-add 'corfu--capf-wrapper :around #'+my/corfu-block-<))
-
-;; (with-eval-after-load 'copilot
-;;   (add-to-list 'copilot-disable-predicates
-;;                (lambda ()
-;;                  (and (> (point) (point-min))
-;;                       (eq (char-before) ?<)))))
-#+end_src
-
-
+**** NOTES
+For ty to work we need to install it for each active environment. It will detect the environment used through the ~conda~ package (~+conda~ in the python lang entry of init).
 
 ** DAP MODE (Debugging)
 #+begin_src emacs-lisp
