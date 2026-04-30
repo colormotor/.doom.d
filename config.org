@@ -222,7 +222,7 @@ From [[https://github.com/robbert-vdh/dotfiles/blob/282b5393f54ecea91c8ad004cdf4
   :custom
   (corfu-auto t)
   (corfu-cycle t)
-  (corfu-auto-delay 0.01)
+  (corfu-auto-delay 0.5)
   )
 
 #+end_src
