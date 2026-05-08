@@ -2570,6 +2570,9 @@ From doom emacs docs
 
 **** NOTES
 For ty to work we need to install it for each active environment. It will detect the environment used through the ~conda~ package (~+conda~ in the python lang entry of init).
+*** Eglot type hints seem to suck
+would like to keep args hints (maybe) but types... urgh
+
 
 ** DAP MODE (Debugging)
 #+begin_src emacs-lisp
