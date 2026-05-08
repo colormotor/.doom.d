@@ -1919,7 +1919,7 @@ Extend the following to allow choice between Ollama (select a model that runs fa
   ;; Set default model
   (setq gptel-model '(deepseek-chat)) ;"deepseek-chat")
   (setq max-mini-window-height 1) ; Avoids bug with rewrite?
-  (setq gptel--system-message "You are a large language model living in Emacs and a helpful assistant. Respond concisely. When generating Jupyter Python code blocks, always use `#+BEGIN_SRC jupyter-python :session py` for the block definition, unless otherwise specified.")
+  (setq gptel--system-message "You are a large language model living in Emacs and a helpful assistant. Respond concisely. When generating Jupyter Python code blocks, always use `#+BEGIN_SRC jupyter-python :session py` for the block definition, unless otherwise specified. Keep your answers concise and don't over comment code. If writing Python don't use types")
 
   ;; Optional: Customize other settings
   ;; (setq gptel-temperature 0.7
@@ -1967,7 +1967,9 @@ Extend the following to allow choice between Ollama (select a model that runs fa
     "Set default model based on current backend."
     (cond
      ((string= (gptel-backend-name gptel-backend) "DeepSeek")
-      (setq gptel-model 'deepseek-chat))
+      ;(setq gptel-model 'deepseek-chat)
+      (setq gptel-model 'deepseek-reasoner)
+      )
      ((string= (gptel-backend-name gptel-backend) "Ollama")
       (setq gptel-model "llama3.2:1b")))) ; Fastest M1 model
 
@@ -2248,6 +2250,22 @@ Also issues when loading, with a need to manually require ~ob-jupyter~ (see ; ht
 )
 #+end_src
 
+[[https://github.com/emacs-jupyter/jupyter/issues/607][Issue]] after new version of org
+#+begin_src emacs-lisp
+  (defun my/jupyter-org-results-drawer-pre-blank-fix (element)
+    "Advice to ensure the RESULTS drawer has a :pre-blank 0 property.
+This prevents 'wrong-type-argument wholenump nil' errors in newer Org versions."
+    (if (and element (eq (org-element-type element) 'drawer))
+        (progn
+          (org-element-put-property element :pre-blank 0)
+          element)
+      element))
+  (advice-add 'jupyter-org-results-drawer 
+              :filter-return 
+              #'my/jupyter-org-results-drawer-pre-blank-fix)
+
+(org-element-put-property element :post-blank 1)
+#+end_src
 *** Setup popup position
 #+begin_src emacs-lisp
 (set-popup-rule! "^\\*jupyter-repl.*\\*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
