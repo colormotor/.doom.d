@@ -132,11 +132,10 @@ I like to switch around between these:
 ;; (setq doom-theme 'doom-snazzy) ; kinda nice ++
 ;; (setq doom-theme 'doom-rouge) ; kinda nice maybe
 ;; (setq doom-theme 'doom-nord) ; very gray
-;;
 ;;(setq doom-theme 'doom-manegarm) ; freddy kruger
 (setq doom-theme 'doom-sourcerer) ; nice stuff
 ;;(setq doom-theme 'doom-meltbus) ; too black and white
-;; (setq doom-theme 'doom-city-lights) ; nice greenish blue
+;; (setq doom-theme 'doom-city-lights) ; nice  greenish blue
 ;; (setq doom-theme 'doom-challenger-deep) ; nice
 ;; (setq doom-theme 'doom-sourcerer) ; nice gray/purple
 ;; (setq doom-theme 'doom-tomorrow-night)
@@ -460,6 +459,14 @@ With Evil mode and insert active, shift selection uses word boundaries that is r
 (define-key evil-insert-state-map (kbd "C-S-<left>")  nil)
 (define-key evil-insert-state-map (kbd "S-<right>") nil)
 (define-key evil-insert-state-map (kbd "S-<left>")  nil)
+#+end_src
+
+*** Evil interferes with transients
+#+begin_src emacs-lisp
+(with-eval-after-load 'transient
+  (define-key transient-map [escape] 'transient-quit-one)
+  ;; Force transient popups to use standard Emacs bindings instead of Evil
+  (evil-set-initial-state 'transient-edit-mode 'emacs))
 #+end_src
 *** Keybinding notes
 Note that from insert mode it is possible to ~C-o~ and then use for one time any
@@ -1904,54 +1911,40 @@ Stole this from [[https://github.com/dylanbmorgan/xxh-plugin-prerun-dotfiles/tre
 Pretty mindblowing demo: [[https://www.youtube.com/watch?v=bsRnh_brggM]]
 
 Extend the following to allow choice between Ollama (select a model that runs fast on M1 macs) and deepseek (existing config)
-#+begin_src emacs-lisp
-(use-package! gptel
-  :config
-  ;; Set up DeepSeek as the default backend
-  (setq gptel-backend
-        (gptel-make-deepseek "DeepSeek"
-          :host "api.deepseek.com"
-          :key (or (getenv "DEEPSEEK_API_KEY")
-                   "your-api-key-here") ; Fallback, but use env var for security
-          :models '(deepseek-chat)
-          :stream t))
-  (setq gptel-default-mode 'org-mode)
-  ;; Set default model
-  (setq gptel-model '(deepseek-chat)) ;"deepseek-chat")
-  (setq max-mini-window-height 1) ; Avoids bug with rewrite?
-  (setq gptel--system-message "You are a large language model living in Emacs and a helpful assistant. Respond concisely. When generating Jupyter Python code blocks, always use `#+BEGIN_SRC jupyter-python :session py` for the block definition, unless otherwise specified. Keep your answers concise and don't over comment code. If writing Python don't use types")
-
-  ;; Optional: Customize other settings
-  ;; (setq gptel-temperature 0.7
-  ;;       gptel-max-tokens 4096
-  ;;       gptel-system-message "You are a helpful AI assistant.")
-)
-
-(defun my/gptel-send-context-aware ()
-  "Send region or heading to GPTel, fallback to org-ctrl-c-ctrl-c."
-  (interactive)
-  (cond
-   ((region-active-p) (gptel-send (region-beginning) (region-end)))
-   ((org-at-heading-p) (gptel-send))
-   (t (call-interactively 'org-ctrl-c-ctrl-c))))
-
-;; Only override in gptel-mode
-(define-key gptel-mode-map (kbd "C-c C-c") 'my/gptel-send-context-aware)
-
-#+end_src
-
 
 #+begin_src emacs-lisp
 (use-package! gptel
   :config
+  ;(setq gptel-log-level 'debug)
+  ;(setq gptel-track-media t)
+  ;; Web Search
+  (setq gptel-tools
+      (list (gptel-make-tool
+             :name "$web_search"
+             :function (lambda (&optional search_result)
+                         (json-serialize
+                          `(:search_result ,search_result)))
+             :description "Moonshot builtin web search. Only usable by moonshot model (kimi), ignore this if you are not."
+             :args '((:name "search_result" :type object :optional t))
+             :category "web")))
   ;; Set up multiple backends
   (setq gptel-backends
         (list
-         (gptel-make-deepseek "DeepSeek"
+          (gptel-make-openai "Moonshot"
+           :host "api.moonshot.ai"
+           :key (or (getenv "KIMI_API_KEY")
+                    "your-deepseek-api-key-here")
+           :models '(kimi-k2.7-code kimi-k2.6)
+           ;:models '(kimi-latest kimi-k2-0711-preview)
+           :stream t
+           :request-params '(:tools [(:type "builtin_function" :function (:name "$web_search"))])
+         )
+         (gptel-make-openai "DeepSeek"
            :host "api.deepseek.com"
            :key (or (getenv "DEEPSEEK_API_KEY")
                     "your-deepseek-api-key-here")
-           :models '(deepseek-chat)
+           ;:models '(deepseek-chat deepseek-reasoner)
+           :models '(deepseek-v4-flash deepseek-v4-pro)
            :stream t)
          (gptel-make-ollama "Ollama"
            :host "localhost:11434"
@@ -1962,13 +1955,18 @@ Extend the following to allow choice between Ollama (select a model that runs fa
   (setq gptel-backend (car gptel-backends))
   (setq gptel-default-mode 'org-mode)
 
+  ;(setq gptel-include-reasoning f)
   ;; Set default model based on backend
   (defun my/gptel-set-default-model ()
     "Set default model based on current backend."
     (cond
+     ((string= (gptel-backend-name gptel-backend) "Moonshot")
+      (setq gptel-model 'kimi-k2.7-code)
+      )
      ((string= (gptel-backend-name gptel-backend) "DeepSeek")
-      ;(setq gptel-model 'deepseek-chat)
-      (setq gptel-model 'deepseek-reasoner)
+      (setq gptel-model 'deepseek-v4-pro)
+      ;(setq gptel-model 'deepseek-v4-flash)
+      ;(setq gptel-model 'deepseek-reasoner)
       )
      ((string= (gptel-backend-name gptel-backend) "Ollama")
       (setq gptel-model "llama3.2:1b")))) ; Fastest M1 model
@@ -1978,22 +1976,20 @@ Extend the following to allow choice between Ollama (select a model that runs fa
   (setq gptel--system-message "You are an expert AI assistant specialized living in Emacs.
     You are an expert AI assistant specialized in:
     1. Low-level programming and systems programming
-    2. Stable Diffusion internals, optimization, and debugging
+    2. ML internals, optimization, and debugging
     3. Curve generation methods, GCAD
     4. Optimization methods
     5. Mathematical reasoning and numerical methods
 
     Guidelines:
     - Provide concise, technical answers with code examples when relevant
-    - Explain complex concepts clearly/concisely but without oversimplification
+    - Answer the question, do not expand freely if not asked to
     - Focus on practical solutions for system-level work
-    - When discussing Stable Diffusion, include PyTorch implementation details
-    - Suggest simple solutions if they exist (e.g. not a deep network if regression is sufficient
+    - Suggest simple solutions if they exist (e.g. not a deep network if regression is sufficient)
     - Use mathematical notation when appropriate
-    - Suggest optimizations and best practices
-    - Root your answers in existing computer graphics and ML literature
-    - When generating Jupyter Python code blocks, always use `#+BEGIN_SRC jupyter-python :session py` for the block definition, unless otherwise specified
-    - Don't use typing when writing Python code
+    - If relevant to the context, root your answers in existing computer graphics and ML literature
+    - When generating Jupyter Python code blocks inside an org document, always use `#+BEGIN_SRC jupyter-python :session py` for the block definition, unless otherwise specified
+    - Don't use typing when writing Python code, unless requested
     ")
 
   ;; Optional: Customize other settings
@@ -2028,6 +2024,26 @@ Extend the following to allow choice between Ollama (select a model that runs fa
 
 #+end_src
 
+** Disable enter for response
+#+begin_src emacs-lisp
+(with-eval-after-load 'gptel
+  (define-key gptel-mode-map (kbd "C-c RET") nil)
+  (define-key gptel-mode-map (kbd "<insert-state> <return>") nil)
+  (define-key gptel-mode-map (kbd "<insert-state> RET") nil))
+#+end_src
+
+** Add recent files
+#+begin_src emacs-lisp
+(defun gptel-add-recent-file ()
+  "Prompt for a file from `recentf-list` and add it to `gptel` context."
+  (interactive)
+  (if-let ((file (completing-read "Add recent file to gptel: " recentf-list nil t)))
+      (progn
+        (gptel-add-file file)
+        (message "Added to gptel context: %s" file))
+    (user-error "No file selected")))
+
+#+end_src
 
 * Coding
 #+begin_src emacs-lisp
@@ -2264,8 +2280,9 @@ This prevents 'wrong-type-argument wholenump nil' errors in newer Org versions."
               :filter-return 
               #'my/jupyter-org-results-drawer-pre-blank-fix)
 
-(org-element-put-property element :post-blank 1)
+;(org-element-put-property element :post-blank 1)
 #+end_src
+
 *** Setup popup position
 #+begin_src emacs-lisp
 (set-popup-rule! "^\\*jupyter-repl.*\\*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
@@ -2578,7 +2595,11 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 From doom emacs docs
 #+begin_src emacs-lisp
 (with-eval-after-load 'python
- (set-eglot-client! '(python-mode python-ts-mode) '("ty" "server")))
+ (set-eglot-client! '(python-mode python-ts-mode) '("ty" "server"))
+ (add-hook 'eglot-managed-mode-hook (lambda () (eglot-inlay-hints-mode -1))) ;; disable hints by default
+)
+
+
 
 ;; Not necessary for lsp-mode users, because `ty-ls' is already priority = -1
 ;; (lower = higher priority). Including this for posterity:
