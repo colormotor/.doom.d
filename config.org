@@ -2264,7 +2264,7 @@ This prevents 'wrong-type-argument wholenump nil' errors in newer Org versions."
               :filter-return 
               #'my/jupyter-org-results-drawer-pre-blank-fix)
 
-(org-element-put-property element :post-blank 1)
+;; (org-element-put-property element :post-blank 1)
 #+end_src
 *** Setup popup position
 #+begin_src emacs-lisp
@@ -2575,15 +2575,24 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 
 ** Completion
 *** Ty for Python priority
-From doom emacs docs
+Based on this [[https://www.reddit.com/r/emacs/comments/1pkan2e/yet_another_post_about_eglot_python_ruff_lsp/][reddit post]] using [[https://github.com/joaotavora/rassumfrassum][rassumfrassum]]
 #+begin_src emacs-lisp
-(with-eval-after-load 'python
- (set-eglot-client! '(python-mode python-ts-mode) '("ty" "server")))
+;; (with-eval-after-load 'python
+;;  (set-eglot-client! '(python-mode python-ts-mode) '("ty" "server")))
 
-;; Not necessary for lsp-mode users, because `ty-ls' is already priority = -1
-;; (lower = higher priority). Including this for posterity:
-(with-eval-after-load 'python
- (set-lsp-priority! 'ty-ls -5)) ; default is -1
+;; ;; Not necessary for lsp-mode users, because `ty-ls' is already priority = -1
+;; ;; (lower = higher priority). Including this for posterity:
+;; (with-eval-after-load 'python
+;;  (set-lsp-priority! 'ty-ls -5)) ; default is -1
+
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs
+               '(python-base-mode . ("rass" "python") )))
+
+(add-hook 'python-base-mode-hook
+          (lambda ()
+            (eglot-ensure)
+            (add-hook 'after-save-hook 'eglot-format nil t)))
 #+end_src
 
 **** NOTES
