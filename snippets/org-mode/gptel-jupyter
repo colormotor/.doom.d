@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# contributor: Daniel Berio
+# name: #+BEGIN_SRC gptel :wrap src jupyter-python...
+# uuid: gptel-jupyter
+# key: <gj
+# --
+#+BEGIN_SRC gptel :wrap "src jupyter-python :session py" :preset coding-only
+`%`$0
+#+END_SRC

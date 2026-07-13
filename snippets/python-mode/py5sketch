@@ -1,0 +1,23 @@
+# -*- mode: snippet -*-
+# name: py5sketch
+# key: <p5
+# condition: t
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# --
+
+from py5canvas import *
+
+
+def parameters():
+    return {'foo': (0.0, 0.0, 1.0)}
+
+
+def setup():
+    create_canvas($1, $2)
+    color_mode('rgb', 1.0)
+
+def draw():
+    background(0)
+
+
+run()

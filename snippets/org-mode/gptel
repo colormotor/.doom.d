@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# contributor: Daniel Berio
+# name: #+BEGIN_SRC gptel...
+# uuid: gptel
+# key: <g
+# --
+#+BEGIN_SRC gptel 
+`%`$0
+#+END_SRC

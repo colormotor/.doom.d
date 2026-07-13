@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# contributor: Daniel Berio
+# name: #+BEGIN_SRC gptel :entry t :session...
+# uuid: gptel-entry-session
+# key: <ges
+# --
+#+BEGIN_SRC gptel :entry t :session org
+`%`$0
+#+END_SRC
