@@ -1,6 +1,6 @@
 #+AUTHOR: Daniel Berio
 #+EMAIL: drand48@gmail.com
-#+PROPERTY: header-args :emacs-lisp :tangle yes :cache yes :results silent :comments link :exports code
+#+PROPERTY: header-args:emacs-lisp :tangle yes :cache yes :results silent :comments link :exports code
 
 
 #+begin_src emacs-lisp
@@ -61,6 +61,11 @@ Some existing literate configurations to get inspiration from
 
 
 * Editor configuration
+** Autosave
+#+begin_src emacs-lisp
+(setq auto-save-default t
+      make-backup-files t)
+#+end_src
 ** Splash screen
 See https://discourse.doomemacs.org/t/how-to-change-your-splash-screen/57
 
@@ -89,7 +94,7 @@ Setting the following to ~1~ completely blocks Emacs:
 
 ** Mac delay with SPC
 #+begin_src emacs-lisp
-(setq which-key-idle-delay 0.5)
+;(setq which-key-idle-delay 0.5)
 #+end_src
 ** Fonts
 Doom exposes five (optional) variables for controlling fonts in Doom. Here
@@ -133,10 +138,11 @@ I like to switch around between these:
 ;; (setq doom-theme 'doom-rouge) ; kinda nice maybe
 ;; (setq doom-theme 'doom-nord) ; very gray
 ;;(setq doom-theme 'doom-manegarm) ; freddy kruger
-(setq doom-theme 'doom-sourcerer) ; nice stuff
+;(setq doom-theme 'doom-sourcerer) ; nice stuff
 ;;(setq doom-theme 'doom-meltbus) ; too black and white
-;; (setq doom-theme 'doom-city-lights) ; nice  greenish blue
-;; (setq doom-theme 'doom-challenger-deep) ; nice
+;;(setq doom-theme 'doom-city-lights) ; nice  greenish blue
+;(setq doom-theme 'wheatgrass) ; nice  greenish blue
+;(setq doom-theme 'doom-challenger-deep) ; nice
 ;; (setq doom-theme 'doom-sourcerer) ; nice gray/purple
 ;; (setq doom-theme 'doom-tomorrow-night)
 ;; (setq doom-theme 'doom-gruvbox) ; brown/orange
@@ -150,11 +156,97 @@ I like to switch around between these:
 ;; (load-theme doom-theme t) ;'doom-snazzy)
 #+end_src
 
+#+begin_src emacs-lisp
+(setq my/curated-themes
+  '(
+    doom-dark+      ; maria says ok
+    doom-ayu-dark
+    doom-nord-aurora
+    doom-bluloco-dark
+    doom-sourcerer  ; dark - nice
+    ;doom-1337       ; dark
+    ;wombat          ; grey
+    ;doom-badger     ; dark-grey
+    ;doom-pine       ; dark-green
+    doom-Iosvkem    ; Grey pink stuff
+    doom-gruvbox    ; grey
+    doom-old-hope   ; Nice - dark
+    doom-monokai-pro ; grey nice
+    doom-tokyo-night ; pruplish dark
+    doom-oceanic-next ; teal
+    doom-operandi-tinted ; light tinted pink
+    leuven          ; light 
+   )
+  ;"Curated list of themes I actually like."
+  )
+
+(defun my/select-curated-theme ()
+  "Select and load a theme from `my/curated-themes' with live preview."
+  (interactive)
+  (let ((orig-theme (car custom-enabled-themes)))
+    ;; Temporarily override the function that lists all themes
+    (cl-letf (((symbol-function 'custom-available-themes)
+               (lambda () my/curated-themes)))
+      (call-interactively #'consult-theme))
+    
+    ;; Update doom-theme if a new theme was successfully loaded
+    (let ((final-theme (car custom-enabled-themes)))
+      (when (and final-theme (not (eq final-theme orig-theme)))
+        (setq doom-theme final-theme)
+        (customize-save-variable 'doom-theme final-theme))))) ; save to disk
+
+(map! :leader :desc "Load curated theme" "t t" #'my/select-curated-theme)
+
+#+end_src
+
+
 This determines the style of line numbers in effect. If set to ~nil~, line
 numbers are disabled. For relative line numbers, set this to ~relative~.
 #+begin_src emacs-lisp
 (setq display-line-numbers-type t)
 #+end_src
+
+*** Issues with cursor color
+Since updating emacs + doom + MacOS, I get a black cursor for dark themes. Really annoying, asking the bot overlords to fix:
+
+#+begin_src emacs-lisp
+(defun my/adaptive-cursor-color (&optional frame)
+  "Set cursor color based on the theme's background mode.
+Ensures the frame parameter, cursor face, and evil state variables are all in sync."
+  (let* ((f (or frame (selected-frame)))
+         ;; Force Emacs to recalculate background-mode based on the current theme
+         (bg-mode (with-selected-frame f
+                    (frame-set-background-mode f)
+                    (frame-parameter f 'background-mode)))
+         (dark-p (eq bg-mode 'dark))
+         (cursor-color (if dark-p "#ffffff" "#222222")))
+    
+    ;; 1. Set the frame parameter
+    (set-frame-parameter f 'cursor-color cursor-color)
+    
+    ;; 2. Set the cursor face (prevents themes from forcing black)
+    (set-face-background 'cursor cursor-color f)
+    
+    ;; 3. Update Evil's cursor state variables dynamically
+    (when (featurep 'evil)
+      (setq evil-normal-state-cursor (list 'box cursor-color)
+            evil-insert-state-cursor (list 'bar cursor-color)
+            evil-visual-state-cursor (list 'hollow cursor-color))
+      ;; Force refresh in current buffer if evil is active
+      (when (bound-and-true-p evil-local-mode)
+        (when (fboundp 'evil-refresh-cursor)
+          (evil-refresh-cursor))))))
+
+;; Hook into all possible theme load and frame creation events
+(add-hook 'after-load-theme-hook #'my/adaptive-cursor-color)
+(add-hook 'doom-load-theme-hook #'my/adaptive-cursor-color)
+(add-hook 'after-make-frame-functions #'my/adaptive-cursor-color)
+
+;; Run at startup and once more after idle to win any load-order races
+(my/adaptive-cursor-color)
+(run-with-idle-timer 0.5 nil #'my/adaptive-cursor-color)
+#+end_src
+
 
 *** No menu bar?
 I am (was) using [[https://github.com/koekeishiya/yabai][Yabai]] on MacOS for window management.
@@ -186,9 +278,9 @@ brew install emacs-plus --with-no-titlebar --with-native-comp
 #+end_src
 
 *** Completion
-Ivy has this absurd thing that it does not let you unselect a completion, making it impossible to save a filename that is partially equal to an existing one...
+Ivy (disabled) has this absurd thing that it does not let you unselect a completion, making it impossible to save a filename that is partially equal to an existing one...
 #+begin_src emacs-lisp
-(setq ivy-use-selectable-prompt t)
+;(setq ivy-use-selectable-prompt t)
 #+end_src
 
 
@@ -216,13 +308,15 @@ From [[https://github.com/robbert-vdh/dotfiles/blob/282b5393f54ecea91c8ad004cdf4
   (setq vertico-count 10))
 
 (use-package! corfu
-  :init
-  (global-corfu-mode)
+  ;:config
+  ;(global-corfu-mode)
   :custom
   (corfu-auto t)
   (corfu-cycle t)
   (corfu-auto-delay 0.5)
-  )
+)
+;(after! corfu
+;  (global-corfu-mode))
 
 #+end_src
 
@@ -382,8 +476,8 @@ Some key bindings I am used to
 ;; Use C-u, C-d also in insert mode
 (global-set-key (kbd "C-u") nil)
 (global-set-key (kbd "C-d") nil)
-(global-set-key (kbd "C-u") 'evil-scroll-up)
-(global-set-key (kbd "C-d") 'evil-scroll-down)
+;(global-set-key (kbd "C-u") 'evil-scroll-up)
+;(global-set-key (kbd "C-d") 'evil-scroll-down)
 (global-set-key (kbd "C-e") 'move-end-of-line)
 (global-set-key (kbd "s-/") 'evilnc-comment-or-uncomment-lines)
 
@@ -1238,7 +1332,7 @@ From https://emacs.stackexchange.com/questions/10504/understanding-scheduled-in-
 (setq org-agenda-files '("~/Dropbox/org/"))
 
 (after! org
-    (setq! +org-capture-todo-file (expand-file-name "todo.org" org-directory)
+    (setopt +org-capture-todo-file (expand-file-name "todo.org" org-directory)
            +org-capture-projects-file (expand-file-name "projects.org" org-directory)
            +org-capture-notes-file (expand-file-name "notes.org" org-directory)
            +org-capture-journal-file (expand-file-name "journal.org" org-directory)
@@ -1378,7 +1472,7 @@ https://orgmode.org/worg/org-tutorials/org-google-sync.html
   (setq org-icalendar-timezone "Europe/London")
   (setq org-icalendar-combined-agenda-file "~/Dropbox/org/export.ics") ;; See ~/.doom.d/bin/export_calendar
   ;; Add scheduled and deadline to calendar
-  (setq! org-icalendar-include-todo t
+  (setopt org-icalendar-include-todo t
          org-icalendar-use-deadline '(event-if-todo event-if-not-todo todo-due)
          org-icalendar-use-scheduled '(event-if-todo event-if-not-todo todo-start))
   ;;; define tags that should be excluded
@@ -1658,7 +1752,7 @@ To view pdfs first time need to:
 ** Config
 Workaround for new emacs/doom not automatically setting the correct mode for LaTex on startup (see [[https://github.com/doomemacs/doomemacs/issues/8191][issue]]).
 #+begin_src emacs-lisp
-(setq major-mode-remap-alist major-mode-remap-defaults)
+;(setq major-mode-remap-alist major-mode-remap-defaults)
 #+end_src
 Setup
 #+begin_src emacs-lisp
@@ -1883,13 +1977,13 @@ and end of line for latex
 Testing both chatgpt-shell (for chat sessions) and GPTel (for integration)
 ** keybindings
 #+begin_src emacs-lisp
-(map! :leader
-      (:prefix ("l" . "LLM")
-       :desc "Chatgpt shell" "c" #'chatgpt-shell
-       :desc "GPTel Menu" "g" #'gptel-menu
-       :desc "GPTel Send" "s" #'gptel-send
-       :desc "GPTel Quick" "q" #'gptel)
-)
+;; (map! :leader
+;;       (:prefix ("l" . "LLM")
+;;        :desc "Chatgpt shell" "c" #'chatgpt-shell
+;;        :desc "GPTel Menu" "g" #'gptel-menu
+;;        :desc "GPTel Send" "s" #'gptel-send
+;;        :desc "GPTel Quick" "q" #'gptel)
+;; )
 #+end_src
 
 ** chatgpt-shell
@@ -1911,25 +2005,31 @@ Stole this from [[https://github.com/dylanbmorgan/xxh-plugin-prerun-dotfiles/tre
 Pretty mindblowing demo: [[https://www.youtube.com/watch?v=bsRnh_brggM]]
 
 Extend the following to allow choice between Ollama (select a model that runs fast on M1 macs) and deepseek (existing config)
+#+begin_src emacs-lisp
+(getenv "ZAI_API_KEY")
+#+end_src
 
 #+begin_src emacs-lisp
-(use-package! gptel
+(after! gptel ;(use-package! gptel
   :config
-  ;(setq gptel-log-level 'debug)
-  ;(setq gptel-track-media t)
-  ;; Web Search
-  (setq gptel-tools
-      (list (gptel-make-tool
-             :name "$web_search"
-             :function (lambda (&optional search_result)
-                         (json-serialize
-                          `(:search_result ,search_result)))
-             :description "Moonshot builtin web search. Only usable by moonshot model (kimi), ignore this if you are not."
-             :args '((:name "search_result" :type object :optional t))
-             :category "web")))
-  ;; Set up multiple backends
   (setq gptel-backends
         (list
+          (gptel-make-openai "Zai"
+           :host "api.z.ai"
+           :protocol "https"
+           :endpoint "/api/paas/v4/chat/completions"
+           :key (or (getenv "ZAI_API_KEY")
+                    "your-deepseek-api-key-here")
+           :models '(
+                     GLM-5.2
+              GLM-5.1
+              GLM-4.7
+              GLM-4.5-air)
+           ;:models '(kimi-latest kimi-k2-0711-preview)
+           :stream t
+           ;; :request-params '(:tools [(:type "builtin_function" :function (:name "$web_search"))])
+         )
+
           (gptel-make-openai "Moonshot"
            :host "api.moonshot.ai"
            :key (or (getenv "KIMI_API_KEY")
@@ -1951,10 +2051,26 @@ Extend the following to allow choice between Ollama (select a model that runs fa
            :models '("llama3.2:1b" "llama3.2:3b" "phi3:mini" "qwen2.5:0.5b")
            :stream t)))
 
+    ;; Only expose the web-search tool stub in actual gptel chat buffers using Moonshot.
+  (defun my/gptel-set-backend-tools ()
+    (if (and gptel-backend
+             (string= (gptel-backend-name gptel-backend) "Moonshot"))
+        (setq-local gptel-tools
+                    (list (gptel-make-tool
+                           :name "$web_search"
+                           :function (lambda (&optional search_result)
+                                       (json-serialize `(:search_result ,search_result)))
+                           :description "Moonshot builtin web search."
+                           :args '((:name "search_result" :type object :optional t))
+                           :category "web")))
+      (setq-local gptel-tools nil)))
+
+  (add-hook 'gptel-mode-hook #'my/gptel-set-backend-tools)
+
   ;; Set default backend (can be changed with gptel-set-backend)
   (setq gptel-backend (car gptel-backends))
   (setq gptel-default-mode 'org-mode)
-
+  (setq gptel-include-reasoning "*gptel-reasoning*")
   ;(setq gptel-include-reasoning f)
   ;; Set default model based on backend
   (defun my/gptel-set-default-model ()
@@ -1962,6 +2078,9 @@ Extend the following to allow choice between Ollama (select a model that runs fa
     (cond
      ((string= (gptel-backend-name gptel-backend) "Moonshot")
       (setq gptel-model 'kimi-k2.7-code)
+      )
+     ((string= (gptel-backend-name gptel-backend) "Zai")
+      (setq gptel-model 'GLM-5.2)
       )
      ((string= (gptel-backend-name gptel-backend) "DeepSeek")
       (setq gptel-model 'deepseek-v4-pro)
@@ -1973,30 +2092,40 @@ Extend the following to allow choice between Ollama (select a model that runs fa
 
   (my/gptel-set-default-model)
 
-  (setq gptel--system-message "You are an expert AI assistant specialized living in Emacs.
-    You are an expert AI assistant specialized in:
-    1. Low-level programming and systems programming
-    2. ML internals, optimization, and debugging
-    3. Curve generation methods, GCAD
-    4. Optimization methods
-    5. Mathematical reasoning and numerical methods
+  ;; Keybindings
+  (define-key gptel-mode-map (kbd "C-c C-c") 'my/gptel-send-context-aware)
+  (define-key gptel-mode-map (kbd "C-c C-b") 'my/gptel-switch-backend)
 
-    Guidelines:
-    - Provide concise, technical answers with code examples when relevant
-    - Answer the question, do not expand freely if not asked to
-    - Focus on practical solutions for system-level work
-    - Suggest simple solutions if they exist (e.g. not a deep network if regression is sufficient)
-    - Use mathematical notation when appropriate
-    - If relevant to the context, root your answers in existing computer graphics and ML literature
-    - When generating Jupyter Python code blocks inside an org document, always use `#+BEGIN_SRC jupyter-python :session py` for the block definition, unless otherwise specified
-    - Don't use typing when writing Python code, unless requested
-    ")
+  
+  (setq gptel-directives
+        '((default . "You are a large language model living in Emacs and a helpful   assistant. Respond concisely.")
+          (coding . "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt or note.")
+          (python . "You are a large language model and an expert Python programmer. Don't use typing in your code and respond to the questions carefully and concisely.")
+          (writing . "You are a large language model and a writing assistant. Respond concisely.")
+          (emacs . "You are an expert elisp and emacs customization, particularly using Doom emacs. Respond concisely.")
+          (chat . "You are a large language model and a conversation partner. Respond concisely.")
+          (review . "Review the following code/text. Point out bugs, style issues and improvements concisely.")
+          (math . "You are an expert in numerical methods, optimization and curve generation. Use math notation.")
+        )
+  )
+
+  ;; Keep your original default behavior when no directive is chosen
+  (setq gptel--system-message (alist-get 'default gptel-directives))
+
+  (gptel-make-preset 'coding-only
+    :description "Zai GLM-5.2 with coding directive"
+    :backend "Zai"
+    :model 'GLM-5.2
+    :system-message "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt or note"
+    
+  ) 
 
   ;; Optional: Customize other settings
   ;; (setq gptel-temperature 0.7
   ;;       gptel-max-tokens 4096
   ;;       gptel-system-message "You are a helpful AI assistant.")
 )
+
 
 (defun my/gptel-switch-backend ()
   "Interactively switch between GPTel backends."
@@ -2018,11 +2147,8 @@ Extend the following to allow choice between Ollama (select a model that runs fa
    ((org-at-heading-p) (gptel-send))
    (t (call-interactively 'org-ctrl-c-ctrl-c))))
 
-;; Keybindings
-(define-key gptel-mode-map (kbd "C-c C-c") 'my/gptel-send-context-aware)
-(define-key gptel-mode-map (kbd "C-c C-b") 'my/gptel-switch-backend)
-
 #+end_src
+
 
 ** Disable enter for response
 #+begin_src emacs-lisp
@@ -2045,6 +2171,12 @@ Extend the following to allow choice between Ollama (select a model that runs fa
 
 #+end_src
 
+** Testing auto commit messages with gptel
+#+begin_src emacs-lisp
+;; (use-package gptel-magit
+;;   :ensure t
+;;   :hook (magit-mode . gptel-magit-install))
+#+end_src
 * Coding
 #+begin_src emacs-lisp
 (setq flycheck-checker-error-threshold 2500)
@@ -2244,6 +2376,7 @@ Some links in regard:
 ; https://github.com/emacs-jupyter/jupyter/issues/306
 (after! org
         ; (require 'ob-jupyter)
+        (require 'org-tempo) ; Requied for <el
         (org-babel-do-load-languages
         'org-babel-load-languages
         '((emacs-lisp . t)
@@ -2251,7 +2384,7 @@ Some links in regard:
         (octave . t)
         (jupyter . t)))
         (setq org-babel-default-header-args:jupyter-python '((:async . "no")
-                                                             (:kernel . "python3")
+                                                             (:kernel . "calligraph")
                                                              (:var . "orgdir=(file-name-directory (buffer-file-name))")
                                                              ))
 )
@@ -2591,26 +2724,76 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 #+end_src
 
 ** Completion
+*** (TESTING) minuet
+#+begin_src emacs-lisp
+(use-package minuet
+    :bind
+    (("M-y" . #'minuet-complete-with-minibuffer) ;; use minibuffer for completion
+     ("M-i" . #'minuet-show-suggestion) ;; use overlay for completion
+     ("C-c m" . #'minuet-configure-provider)
+     :map minuet-active-mode-map
+     ;; These keymaps activate only when a minuet suggestion is displayed in the current buffer
+     ("M-p" . #'minuet-previous-suggestion) ;; invoke completion or cycle to next completion
+     ("M-n" . #'minuet-next-suggestion) ;; invoke completion or cycle to previous completion
+     ("M-A" . #'minuet-accept-suggestion) ;; accept whole completion
+     ;; Accept the first line of completion, or N lines with a numeric-prefix:
+     ;; e.g. C-u 2 M-a will accepts 2 lines of completion.
+     ("M-a" . #'minuet-accept-suggestion-line)
+     ("M-e" . #'minuet-dismiss-suggestion))
+    :init
+    (add-hook 'prog-mode-hook #'minuet-auto-suggestion-mode)
+    :config
+    (setq minuet-provider 'openai-fim-compatible)
+    (setq minuet-auto-suggestion-throttle-delay 1.5) ;; Increase to reduce costs and avoid rate limits
+    (setq minuet-auto-suggestion-debounce-delay 0.6) ;; Increase to reduce costs and avoid rate limits
+    (setq minuet-context-window 256)
+    
+    (plist-put minuet-openai-fim-compatible-options :end-point "https://api.deepseek.com/beta/completions")
+    (plist-put minuet-openai-fim-compatible-options :api-key "DEEPSEEK_API_KEY")
+    (plist-put minuet-openai-fim-compatible-options :model "deepseek-v4-flash")
+
+    (minuet-set-optional-options minuet-openai-fim-compatible-options :max_tokens 56)
+    (minuet-set-optional-options minuet-openai-fim-compatible-options :top_p 0.9))
+#+end_src
 *** Ty for Python priority
 Based on this [[https://www.reddit.com/r/emacs/comments/1pkan2e/yet_another_post_about_eglot_python_ruff_lsp/][reddit post]] using [[https://github.com/joaotavora/rassumfrassum][rassumfrassum]]
 #+begin_src emacs-lisp
-(with-eval-after-load 'eglot
-  (add-to-list 'eglot-server-programs
+(use-package! eglot
+  :config
+   (setq
+         ;eglot-autoreconnect nil
+         eglot-max-file-watches 1000
+         eglot-watch-files-outside-project-root nil)
+
+   (add-to-list 'eglot-server-programs
                '(python-base-mode . ("rass" "python") ))
-  )
+)
+
+;; (with-eval-after-load 'eglot
+;;   (add-to-list 'eglot-server-programs
+;;                '(python-base-mode . ("rass" "python") ))
+;;   )
+
 
 (add-hook 'python-base-mode-hook
           (lambda ()
             (eglot-ensure)
-            (eglot-inlay-hints-mode -1)
             (add-hook 'after-save-hook 'eglot-format nil t)))
+
+; Inlay hints are annoying
+(add-hook 'eglot-managed-mode-hook (lambda () (eglot-inlay-hints-mode -1)))
+
 #+end_src
 
+Trying to make eglot [[https://github.com/jdtsmith/eglot-booster][less sluggish]]
+
+#+begin_src emacs-lisp
+(use-package eglot-booster
+	:after eglot
+	:config	(eglot-booster-mode))
+#+end_src
 **** NOTES
 For ty to work we need to install it for each active environment. It will detect the environment used through the ~conda~ package (~+conda~ in the python lang entry of init).
-*** Eglot type hints seem to suck
-would like to keep args hints (maybe) but types... urgh
-
 
 ** DAP MODE (Debugging)
 #+begin_src emacs-lisp

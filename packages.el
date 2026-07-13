@@ -5,6 +5,7 @@
 ;; on the command line, then restart Emacs for the changes to take effect -- or
 ;; use 'M-x doom/reload'.
 
+;(package! corfu)
 
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;(package! some-package)
@@ -59,6 +60,17 @@
 (package! zmq
    :recipe (:host github :repo "nnicandro/emacs-zmq"))
 
+(unpin! gptel)
+(package! gptel
+:recipe (:host github :repo "karthink/gptel"))
+
+;; Too buggy to be useful
+(unpin! ob-gptel)
+(package! ob-gptel
+  :recipe (:host github :repo "bramboomen/ob-gptel" :branch "fix-callback"))
+
+(package! eglot-booster
+:recipe (:host github :repo "jdtsmith/eglot-booster"))
 
 ;; (use-package jupyter
 ;;   :demand t
@@ -71,7 +83,7 @@
 ;;     :recipe (:host github :repo "tmurph/jupyter" :branch "devel")) ; :branch "next"))
 
 (package! chatgpt-shell)
-(package! gptel)
+(package! minuet)
 
 ;; (package! polymode)
 ;; (package! poly-org)
@@ -107,7 +119,7 @@
 ;; (package! dimmer)
 
 (unpin! dap-mode)
-(package! magit-section)
+;(package! magit-section)
 (package! lsp-ui)
 (package! dap-mode)
 (package! clang-format)
@@ -121,6 +133,9 @@
 (package! org-make-toc)
 
 (package! polymode)
+
+;(package! gptel-magit)
+  
 ;;
 ;; ;(package! realgud-lldb)
 
