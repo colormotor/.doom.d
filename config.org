@@ -2788,9 +2788,9 @@ Based on this [[https://www.reddit.com/r/emacs/comments/1pkan2e/yet_another_post
 Trying to make eglot [[https://github.com/jdtsmith/eglot-booster][less sluggish]]
 
 #+begin_src emacs-lisp
-(use-package eglot-booster
-	:after eglot
-	:config	(eglot-booster-mode))
+;; (use-package eglot-booster
+;; 	:after eglot
+;; 	:config	(eglot-booster-mode))
 #+end_src
 **** NOTES
 For ty to work we need to install it for each active environment. It will detect the environment used through the ~conda~ package (~+conda~ in the python lang entry of init).
