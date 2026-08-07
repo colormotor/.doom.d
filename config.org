@@ -301,23 +301,34 @@ From https://tecosaur.github.io/emacs-config/config.html
 ;; (package! company :disable t)
 #+end_src
 
-**** Cofu
+**** Corfu
 From [[https://github.com/robbert-vdh/dotfiles/blob/282b5393f54ecea91c8ad004cdf417b6e1ad24d2/modules/emacs/doom/config.org#corfu][here]]:
 #+begin_src emacs-lisp
 (after! vertico
   (setq vertico-count 10))
 
-(use-package! corfu
-  ;:config
-  ;(global-corfu-mode)
-  :custom
-  (corfu-auto t)
-  (corfu-cycle t)
-  (corfu-auto-delay 0.5)
-)
+;; (use-package! corfu
+;;   ;:config
+;;   ;(global-corfu-mode)
+;;   :custom
+;;   (corfu-auto t)
+;;   (corfu-cycle t)
+;;   (corfu-auto-delay 0.5)
+;; )
 ;(after! corfu
 ;  (global-corfu-mode))
-
+(after! corfu
+  ;; Preselect first candidate so TAB immediately has something to insert
+  (setq corfu-preselect 'first
+        corfu-auto-delay 0.1)  ; popup is up before you reach for TAB
+  ;; setup tab completion 
+  ;; need to map to specify insert mode or it gets overidden
+  (map! :map corfu-map
+        :i "TAB"     #'corfu-insert   ; char 9 slot
+        :i [tab]     #'corfu-insert   ; <tab> function-key slot (GUI)
+        :i "<up>"    #'corfu-previous
+        :i "<down>"  #'corfu-next))
+)
 #+end_src
 
 
@@ -2014,6 +2025,15 @@ Extend the following to allow choice between Ollama (select a model that runs fa
   :config
   (setq gptel-backends
         (list
+         (gptel-make-openai "Moonshot"
+           :host "api.moonshot.ai"
+           :key (or (getenv "KIMI_API_KEY")
+                    "your-deepseek-api-key-here")
+           :models '(kimi-k3 kimi-k2.7-code kimi-k2.6)
+           ;:models '(kimi-latest kimi-k2-0711-preview)
+           :stream t
+           :request-params '(:tools [(:type "builtin_function" :function (:name "$web_search"))])
+         )
           (gptel-make-openai "Zai"
            :host "api.z.ai"
            :protocol "https"
@@ -2028,16 +2048,6 @@ Extend the following to allow choice between Ollama (select a model that runs fa
            ;:models '(kimi-latest kimi-k2-0711-preview)
            :stream t
            ;; :request-params '(:tools [(:type "builtin_function" :function (:name "$web_search"))])
-         )
-
-          (gptel-make-openai "Moonshot"
-           :host "api.moonshot.ai"
-           :key (or (getenv "KIMI_API_KEY")
-                    "your-deepseek-api-key-here")
-           :models '(kimi-k2.7-code kimi-k2.6)
-           ;:models '(kimi-latest kimi-k2-0711-preview)
-           :stream t
-           :request-params '(:tools [(:type "builtin_function" :function (:name "$web_search"))])
          )
          (gptel-make-openai "DeepSeek"
            :host "api.deepseek.com"
@@ -2077,7 +2087,7 @@ Extend the following to allow choice between Ollama (select a model that runs fa
     "Set default model based on current backend."
     (cond
      ((string= (gptel-backend-name gptel-backend) "Moonshot")
-      (setq gptel-model 'kimi-k2.7-code)
+      (setq gptel-model 'kimi-k3)
       )
      ((string= (gptel-backend-name gptel-backend) "Zai")
       (setq gptel-model 'GLM-5.2)
@@ -2105,7 +2115,7 @@ Extend the following to allow choice between Ollama (select a model that runs fa
           (emacs . "You are an expert elisp and emacs customization, particularly using Doom emacs. Respond concisely.")
           (chat . "You are a large language model and a conversation partner. Respond concisely.")
           (review . "Review the following code/text. Point out bugs, style issues and improvements concisely.")
-          (math . "You are an expert in numerical methods, optimization and curve generation. Use math notation.")
+          (math . "You are an expert in numerical methods, optimization, graph theory and curve generation. You are also an expert Python progammer. Respond to the questions carefully and concisely.")
         )
   )
 
@@ -2199,26 +2209,24 @@ Extend the following to allow choice between Ollama (select a model that runs fa
 #+end_src
 
 ** Polymode
-*** Enable org/md comments in Python
-Slop code written by ChatGPT. Allows to write comments that get fontified with the syntax
+*** Enable org/md comments in Python 
+
+Using bots to try getting org-fontication inside triple quote comments of these kinds
 #+begin_example
-#%% [org]
-'''
+"""org
 Some org mode stuff
-'''
+"""
 #+end_example
 or
 #+begin_example
-#%% [md]
-'''
-Some MD stuff
-'''
+"""org
+Some org mode stuff
+"""
 #+end_example
 
-#+begin_src emacs-lisp
-;;; --- Compact polymode for [org] + [md] cells in Python ---
 
-;; Org submode without indentation (only inside islands)
+#+begin_src emacs-lisp
+;;; --- Optional: smoother yasnippet interaction (tiny + DRY) ---
 (define-derived-mode org-noindent-mode org-mode "OrgNoIndent"
   (setq-local org-adapt-indentation nil
               org-startup-indented nil
@@ -2230,91 +2238,93 @@ Some MD stuff
 (use-package! polymode
   :defer t
   :config
-  ;; Hosts
-  (define-hostmode poly-python-hostmode    :mode 'python-mode)
-  (define-hostmode poly-python-ts-hostmode :mode 'python-ts-mode)
+  (require 'org)
 
-  ;; ---- Helpers (DRY) ----
-  (defun my/poly--build-head (tags)
-    "Build head matcher: '#%% [TAGS]' (+ optional blanks) + opening '''/\"\"\"."
-    (concat
-     "^[ \t]*# ?%%[ \t]*\\[" (regexp-opt tags) "\\][^\n\r]*\\(?:\n\\|\r\n\\)"
-     "\\(?:[ \t]*\\(?:\n\\|\r\n\\)\\)*"
-     "[ \t]*\\(?:\"\"\"\\|'''\\)[ \t]*\\(?:\\n\\|\\r\\n\\)?"))
+  (defconst my/poly-org-head
+    "^[ \t]*\\(?:\"\"\"\\|'''\\)[ \t]*org[ \t]*$")
 
-  (defconst my/poly--tail "^[ \t]*\\(?:\"\"\"\\|'''\\)[ \t]*$") ; closing quotes
-  (defconst my/poly--enable-pattern "^[ \t]*# ?%%[ \t]*\\[\\(org\\|md\\|markdown\\)\\]")
+  (defconst my/poly-org-tail
+    "^[ \t]*\\(?:\"\"\"\\|'''\\)[ \t]*$")
 
-  ;; ---- Innermodes ----
+  (define-hostmode poly-python-hostmode
+    :mode 'python-mode)
+
+  (define-hostmode poly-python-ts-hostmode
+    :mode 'python-ts-mode)
+
   (define-innermode poly-python-org-innermode
     :mode 'org-noindent-mode
-    :head-matcher (my/poly--build-head '("org"))
-    :tail-matcher my/poly--tail
-    :head-mode 'host :tail-mode 'host)
+    :head-matcher my/poly-org-head
+    :tail-matcher my/poly-org-tail
+    :head-mode 'host
+    :tail-mode 'host)
 
-  (define-innermode poly-python-md-innermode
-    :mode 'markdown-mode
-    :head-matcher (my/poly--build-head '("md" "markdown"))
-    :tail-matcher my/poly--tail
-    :head-mode 'host :tail-mode 'host)
-
-  ;; ---- Single polymode that includes BOTH innermodes ----
-  (define-polymode poly-python+jupy-mixed
+  (define-polymode poly-python+org-mode
     :hostmode 'poly-python-hostmode
-    :innermodes '(poly-python-org-innermode poly-python-md-innermode))
-  (define-polymode poly-python-ts+jupy-mixed
-    :hostmode 'poly-python-ts-hostmode
-    :innermodes '(poly-python-org-innermode poly-python-md-innermode))
+    :innermodes '(poly-python-org-innermode))
 
-  ;; Auto-enable only when buffer contains a matching header.
-  ;; => bare "#%%" or "# %%" remain plain Python (code by default).
-  (defun my/py-maybe-enable-poly-jupy ()
+  (define-polymode poly-python-ts+org-mode
+    :hostmode 'poly-python-ts-hostmode
+    :innermodes '(poly-python-org-innermode))
+
+  ;; Auto-enable when buffer contains '''org or """org
+  (defun my/py-maybe-enable-poly-org ()
     (when (save-excursion
             (save-restriction
               (widen) (goto-char (point-min))
-              (re-search-forward my/poly--enable-pattern 4000 t)))
+              (re-search-forward my/poly-org-head nil t)))
       (if (derived-mode-p 'python-ts-mode)
-          (poly-python-ts+jupy-mixed)
-        (poly-python+jupy-mixed))))
+          (poly-python-ts+org-mode)
+        (poly-python+org-mode)))))
 
-  (add-hook 'python-mode-hook    #'my/py-maybe-enable-poly-jupy)
-  (add-hook 'python-ts-mode-hook #'my/py-maybe-enable-poly-jupy))
+  ;; (add-hook 'python-mode-hook    #'my/py-maybe-enable-poly-org)
+  ;; (add-hook 'python-ts-mode-hook #'my/py-maybe-enable-poly-org)
 
-;;; --- Optional: smoother yasnippet interaction (tiny + DRY) ---
-(with-eval-after-load 'yasnippet
-  (defvar-local my/poly-lock-was-on nil)
-  (add-hook 'yas-before-expand-snippet-hook
-            (lambda () (when (boundp 'poly-lock-mode)
-                         (setq my/poly-lock-was-on poly-lock-mode)
-                         (when poly-lock-mode (poly-lock-mode -1)))))
-  (add-hook 'yas-after-exit-snippet-hook
-            (lambda () (when (and (boundp 'poly-lock-mode) my/poly-lock-was-on)
-                         (poly-lock-mode 1)))))
+  ;; FIX: Restore Python's font-lock behavior hijacked by org-mode
+  ;; (defun my/poly-python-restore-font-lock ()
+  ;;   "Restore python font-lock defaults and region functions."
+  ;;   (setq font-lock-defaults
+  ;;         (with-temp-buffer (python-mode) font-lock-defaults))
+  ;;   (font-lock-set-defaults)
+  ;;   (setq font-lock-fontify-region-function #'font-lock-default-fontify-region)
+  ;;   (font-lock-flush))
+
+  ;; (add-hook 'poly-python+org-mode-hook #'my/poly-python-restore-font-lock))
+
+;; (with-eval-after-load 'yasnippet
+;;   (defvar-local my/poly-lock-was-on nil)
+;;   (add-hook 'yas-before-expand-snippet-hook
+;;             (lambda () (when (boundp 'poly-lock-mode)
+;;                          (setq my/poly-lock-was-on poly-lock-mode)
+;;                          (when poly-lock-mode (poly-lock-mode -1)))))
+;;   (add-hook 'yas-after-exit-snippet-hook
+;;             (lambda () (when (and (boundp 'poly-lock-mode) my/poly-lock-was-on)
+;;                          (poly-lock-mode 1)))))
 
 #+end_src
 
 This does not play well with Yasnippet since fontification starts early
 #+begin_src emacs-lisp
 ;;; Pause poly/jit/font-lock while yas expands (prevents lockups)
-(with-eval-after-load 'yasnippet
-  (defun my/yas--with-fontification-paused (fn &rest args)
-    (let* ((had-poly (and (boundp 'poly-lock-mode) poly-lock-mode))
-           (had-jit  (and (fboundp 'jit-lock-mode)
-                          (boundp 'jit-lock-mode) (symbol-value 'jit-lock-mode)))
-           (had-fl   font-lock-mode))
-      (unwind-protect
-          (progn
-            (when had-poly (poly-lock-mode -1))
-            (when had-jit  (jit-lock-mode -1))
-            (when had-fl   (font-lock-mode -1))
-            (apply fn args))
-        (when had-fl   (font-lock-mode 1))
-        (when (fboundp 'jit-lock-mode) (when had-jit  (jit-lock-mode 1)))
-        (when (boundp 'poly-lock-mode) (when had-poly (poly-lock-mode 1))))))
+;; (with-eval-after-load 'yasnippet
+;;   (defun my/yas--with-fontification-paused (fn &rest args)
+;;     (let* ((had-poly (and (boundp 'poly-lock-mode) poly-lock-mode))
+;;            (had-jit  (and (fboundp 'jit-lock-mode)
+;;                           (boundp 'jit-lock-mode) (symbol-value 'jit-lock-mode)))
+;;            (had-fl   font-lock-mode))
+;;       (unwind-protect
+;;           (progn
+;;             (when had-poly (poly-lock-mode -1))
+;;             (when had-jit  (jit-lock-mode -1))
+;;             (when had-fl   (font-lock-mode -1))
+;;             (apply fn args))
+;;         (when had-fl   (font-lock-mode 1))
+;;         (when (fboundp 'jit-lock-mode) (when had-jit  (jit-lock-mode 1)))
+;;         (when (boundp 'poly-lock-mode) (when had-poly (poly-lock-mode 1))))))
 
-  ;; Wrap both yas entry points
-  (advice-add 'yas-expand-snippet :around #'my/yas--with-fontification-paused)
-  (advice-add 'yas-insert-snippet :around #'my/yas--with-fontification-paused))
+;;   ;; Wrap both yas entry points
+;;   (advice-add 'yas-expand-snippet :around #'my/yas--with-fontification-paused)
+;;   (advice-add 'yas-insert-snippet :around #'my/yas--with-fontification-paused))
 
 #+end_src
 ** Jupytext setup (broken)
@@ -2725,6 +2735,7 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 
 ** Completion
 *** (TESTING) minuet
+A copilot-like LLM driven completion engine
 #+begin_src emacs-lisp
 (use-package minuet
     :bind
@@ -2744,16 +2755,41 @@ If this is the case, formatting will extend to all subdirectories. To disable it
     (add-hook 'prog-mode-hook #'minuet-auto-suggestion-mode)
     :config
     (setq minuet-provider 'openai-fim-compatible)
-    (setq minuet-auto-suggestion-throttle-delay 1.5) ;; Increase to reduce costs and avoid rate limits
-    (setq minuet-auto-suggestion-debounce-delay 0.6) ;; Increase to reduce costs and avoid rate limits
-    (setq minuet-context-window 256)
-    
-    (plist-put minuet-openai-fim-compatible-options :end-point "https://api.deepseek.com/beta/completions")
-    (plist-put minuet-openai-fim-compatible-options :api-key "DEEPSEEK_API_KEY")
-    (plist-put minuet-openai-fim-compatible-options :model "deepseek-v4-flash")
+
+    (setq minuet-n-completions 1) ; recommended for Local LLM for resource saving
+    ;; I recommend beginning with a small context window size and incrementally
+    ;; expanding it, depending on your local computing power. A context window
+    ;; of 512, serves as an good starting point to estimate your computing
+    ;; power. Once you have a reliable estimate of your local computing power,
+    ;; you should adjust the context window to a larger value.
+    (setq minuet-context-window 512)
+    (plist-put minuet-openai-fim-compatible-options :end-point "http://localhost:11434/v1/completions")
+    ;; an arbitrary non-null environment variable as placeholder.
+    ;; For Windows users, TERM may not be present in environment variables.
+    ;; Consider using APPDATA instead.
+    (plist-put minuet-openai-fim-compatible-options :name "Ollama")
+    (plist-put minuet-openai-fim-compatible-options :api-key "TERM")
+    (plist-put minuet-openai-fim-compatible-options :model "qwen2.5-coder:1.5b-base")
 
     (minuet-set-optional-options minuet-openai-fim-compatible-options :max_tokens 56)
-    (minuet-set-optional-options minuet-openai-fim-compatible-options :top_p 0.9))
+
+    (setq minuet-auto-suggestion-debounce-delay 0.4) ;; Wait 400ms after you pause typing
+    (setq minuet-auto-suggestion-throttle-delay 0.8) ;; Limit how often requests fire
+
+    ;; Llama.cpp does not support the `suffix` option in FIM completion.
+    ;; Therefore, we must disable it and manually populate the special
+    ;; tokens required for FIM completion.
+    (minuet-set-nested-plist minuet-openai-fim-compatible-options nil :template :suffix)
+    (minuet-set-optional-options
+     minuet-openai-fim-compatible-options
+     :prompt
+     (defun minuet-llama-cpp-fim-qwen-prompt-function (ctx)
+         (format "<|fim_prefix|>%s\n%s<|fim_suffix|>%s<|fim_middle|>"
+                 (plist-get ctx :language-and-tab)
+                 (plist-get ctx :before-cursor)
+                 (plist-get ctx :after-cursor)))
+     :template)
+)
 #+end_src
 *** Ty for Python priority
 Based on this [[https://www.reddit.com/r/emacs/comments/1pkan2e/yet_another_post_about_eglot_python_ruff_lsp/][reddit post]] using [[https://github.com/joaotavora/rassumfrassum][rassumfrassum]]
