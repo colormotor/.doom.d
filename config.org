@@ -327,7 +327,7 @@ From [[https://github.com/robbert-vdh/dotfiles/blob/282b5393f54ecea91c8ad004cdf4
         :i "TAB"     #'corfu-insert   ; char 9 slot
         :i [tab]     #'corfu-insert   ; <tab> function-key slot (GUI)
         :i "<up>"    #'corfu-previous
-        :i "<down>"  #'corfu-next))
+        :i "<down>"  #'corfu-next)
 )
 #+end_src
 
