@@ -320,7 +320,7 @@ From [[https://github.com/robbert-vdh/dotfiles/blob/282b5393f54ecea91c8ad004cdf4
 (after! corfu
   ;; Preselect first candidate so TAB immediately has something to insert
   (setq corfu-preselect 'first
-        corfu-auto-delay 0.1)  ; popup is up before you reach for TAB
+        corfu-auto-delay 0.2)  ; popup is up before you reach for TAB
   ;; setup tab completion 
   ;; need to map to specify insert mode or it gets overidden
   (map! :map corfu-map
@@ -809,6 +809,12 @@ On mac some icons don't seem to workaround, this is a fix
 (with-eval-after-load 'org-modern
   (setq org-modern-star
         '("◉" "○" "●" "◈" "◇" "◆" "▸" "▹" "•")))
+#+end_src
+
+*** Issue, code blocks remain "executed" even if not
+#+begin_src emacs-lisp
+(after! org
+  (setq org-element-use-cache nil))
 #+end_src
 
 *** Issue: (autoload 'org-eldoc-get-src-lang "org-eldoc")
@@ -2016,9 +2022,6 @@ Stole this from [[https://github.com/dylanbmorgan/xxh-plugin-prerun-dotfiles/tre
 Pretty mindblowing demo: [[https://www.youtube.com/watch?v=bsRnh_brggM]]
 
 Extend the following to allow choice between Ollama (select a model that runs fast on M1 macs) and deepseek (existing config)
-#+begin_src emacs-lisp
-(getenv "ZAI_API_KEY")
-#+end_src
 
 #+begin_src emacs-lisp
 (after! gptel ;(use-package! gptel
@@ -2029,7 +2032,10 @@ Extend the following to allow choice between Ollama (select a model that runs fa
            :host "api.moonshot.ai"
            :key (or (getenv "KIMI_API_KEY")
                     "your-deepseek-api-key-here")
-           :models '(kimi-k3 kimi-k2.7-code kimi-k2.6)
+           :models '((kimi-k3 :capabilities (media tool-use json url)
+                              :mime-types
+	                      ("application/pdf" "image/jpeg" "image/png" "image/gif" "image/webp"))
+                      kimi-k2.7-code kimi-k2.6)
            ;:models '(kimi-latest kimi-k2-0711-preview)
            :stream t
            :request-params '(:tools [(:type "builtin_function" :function (:name "$web_search"))])
@@ -2062,18 +2068,48 @@ Extend the following to allow choice between Ollama (select a model that runs fa
            :stream t)))
 
     ;; Only expose the web-search tool stub in actual gptel chat buffers using Moonshot.
-  (defun my/gptel-set-backend-tools ()
-    (if (and gptel-backend
-             (string= (gptel-backend-name gptel-backend) "Moonshot"))
-        (setq-local gptel-tools
-                    (list (gptel-make-tool
-                           :name "$web_search"
-                           :function (lambda (&optional search_result)
-                                       (json-serialize `(:search_result ,search_result)))
-                           :description "Moonshot builtin web search."
-                           :args '((:name "search_result" :type object :optional t))
-                           :category "web")))
-      (setq-local gptel-tools nil)))
+  ;; (defun my/gptel-set-backend-tools ()
+  ;;   (if (and gptel-backend
+  ;;            (string= (gptel-backend-name gptel-backend) "Moonshot"))
+  ;;       (setq-local gptel-tools
+  ;;                   (list (gptel-make-tool
+  ;;                          :name "$web_search"
+  ;;                          :function (lambda (&optional search_result)
+  ;;                                      (json-serialize `(:search_result ,search_result)))
+  ;;                          :description "Moonshot builtin web search."
+  ;;                          :args '((:name "search_result" :type object :optional t))
+  ;;                          :category "web")))
+  ;;     (setq-local gptel-tools nil)))
+
+  (setq gptel-tools
+      (list
+       (gptel-make-tool
+             :name "$web_search"
+             :function (lambda (&optional search_result)
+                         (json-serialize
+                          `(:search_result ,search_result)))
+             :description "Moonshot builtin web search. Only usable by moonshot model (kimi), ignore this if you are not."
+             :args '((:name "search_result" :type object :optional t))
+             :category "web")
+       
+       ;; (gptel-make-tool
+       ;;  :name "$web_search"
+       ;;  :function #'+gptel-web-search
+       ;;  :description "Search the web and return the top results with URLs and \
+       ;;  snippets. Use for anything current, or any fact that needs a source."
+       ;;  :args '((:name "query" :type string :description "The search query."))
+       ;;  :category "web")
+       )
+    )
+  
+  ;; (unless (gptel-get-tool "$web_search")
+  ;;   (gptel-make-tool
+  ;;    :name "$web_search"
+  ;;    :function (lambda (&optional search_result)
+  ;;                (json-serialize `(:search_result ,search_result)))
+  ;;    :description "Moonshot builtin web search (echo args back)."
+  ;;    :args '((:name "search_result" :type object :optional t))
+  ;;    :category "web")))
 
   (add-hook 'gptel-mode-hook #'my/gptel-set-backend-tools)
 
@@ -2081,6 +2117,7 @@ Extend the following to allow choice between Ollama (select a model that runs fa
   (setq gptel-backend (car gptel-backends))
   (setq gptel-default-mode 'org-mode)
   (setq gptel-include-reasoning "*gptel-reasoning*")
+  (setq gptel-track-media t)
   ;(setq gptel-include-reasoning f)
   ;; Set default model based on backend
   (defun my/gptel-set-default-model ()
@@ -2211,7 +2248,7 @@ Extend the following to allow choice between Ollama (select a model that runs fa
 ** Polymode
 *** Enable org/md comments in Python 
 
-Using bots to try getting org-fontication inside triple quote comments of these kinds
+Using bot overlords to try getting org-fontication inside triple quote comments of these kinds
 #+begin_example
 """org
 Some org mode stuff
@@ -2224,109 +2261,127 @@ Some org mode stuff
 """
 #+end_example
 
-
 #+begin_src emacs-lisp
-;;; --- Optional: smoother yasnippet interaction (tiny + DRY) ---
-(define-derived-mode org-noindent-mode org-mode "OrgNoIndent"
-  (setq-local org-adapt-indentation nil
-              org-startup-indented nil
-              electric-indent-inhibit t
-              indent-line-function #'indent-relative)
-  (ignore-errors (org-indent-mode -1))
-  (electric-indent-local-mode -1))
-
-(use-package! polymode
-  :defer t
+(use-package polymode
+  :ensure t
   :config
-  (require 'org)
-
-  (defconst my/poly-org-head
-    "^[ \t]*\\(?:\"\"\"\\|'''\\)[ \t]*org[ \t]*$")
-
-  (defconst my/poly-org-tail
-    "^[ \t]*\\(?:\"\"\"\\|'''\\)[ \t]*$")
-
-  (define-hostmode poly-python-hostmode
-    :mode 'python-mode)
-
-  (define-hostmode poly-python-ts-hostmode
-    :mode 'python-ts-mode)
-
-  (define-innermode poly-python-org-innermode
-    :mode 'org-noindent-mode
-    :head-matcher my/poly-org-head
-    :tail-matcher my/poly-org-tail
+  ;; (define-hostmode my/poly-python-hostmode
+  ;;   :mode (if (and (fboundp 'treesit-available-p) (treesit-available-p))
+  ;;             'python-ts-mode
+  ;;           'python-mode))
+  (define-hostmode my/poly-python-hostmode
+    :mode 'python-mode) 
+  (define-innermode my/poly-python-markdown-innermode
+    :mode 'markdown-mode
+    :name "Markdown Cell"
+    :head-matcher (rx bol ?# (0+ blank) "%%" (0+ blank)
+                      (? "[" (or "markdown" "md") "]")
+                      (* nonl) ?\n
+                      (0+ blank) (? (any "rR"))
+                      (or "\"\"\"" "'''") (* nonl) ?\n)
+    :tail-matcher (rx bol (0+ blank) (or "\"\"\"" "'''") (* nonl) ?\n)
     :head-mode 'host
-    :tail-mode 'host)
+    :tail-mode 'host
+    :head-adjust-face `(:background ,(doom-color 'bg-alt) :extend t)
+    :adjust-face nil)
 
-  (define-polymode poly-python+org-mode
-    :hostmode 'poly-python-hostmode
-    :innermodes '(poly-python-org-innermode))
+  (define-polymode my/poly-python-mode
+    :hostmode 'my/poly-python-hostmode
+    :innermodes '(my/poly-python-markdown-innermode))
 
-  (define-polymode poly-python-ts+org-mode
-    :hostmode 'poly-python-ts-hostmode
-    :innermodes '(poly-python-org-innermode))
+  ;; Guard: polymode re-runs the host mode during init; without this the
+  ;; hook can re-trigger the polymode recursively.
+  (defun my/poly-python-maybe-enable ()
+    (unless (bound-and-true-p polymode-mode)
+      (my/poly-python-mode)))
 
-  ;; Auto-enable when buffer contains '''org or """org
-  (defun my/py-maybe-enable-poly-org ()
-    (when (save-excursion
-            (save-restriction
-              (widen) (goto-char (point-min))
-              (re-search-forward my/poly-org-head nil t)))
-      (if (derived-mode-p 'python-ts-mode)
-          (poly-python-ts+org-mode)
-        (poly-python+org-mode)))))
-
-  ;; (add-hook 'python-mode-hook    #'my/py-maybe-enable-poly-org)
-  ;; (add-hook 'python-ts-mode-hook #'my/py-maybe-enable-poly-org)
-
-  ;; FIX: Restore Python's font-lock behavior hijacked by org-mode
-  ;; (defun my/poly-python-restore-font-lock ()
-  ;;   "Restore python font-lock defaults and region functions."
-  ;;   (setq font-lock-defaults
-  ;;         (with-temp-buffer (python-mode) font-lock-defaults))
-  ;;   (font-lock-set-defaults)
-  ;;   (setq font-lock-fontify-region-function #'font-lock-default-fontify-region)
-  ;;   (font-lock-flush))
-
-  ;; (add-hook 'poly-python+org-mode-hook #'my/poly-python-restore-font-lock))
-
-;; (with-eval-after-load 'yasnippet
-;;   (defvar-local my/poly-lock-was-on nil)
-;;   (add-hook 'yas-before-expand-snippet-hook
-;;             (lambda () (when (boundp 'poly-lock-mode)
-;;                          (setq my/poly-lock-was-on poly-lock-mode)
-;;                          (when poly-lock-mode (poly-lock-mode -1)))))
-;;   (add-hook 'yas-after-exit-snippet-hook
-;;             (lambda () (when (and (boundp 'poly-lock-mode) my/poly-lock-was-on)
-;;                          (poly-lock-mode 1)))))
-
+  :hook ((python-mode python-ts-mode) . my/poly-python-maybe-enable))
 #+end_src
 
-This does not play well with Yasnippet since fontification starts early
 #+begin_src emacs-lisp
-;;; Pause poly/jit/font-lock while yas expands (prevents lockups)
-;; (with-eval-after-load 'yasnippet
-;;   (defun my/yas--with-fontification-paused (fn &rest args)
-;;     (let* ((had-poly (and (boundp 'poly-lock-mode) poly-lock-mode))
-;;            (had-jit  (and (fboundp 'jit-lock-mode)
-;;                           (boundp 'jit-lock-mode) (symbol-value 'jit-lock-mode)))
-;;            (had-fl   font-lock-mode))
-;;       (unwind-protect
-;;           (progn
-;;             (when had-poly (poly-lock-mode -1))
-;;             (when had-jit  (jit-lock-mode -1))
-;;             (when had-fl   (font-lock-mode -1))
-;;             (apply fn args))
-;;         (when had-fl   (font-lock-mode 1))
-;;         (when (fboundp 'jit-lock-mode) (when had-jit  (jit-lock-mode 1)))
-;;         (when (boundp 'poly-lock-mode) (when had-poly (poly-lock-mode 1))))))
+;; ;;; Org/Markdown fontification inside python triple-quoted strings
 
-;;   ;; Wrap both yas entry points
-;;   (advice-add 'yas-expand-snippet :around #'my/yas--with-fontification-paused)
-;;   (advice-add 'yas-insert-snippet :around #'my/yas--with-fontification-paused))
+;; ;; ---- entry points (no deps; safe on python hooks before org loads) ----
+;; (defconst +py/poly-head-re
+;;   "^[ \t]*\\(?:[rR]\\)?\\(?:\"\"\"\\|'''\\)[ \t]*\\(?:org\\|markdown\\|md\\)[ \t]*$")
 
+;; (defun +py/poly-enable ()
+;;   "Fontify magic triple-quoted strings in this python buffer as org/markdown."
+;;   (interactive)
+;;   (require 'org) ; triggers the `after! org' block that defines the poly modes
+;;   (unless (fboundp 'poly-python+org-mode)
+;;     (user-error "polymode missing: add (package! polymode) to packages.el, then doom sync"))
+;;   (if (derived-mode-p 'python-ts-mode)
+;;       (poly-python-ts+org-mode)
+;;     (poly-python+org-mode)))
+
+;; (defun +py/poly-maybe-enable ()
+;;   (when (and (not (bound-and-true-p polymode-mode))
+;;              (save-excursion
+;;                (save-restriction
+;;                  (widen) (goto-char (point-min))
+;;                  (re-search-forward +py/poly-head-re nil t))))
+;;     (+py/poly-enable)))
+
+;; (add-hook 'python-mode-hook #'+py/poly-maybe-enable)
+;; (add-hook 'python-ts-mode-hook #'+py/poly-maybe-enable)
+
+;; ;; ---- chunk/host definitions (needs org loaded for keymap parent) ----
+;; (after! org
+;;   (require 'polymode)
+
+;;   ;; Org font-lock without Doom's org-mode-hook add-ons (org-modern, fragtog,
+;;   ;; appear, evil-org...), which misbehave inside narrowed chunk buffers.
+;;   ;; The buffer-local nil binding blocks the global org-mode-hook too
+;;   ;; (body runs before the deferred mode hooks fire).
+;;   (define-derived-mode poly-org-mode org-mode "PolyOrg"
+;;     (setq-local org-mode-hook nil)
+;;     (setq-local org-adapt-indentation nil
+;;                 org-startup-indented nil
+;;                 electric-indent-inhibit t
+;;                 indent-line-function #'indent-relative)
+;;     (electric-indent-local-mode -1)
+;;     (ignore-errors (org-indent-mode -1))
+;;     (define-key poly-org-mode-map (kbd "TAB") #'indent-relative)
+;;     (define-key poly-org-mode-map [tab] #'indent-relative))
+
+;;   (add-hook 'poly-org-mode-hook
+;;             (lambda () (when (bound-and-true-p yas-minor-mode)
+;;                          (yas-minor-mode -1))))
+
+;;   (defconst +py/poly-org-head-re
+;;     "^[ \t]*\\(?:[rR]\\)?\\(?:\"\"\"\\|'''\\)[ \t]*org[ \t]*$")
+;;   (defconst +py/poly-md-head-re
+;;     "^[ \t]*\\(?:[rR]\\)?\\(?:\"\"\"\\|'''\\)[ \t]*\\(?:markdown\\|md\\)[ \t]*$")
+;;   (defconst +py/poly-tail-re
+;;     "^[ \t]*\\(?:\"\"\"\\|'''\\)[ \t]*$")
+
+;;   (define-hostmode poly-python-hostmode :mode 'python-mode)
+;;   (define-hostmode poly-python-ts-hostmode :mode 'python-ts-mode)
+
+;;   (define-innermode +poly-py-org-innermode
+;;     :mode 'poly-org-mode
+;;     :head-matcher +py/poly-org-head-re
+;;     :tail-matcher +py/poly-tail-re
+;;     :head-mode 'host
+;;     :tail-mode 'host)
+
+;;   (define-innermode +poly-py-md-innermode
+;;     :mode (if (fboundp 'markdown-mode) 'markdown-mode 'text-mode)
+;;     :head-matcher +py/poly-md-head-re
+;;     :tail-matcher +py/poly-tail-re
+;;     :head-mode 'host
+;;     :tail-mode 'host)
+
+;;   (define-polymode poly-python+org-mode
+;;     :hostmode 'poly-python-hostmode
+;;     :innermodes '(+poly-py-org-innermode +poly-py-md-innermode))
+
+;;   (define-polymode poly-python-ts+org-mode
+;;     :hostmode 'poly-python-ts-hostmode
+;;     :innermodes '(+poly-py-org-innermode +poly-py-md-innermode)))
 #+end_src
+
 ** Jupytext setup (broken)
 #+begin_src emacs-lisp
 ;; (use-package! mmm-mode
@@ -2546,6 +2601,7 @@ with ~jupyter-execute-last~.
       (jupyter-eval-string last-executed-cell)
       (deactivate-mark)
       )))
+
 
 (defun jupyter-execute-last()
   (interactive)
