@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: # Set org document kernel
+# uuid: py-kernel
+# key: <k
+# --
+#+PROPERTY: header-args:jupyter-python :session py :kernel $0

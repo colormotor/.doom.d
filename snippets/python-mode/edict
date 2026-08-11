@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: edict
+# key: <ed
+# uuid: <ed
+# --
+
+from easydict import EasyDict as edict

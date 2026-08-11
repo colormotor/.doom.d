@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: pdb
+# key: <pb
+# uuid: <pb
+# --
+
+pdb.set_trace()

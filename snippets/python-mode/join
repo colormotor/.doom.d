@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: expanduser
+# key: <pj
+# uuid: <pj
+# --
+
+os.path.join($1)

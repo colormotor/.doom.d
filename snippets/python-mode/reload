@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: import reload
+# key: <rl
+# uuid: <rl
+# --
+
+from importlib import reload
+

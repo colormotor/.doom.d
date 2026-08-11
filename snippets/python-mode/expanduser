@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: expanduser
+# key: <pe
+# uuid: <pe
+# --
+
+os.path.expanduser($1)
