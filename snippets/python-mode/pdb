@@ -1,7 +1,6 @@
 # -*- mode: snippet -*-
-# name: pdb
-# key: <pb
-# uuid: <pb
+# name: 
+# key: trigger-key
+# condition: t
 # --
 
-pdb.set_trace()
