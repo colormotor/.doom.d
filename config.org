@@ -2574,6 +2574,21 @@ https://github.com/nnicandro/emacs-jupyter/issues/366#issuecomment-985730376
 (add-hook 'org-babel-after-execute-hook #'display-ansi-colors)
 #+end_src
 
+*** Debugging in org
+Debugging does not work in org mode, but it does in the REPL. Send code in current code cell to the REPL for debugging
+#+begin_src emacs-lisp
+(defun jupyter-send-block-to-repl (&optional no-pop)
+  "Send the src block at point to its Jupyter REPL (pdb-friendly)."
+  (interactive "P")
+  (let ((body (org-babel-expand-src-block
+               nil (org-babel-get-src-block-info 'no-eval))))
+    (unless body (user-error "Not in a source block"))
+    (jupyter-org-with-src-block-client
+     (jupyter-eval-string body)
+     (unless no-pop
+       (pop-to-buffer (oref jupyter-current-client buffer))))))
+#+end_src
+
 *** Spyder-like experience
 Here I try to tweak emacs jupyter to behave more like [[https://www.spyder-ide.org][Spyder]] (my second favourite) or VS codemirror_mode.
 
