@@ -2481,12 +2481,23 @@ This prevents 'wrong-type-argument wholenump nil' errors in newer Org versions."
 ;(org-element-put-property element :post-blank 1)
 #+end_src
 
+
 *** Setup popup position
 #+begin_src emacs-lisp
 (set-popup-rule! "^\\*jupyter-repl.*\\*" :side 'right :size .50 :vslot 2 :ttl nil :quit nil)
 #+end_src
 
 *** Workarounds
+**** Issue with repl getting stuck with pdb
+#+begin_src emacs-lisp
+(defun jupyter-repl-reset-scroll ()
+  "Force-recenter the Jupyter REPL buffer and clear display artifacts."
+  (interactive)
+  (when (derived-mode-p 'jupyter-repl-mode)
+    (set-window-start (selected-window) (point-max))
+    (recenter -1)
+    (redraw-display)))
+#+end_src
 **** Corfu + EIN
 Jupyter seems use EIN under the hood, which messes with corfu for completion:
 #+begin_src emacs-lisp
