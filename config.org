@@ -2262,40 +2262,40 @@ Some org mode stuff
 #+end_example
 
 #+begin_src emacs-lisp
-(use-package polymode
-  :ensure t
-  :config
-  ;; (define-hostmode my/poly-python-hostmode
-  ;;   :mode (if (and (fboundp 'treesit-available-p) (treesit-available-p))
-  ;;             'python-ts-mode
-  ;;           'python-mode))
-  (define-hostmode my/poly-python-hostmode
-    :mode 'python-mode) 
-  (define-innermode my/poly-python-markdown-innermode
-    :mode 'markdown-mode
-    :name "Markdown Cell"
-    :head-matcher (rx bol ?# (0+ blank) "%%" (0+ blank)
-                      (? "[" (or "markdown" "md") "]")
-                      (* nonl) ?\n
-                      (0+ blank) (? (any "rR"))
-                      (or "\"\"\"" "'''") (* nonl) ?\n)
-    :tail-matcher (rx bol (0+ blank) (or "\"\"\"" "'''") (* nonl) ?\n)
-    :head-mode 'host
-    :tail-mode 'host
-    :head-adjust-face `(:background ,(doom-color 'bg-alt) :extend t)
-    :adjust-face nil)
+;; (use-package polymode
+;;   :ensure t
+;;   :config
+;;   ;; (define-hostmode my/poly-python-hostmode
+;;   ;;   :mode (if (and (fboundp 'treesit-available-p) (treesit-available-p))
+;;   ;;             'python-ts-mode
+;;   ;;           'python-mode))
+;;   (define-hostmode my/poly-python-hostmode
+;;     :mode 'python-mode) 
+;;   (define-innermode my/poly-python-markdown-innermode
+;;     :mode 'markdown-mode
+;;     :name "Markdown Cell"
+;;     :head-matcher (rx bol ?# (0+ blank) "%%" (0+ blank)
+;;                       (? "[" (or "markdown" "md") "]")
+;;                       (* nonl) ?\n
+;;                       (0+ blank) (? (any "rR"))
+;;                       (or "\"\"\"" "'''") (* nonl) ?\n)
+;;     :tail-matcher (rx bol (0+ blank) (or "\"\"\"" "'''") (* nonl) ?\n)
+;;     :head-mode 'host
+;;     :tail-mode 'host
+;;     :head-adjust-face `(:background ,(doom-color 'bg-alt) :extend t)
+;;     :adjust-face nil)
 
-  (define-polymode my/poly-python-mode
-    :hostmode 'my/poly-python-hostmode
-    :innermodes '(my/poly-python-markdown-innermode))
+;;   (define-polymode my/poly-python-mode
+;;     :hostmode 'my/poly-python-hostmode
+;;     :innermodes '(my/poly-python-markdown-innermode))
 
-  ;; Guard: polymode re-runs the host mode during init; without this the
-  ;; hook can re-trigger the polymode recursively.
-  (defun my/poly-python-maybe-enable ()
-    (unless (bound-and-true-p polymode-mode)
-      (my/poly-python-mode)))
+;;   ;; Guard: polymode re-runs the host mode during init; without this the
+;;   ;; hook can re-trigger the polymode recursively.
+;;   (defun my/poly-python-maybe-enable ()
+;;     (unless (bound-and-true-p polymode-mode)
+;;       (my/poly-python-mode)))
 
-  :hook ((python-mode python-ts-mode) . my/poly-python-maybe-enable))
+;;   :hook ((python-mode python-ts-mode) . my/poly-python-maybe-enable))
 #+end_src
 
 #+begin_src emacs-lisp
