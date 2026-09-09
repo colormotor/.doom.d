@@ -1708,6 +1708,19 @@ I typically want to open the notebook to test it, but the ~my-ipynb-export-to-ip
     (ox-ipynb-export-to-ipynb-file-and-open)))
 
 #+end_src
+** Workarounds
+*** Yasnippet
+Sometimes, yasnippet will randomly stop working in org mode, maybe this is a workaround?
+From: https://github.com/doomemacs/core/issues/7733
+#+begin_src emacs-lisp
+(map! :map org-mode-map
+      :after yasnippet
+      ;; Retain org-mode's native TAB functionality but allow yas-expand when a snippet is available
+      :nvi [tab]        yas-maybe-expand
+      ;; Optionally, bind other keys for snippet navigation
+      :nvi "C-c n"      #'yas-next-field
+      :nvi "C-c p"      #'yas-prev-field)
+#+end_src
 * Magit (git)
 
 Defo the best git client out there.
@@ -2047,6 +2060,7 @@ Extend the following to allow choice between Ollama (select a model that runs fa
            :key (or (getenv "ZAI_API_KEY")
                     "your-deepseek-api-key-here")
            :models '(
+                     GLM-5.3
                      GLM-5.2
               GLM-5.1
               GLM-4.7

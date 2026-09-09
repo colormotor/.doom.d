@@ -4,4 +4,4 @@
 # uuid: <pe
 # --
 
-os.path.expanduser($1)
+os.path.expanduser("~/$1")
