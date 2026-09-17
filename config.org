@@ -1721,6 +1721,7 @@ From: https://github.com/doomemacs/core/issues/7733
       :nvi "C-c n"      #'yas-next-field
       :nvi "C-c p"      #'yas-prev-field)
 #+end_src
+
 * Magit (git)
 
 Defo the best git client out there.
