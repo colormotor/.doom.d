@@ -58,7 +58,7 @@ Some existing literate configurations to get inspiration from
 - https://blog.sumtypeofway.com/posts/emacs-config.html
 - https://zzamboni.org/post/my-doom-emacs-configuration-with-commentary/
 - http://alhassy.com/emacs.d/
-
+- https://github.com/jneidel/dotfiles/blob/master/.emacs.d/dotemacs.org
 
 * Editor configuration
 ** Autosave
@@ -2061,6 +2061,7 @@ Extend the following to allow choice between Ollama (select a model that runs fa
            :key (or (getenv "ZAI_API_KEY")
                     "your-deepseek-api-key-here")
            :models '(
+                     GLM-5.3-Flash
                      GLM-5.3
                      GLM-5.2
               GLM-5.1
@@ -2160,14 +2161,12 @@ Extend the following to allow choice between Ollama (select a model that runs fa
 
   
   (setq gptel-directives
-        '((default . "You are a large language model living in Emacs and a helpful   assistant. Respond concisely.")
+        '((default . "You are a large language model living in Emacs and a helpful  assistant. You are an expert programmer. Don't use typing in your code and respond to the questions carefully and concisely. When asked a question, respond to only the question with a concise answer, don't expand on answers unless requested to. ")
           (coding . "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt or note.")
-          (python . "You are a large language model and an expert Python programmer. Don't use typing in your code and respond to the questions carefully and concisely.")
+          (python . "You are a large language model living in Emacs and a helpful  assistant. You are an expert Python programmer. Don't use typing in your code and respond to the questions carefully and concisely. When asked a question, respond to only the question with a concise answer, don't expand on answers unless requested to. ")
           (writing . "You are a large language model and a writing assistant. Respond concisely.")
-          (emacs . "You are an expert elisp and emacs customization, particularly using Doom emacs. Respond concisely.")
-          (chat . "You are a large language model and a conversation partner. Respond concisely.")
-          (review . "Review the following code/text. Point out bugs, style issues and improvements concisely.")
-          (math . "You are an expert in numerical methods, optimization, graph theory and curve generation. You are also an expert Python progammer. Respond to the questions carefully and concisely.")
+          (emacs . "You are a large language model living in (Doom) Emacs and a helpful  assistant. You are an expert ELISP programmer. Don't use typing in your code and respond to the questions carefully and concisely. When asked a question, respond to only the question with a concise answer, don't expand on answers unless requested to. ")
+          (math . "ou are a large language model living in emacs and you are an expert in numerical methods, optimization, graph theory and curve generation. You are also an expert Python progammer. Don't use typing in your code and respond to the questions carefully and concisely. When asked a question, respond to only the question with a concise answer, don't expand on answers unless requested to. ")
         )
   )
 
@@ -2830,6 +2829,11 @@ If this is the case, formatting will extend to all subdirectories. To disable it
 #+end_src
 
 ** Code formating
+*** Indent bars
+#+begin_src emacs-lisp
+(use-package indent-bars
+  :hook ((python-mode yaml-mode) . indent-bars-mode)) ; 
+#+end_src
 #+begin_src emacs-lisp
 ;; (set-formatter! 'ruff '("ruff" "format" "-"))
 ;; ;(set-formatter! 'latexindent '("latexindent" "-g" "/dev/null"))
@@ -2881,27 +2885,37 @@ A copilot-like LLM driven completion engine
     (add-hook 'prog-mode-hook #'minuet-auto-suggestion-mode)
     :config
     (setq minuet-provider 'openai-fim-compatible)
-
+    ;(setq minuet-provider 'ollama)
     (setq minuet-n-completions 1) ; recommended for Local LLM for resource saving
     ;; I recommend beginning with a small context window size and incrementally
     ;; expanding it, depending on your local computing power. A context window
     ;; of 512, serves as an good starting point to estimate your computing
     ;; power. Once you have a reliable estimate of your local computing power,
     ;; you should adjust the context window to a larger value.
-    (setq minuet-context-window 512)
+    (setq minuet-context-window 600)
     (plist-put minuet-openai-fim-compatible-options :end-point "http://localhost:11434/v1/completions")
     ;; an arbitrary non-null environment variable as placeholder.
     ;; For Windows users, TERM may not be present in environment variables.
     ;; Consider using APPDATA instead.
+
     (plist-put minuet-openai-fim-compatible-options :name "Ollama")
     (plist-put minuet-openai-fim-compatible-options :api-key "TERM")
     (plist-put minuet-openai-fim-compatible-options :model "qwen2.5-coder:1.5b-base")
 
-    (minuet-set-optional-options minuet-openai-fim-compatible-options :max_tokens 56)
+    ;; (setq minuet-openai-fim-compatible-options
+    ;;         '(:end-point "http://localhost:11434/v1/completions"
+    ;;         :name "Ollama"
+    ;;         :api-key "TERM"
+    ;;         :model "qwen2.5-coder:1.5b-base"
+    ;;         :template "qwen2.5-coder" 
+    ;;         ))
+
+
+    (minuet-set-optional-options minuet-openai-fim-compatible-options :max_tokens 256)
 
     (setq minuet-auto-suggestion-debounce-delay 0.4) ;; Wait 400ms after you pause typing
-    (setq minuet-auto-suggestion-throttle-delay 0.8) ;; Limit how often requests fire
-
+    (setq minuet-auto-suggestion-throttle-delay 0.6) ;; Limit how often requests fire
+    ;(setq minuet-request-timeout 10) 
     ;; Llama.cpp does not support the `suffix` option in FIM completion.
     ;; Therefore, we must disable it and manually populate the special
     ;; tokens required for FIM completion.
@@ -3010,3 +3024,13 @@ Some good hints and code below: https://emacs-lsp.github.io/dap-mode/page/how-to
 #+end_src
 
 - Other recent hints: https://www.reddit.com/r/emacs/comments/mxiqt6/how_to_setup_and_use_dapmode_for_c/
+
+
+* Temp
+#+begin_src emacs-lisp
+(defun my-region-bytes (start end)
+  "Return the number of bytes used by the region."
+  (interactive "r")
+  (message "Region has %d bytes"
+           (- (bufferpos-to-filepos end 'exact)
+#+end_src

@@ -64,6 +64,7 @@
 (package! gptel
 :recipe (:host github :repo "karthink/gptel"))
 
+(package! indent-bars)
 ;; Too buggy to be useful
 (unpin! ob-gptel)
 (package! ob-gptel
