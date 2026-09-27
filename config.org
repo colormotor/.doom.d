@@ -1722,6 +1722,11 @@ From: https://github.com/doomemacs/core/issues/7733
       :nvi "C-c p"      #'yas-prev-field)
 #+end_src
 
+**** Avoid warnings in org mode source blocks
+#+begin_src emacs-lisp
+(add-to-list 'warning-suppress-types 'org-element-parser)
+#+end_src
+
 * Magit (git)
 
 Defo the best git client out there.
@@ -2629,7 +2634,8 @@ Debugging does not work in org mode, but it does in the REPL. Send code in curre
     (jupyter-org-with-src-block-client
      (jupyter-eval-string body)
      (unless no-pop
-       (pop-to-buffer (oref jupyter-current-client buffer))))))
+       ;(pop-to-buffer (oref jupyter-current-client buffer))))))
+        (display-buffer (oref jupyter-current-client buffer))))))
 #+end_src
 
 *** Spyder-like experience
