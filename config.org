@@ -1283,8 +1283,18 @@ I then define the following note types:
     (org-roam-db-autosync-mode +1)
 
     (setq org-roam-graph-viewer "/Applications/Firefox.app/Contents/MacOS/firefox")
+
+    ;; Add search in menu
+    (map! :leader
+        :desc "Search Org-Roam notes" "n r s"
+        (lambda ()
+            (interactive)
+            (let ((default-directory (file-truename org-roam-directory)))
+            (consult-ripgrep))))
+
 )
 #+end_src
+
 
 *** Org-roam UI
 #+begin_src emacs-lisp
@@ -2132,7 +2142,7 @@ Extend the following to allow choice between Ollama (select a model that runs fa
   ;;    :args '((:name "search_result" :type object :optional t))
   ;;    :category "web")))
 
-  (add-hook 'gptel-mode-hook #'my/gptel-set-backend-tools)
+  ;(add-hook 'gptel-mode-hook #'my/gptel-set-backend-tools)
 
   ;; Set default backend (can be changed with gptel-set-backend)
   (setq gptel-backend (car gptel-backends))
@@ -2236,6 +2246,103 @@ Extend the following to allow choice between Ollama (select a model that runs fa
     (user-error "No file selected")))
 
 #+end_src
+
+Or create a chat for a recent file
+#+begin_src emacs-lisp
+;(defun +gptel/chat-for-recent-file ()
+;  "Pick a file from `recentf-list', open it, attach it to a gptel session, and open the chat."
+;  (interactive)
+;  ;; Make sure we actually have a recent-files list to offer
+;  (unless (bound-and-true-p recentf-mode)
+;    (recentf-mode 1))
+;  ;; `recentf-list' can contain nil/stale entries, which is one source of
+;  ;; "Wrong type argument" from `completing-read' -- filter to live strings.
+;  (let* ((files (seq-filter #'file-exists-p
+;                            (seq-filter #'stringp
+;                                        (and (boundp 'recentf-list) recentf-list))))
+;         (file  (and files
+;                     (completing-read "Discuss recent file: " files nil t))))
+;    ;; `completing-read' can return "" rather than nil, which made the old
+;    ;; `if-let' fall through with an empty filename into
+;    ;; `find-file-noselect'.  Guard explicitly.
+;    (if (or (null file) (string-empty-p file))
+;        (user-error "No file selected")
+;      (let ((file-buf (find-file-noselect file)))
+;       ;; 1. Open (or switch to) the gptel session FIRST: the LLM context
+;        ;;    lives in the session buffer, not in the file's buffer.
+;        ;;    Also call `gptel' with no positional arguments -- its optional
+;        ;;    args (session name, API key, initial prompt) expect strings,
+;        ;;    and the old `(gptel nil nil t)' passed `t' where a string was
+;        ;;    expected, raising the wrong-type-argument error.
+;        (gptel)
+;        ;; 2. Attach the file to the (now current) session's context
+;        (gptel-add-file file)
+;       ;; 3. Show the file alongside the chat for reference
+;        (display-buffer file-buf)
+;        (message "Linked recent file to gptel: %s" (file-name-nondirectory file))))))
+;
+;;; Bind it to a Doom leader key sequence (SPC o l c)
+;(map! :leader
+;      :desc "gptel chat for recent file"
+;      "o l c" #'+gptel/chat-for-recent-file)
+#+end_src
+
+** Contextual code generation
+From here [[https://github.com/karthink/gptel/issues/546]]
+#+begin_src emacs-lisp
+(after! gptel
+  (defun my/gptel-code-infill (&optional margin)
+    "Fill in code at point based on buffer context."
+    (let* ((lang (gptel--strip-mode-suffix major-mode))
+           (start (if (use-region-p) (min (point) (region-beginning)) (point)))
+           (end (if (use-region-p) (max (point) (region-end)) (point)))
+           (before-start (if margin
+                             (save-excursion (goto-char start)
+                                             (forward-line (- margin))
+                                             (point))
+                           (point-min)))
+           (after-end (if margin
+                          (save-excursion (goto-char end)
+                                          (forward-line margin)
+                                          (point))
+                        (point-max))))
+      (nconc
+       (list
+        (format "You are a %s programmer and assistant in a code buffer in a text editor.
+
+Follow my instructions and generate %s code to be inserted at the cursor.
+For context, I will provide you with the code BEFORE and AFTER the cursor.
+
+Generate %s code and only code without any explanations or markdown code fences. NO markdown.
+You may include code comments.
+
+Do not repeat any of the BEFORE or AFTER code." lang lang lang)
+        nil
+        "What is the code AFTER the cursor?"
+        (format "AFTER\n```\n%s\n```\n"
+                (buffer-substring-no-properties end after-end))
+        "And what is the code BEFORE the cursor?"
+        (format "BEFORE\n```%s\n%s\n```\n" lang
+                (buffer-substring-no-properties before-start start)))
+       (when (use-region-p) (list "What should I insert at the cursor?")))))
+
+  ;; Dynamically compute the directives when selected
+  (setf (alist-get 'infill-buffer gptel-directives) (lambda () (my/gptel-code-infill)))
+  (setf (alist-get 'infill-50 gptel-directives) (lambda () (my/gptel-code-infill 50)))
+  ;; Inject directly into the main gptel-menu layout
+  (defun my/gptel-run-infill-buffer ()
+    "Trigger gptel code infilling using the full buffer context."
+    (interactive)
+    (let ((gptel-backend gptel-backend)
+          (gptel-system-prompt (my/gptel-code-infill)))
+      (gptel-send)))
+
+ ;(transient-append-suffix 'gptel-menu "k"  ; Looks for the 'gptel-rewrite' key (usually k)
+ ;   '("i" "Code Infill (Buffer)" my/gptel-run-infill-buffer))
+)
+
+#+end_src
+
 
 ** Testing auto commit messages with gptel
 #+begin_src emacs-lisp
@@ -3032,11 +3139,3 @@ Some good hints and code below: https://emacs-lsp.github.io/dap-mode/page/how-to
 - Other recent hints: https://www.reddit.com/r/emacs/comments/mxiqt6/how_to_setup_and_use_dapmode_for_c/
 
 
-* Temp
-#+begin_src emacs-lisp
-(defun my-region-bytes (start end)
-  "Return the number of bytes used by the region."
-  (interactive "r")
-  (message "Region has %d bytes"
-           (- (bufferpos-to-filepos end 'exact)
-#+end_src
