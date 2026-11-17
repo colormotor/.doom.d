@@ -2047,6 +2047,19 @@ Stole this from [[https://github.com/dylanbmorgan/xxh-plugin-prerun-dotfiles/tre
 
 #+end_src
 
+** Agent-shell
+#+begin_src emacs-lisp
+(use-package! agent-shell
+  :defer t
+  :init
+  ;; (map! :leader
+  ;;       (:prefix-map ("o" . "open")
+  ;;        :desc "Agent Shell" "a" #'agent-shell))
+  :config
+  (setq agent-shell-preferred-agent-config
+        (agent-shell-opencode-make-agent-config))
+)
+#+end_src
 ** gptel
 Pretty mindblowing demo: [[https://www.youtube.com/watch?v=bsRnh_brggM]]
 

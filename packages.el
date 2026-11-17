@@ -73,6 +73,11 @@
 (package! eglot-booster
 :recipe (:host github :repo "jdtsmith/eglot-booster"))
 
+;; Agent shell install
+(package! shell-maker)
+(package! acp)
+(package! agent-shell)
+
 ;; (use-package jupyter
 ;;   :demand t
 ;;   :after (:all org python))
