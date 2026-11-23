@@ -78,6 +78,11 @@
 (package! acp)
 (package! agent-shell)
 
+; Lean
+(package! nael)                   
+(package! ob-lean4 :recipe (:host github :repo "0xAX/ob-lean"))
+
+
 ;; (use-package jupyter
 ;;   :demand t
 ;;   :after (:all org python))

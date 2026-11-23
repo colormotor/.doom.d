@@ -2058,6 +2058,7 @@ Stole this from [[https://github.com/dylanbmorgan/xxh-plugin-prerun-dotfiles/tre
   :config
   (setq agent-shell-preferred-agent-config
         (agent-shell-opencode-make-agent-config))
+  (setq agent-shell-session-restore-verbosity 'first-last)
 )
 #+end_src
 ** gptel
@@ -2519,6 +2520,32 @@ Some org mode stuff
 ;;   (define-polymode poly-python-ts+org-mode
 ;;     :hostmode 'poly-python-ts-hostmode
 ;;     :innermodes '(+poly-py-org-innermode +poly-py-md-innermode)))
+#+end_src
+
+** Lean
+#+begin_src emacs-lisp
+(add-hook 'nael-mode-hook #'eglot-ensure)
+(add-to-list 'exec-path (expand-file-name "~/.elan/bin"))
+(add-to-list 'auto-mode-alist '("\\.lean\\'" . nael-mode))
+
+;; ob-lean does not do fontification as it seeks lean4-mode but we are using nael
+(defalias 'lean4-mode 'nael-mode)
+
+(setq nael-prepare-lsp nil)
+
+
+;; register the babel language (ob-lean4 defines org-babel-execute:lean4
+;; but doesn't register itself — verified from its source)
+(after! org
+  (add-to-list 'org-src-lang-modes '("lean4" . nael))
+  (add-to-list 'org-src-lang-modes '("lean" . nael))
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   (append org-babel-load-languages '((lean4 . t)))))
+
+(autoload 'nael-mode "nael" nil t)
+(add-hook 'nael-mode-hook #'abbrev-mode)
+
 #+end_src
 
 ** Jupytext setup (broken)
